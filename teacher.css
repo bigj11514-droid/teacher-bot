@@ -1,0 +1,273 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body{
+    display: flex;
+    justify-content: center;
+    background-image: url(robot-with-blue-eye-created-using-generative-ai-technology-free-photo.jpg);
+    min-height: 100vh;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position-y: 50%;
+    backdrop-filter: blur(10px);
+}
+
+header{
+    width: 100%;
+    min-height: fit-content;
+    margin-top: 0px;
+    position: fixed;
+}
+
+ul{
+   display: flex;
+   justify-content: space-around;
+   min-height: 8vh;
+   align-items: center;
+   font-style: oblique;
+   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+   font-size: 15px;
+   letter-spacing: 1px;
+   list-style: none;
+   box-shadow:2px 2px 6px rgb(163, 203, 219);
+   border: 1px solid rgb(34, 44, 44);
+}
+
+a{
+    text-decoration: none;
+    color: rgb(255, 255, 255);
+    text-transform:uppercase;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 2px rgb(7, 55, 75);
+}
+
+li{
+    border: 2px solid rgb(247, 247, 247);
+    width: 100px;
+    border-radius: 5px;
+    height: 30px;
+    align-content: center;
+    text-align: center;
+    border-bottom: transparent;
+    border-top: transparent;
+}
+
+li:hover{
+    transform: scaleX(1.1);
+    transition: ease-out 1s;
+    border: 2px solid yellow;
+    border: 2px solid rgb(3, 126, 126);
+    border-bottom: transparent;
+    border-top: transparent;
+    box-shadow:2px 2px 6px rgb(163, 203, 219);
+}
+
+
+.container{
+    width: 80%;
+    height: fit-content;
+    font-style: normal;
+    font-size: 20px;
+    text-align: center;
+    align-self: center;
+    
+}
+.container1{
+    width: 80%;
+    min-height: 80vh;
+    font-style: normal;
+    font-size: 20px;
+    text-align: center;
+    align-self: center;
+    
+}
+
+h1 {
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    min-height: auto;
+    border: 1px solid rgb(255, 255, 255);
+    text-align: start;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 2px rgb(7, 55, 75);
+    padding-left: 20px;
+    padding-bottom: 10px;
+    border-radius: 10px;
+    border-top: transparent;
+    border-left: transparent;
+    border-right: transparent;
+    box-shadow:2px 2px 2px rgb(96, 125, 138);
+}
+
+.design{
+    border: 1px solid rgb(34, 44, 44);
+    margin: 20px;
+    border-top-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+    box-shadow:2px 1px 20px rgb(82, 176, 216);
+    min-height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    backdrop-filter: blur(5px);
+}
+
+#designs{
+    gap: 30px;
+}
+
+#designs:hover{
+    transform: none;
+    transition: none;
+}
+
+.select{
+    min-height: 6vh;
+    width: 60%;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-top: transparent;
+    font-style: oblique;
+    
+}
+
+.select:hover{
+    transform: scaleX(0.9);
+    transition: ease-out 1s;
+    box-shadow:2px 2px 9px rgb(163, 203, 219);
+}
+h2{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    min-height: 15vh;
+    text-align: start;
+    text-shadow: 2px 2px 2px rgb(0, 0, 0);
+    margin-top: 10px;
+}
+
+.intro{
+    height: 50px;
+}
+
+p{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    height: 30px;
+    text-shadow: 2px 2px 2px rgb(0, 0, 0);
+
+}
+
+.btn{
+    width: 50%;
+    height: 40px;
+    margin: 30px;
+    border-radius: 15px;
+    background-color: rgb(159, 212, 209);
+    font-weight: 500;
+    font-style: oblique;
+    color: rgb(0, 0, 0);
+    font-size: 20px;
+    letter-spacing: 1px;
+    box-shadow: 2px 2px 2px rgb(57, 204, 204);
+    border: transparent;
+}
+button:hover {
+    transform: scaleX(1.1);
+    transition:ease 2s;
+}
+.page-2{
+    width: 100%;
+}
+
+.questions{
+    width: 70%;
+    min-height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-style: oblique;
+    letter-spacing: 1px;
+    font-size: 30px;
+}
+
+#score{
+   display: block;
+   margin-top: 18px;
+   font-size: 20px;
+   color: rgb(255, 255, 255);
+   letter-spacing: 1px;
+}
+/* styling the question table  */
+.answers{
+    width: 80%;
+    border: 1px solid rgb(233, 233, 233);
+    min-height: 10vh;
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.answers button{
+    width: 90%;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.9);
+    color: rgb(0,0,0);
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.answers button:hover:not(:disabled){
+    transform: scale(1.02);
+}
+.answers button:disabled{
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+h3{
+    font-style: oblique;
+    color: rgb(218, 216, 214);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid rgb(243, 243, 243);
+    border-radius: 15px;
+    width: 96%;
+    min-height: 7vh;
+    text-align: center;
+    
+}
+.container2{
+    width: 80%;
+    min-height: 80vh;
+    font-style: normal;
+    font-size: 20px;
+    text-align: center;
+    align-self: center;
+    border: 2px solid rgb(109, 182, 182);
+    box-shadow: 0px 2px 10px 0px rgb(105, 161, 161);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-top: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-style: dashed;
+}
