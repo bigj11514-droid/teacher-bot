@@ -115,11 +115,10 @@ h1 {
     backdrop-filter: blur(5px);
     align-items: center;
     justify-content: space-around;
-    height: ;
 }
 img{
     border-radius: 50%;
-   transform:rotate(45deg);
+   transform:rotate(47deg);
 }
 .cont1{
     width: 30%;
@@ -128,6 +127,7 @@ img{
 }
 .cont{
     width: 50%;
+    height: 250px;
 }
 #designs{
     gap: 30px;
@@ -287,12 +287,14 @@ h3{
     ul{
         padding: 15px;
     }
-    .container{
-        padding: 70px 10px 20px 10px;
+    .container{     
         width: 100%;
     }
     .design{
         padding: 15px 10px;
+        display: flex;
+        flex-direction: column;
+        height: 600px;
     }
     p,h2{
         font-size: 1rem;
@@ -302,5 +304,8 @@ h3{
     }
     #btn-start{
        width: 80%;
+    }
+    img{
+        transform: rotate(60deg);
     }
 }
