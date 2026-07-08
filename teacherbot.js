@@ -18,7 +18,7 @@ const subjects = {
         question: "Which shape has 4 equal sides?",
         answers: ["Triangle", "Circle", "Square", "Rectangle"],
         correct: 2
-      }
+      },
       {
         question: "What is 30 + 25?",
         answers: ["66", "72", "55", "9"],
