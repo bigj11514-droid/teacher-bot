@@ -19,6 +19,21 @@ const subjects = {
         answers: ["Triangle", "Circle", "Square", "Rectangle"],
         correct: 2
       }
+      {
+        question: "What is 30 + 25?",
+        answers: ["66", "72", "55", "9"],
+        correct: 2
+      },
+      {
+        question: "What is 3 x 9?",
+        answers: ["27", "14", "16", "10"],
+        correct: 0
+      },
+      {
+        question: "identify the next sequence,30, 40,___, 60",
+        answers: ["70", "50", "40", "80"],
+        correct: 2
+      }
     ]
   },
   science: {
