@@ -271,3 +271,24 @@ h3{
     align-items: center;
     border-style: dashed;
 }
+@media (max-width: 900px){
+    ul{
+        padding: 15px;
+    }
+    .container{
+        padding: 70px 10px 20px 10px;
+        width: 100%;
+    }
+    .design{
+        padding: 15px 10px;
+    }
+    p,h2{
+        font-size: 1rem;
+    }
+    a,h1{
+        font-size: 0.8rem;
+    }
+    #btn-start{
+       width: 80%;
+    }
+}
