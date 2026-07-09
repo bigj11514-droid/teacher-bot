@@ -80,7 +80,7 @@ li:hover{
     font-size: 20px;
     text-align: center;
     align-self: center;
-    margin-top: 50px;
+    padding-top: 50px;
     max-width: 1080px;
     margin: 0 auto;
 }
@@ -118,6 +118,7 @@ h1 {
     backdrop-filter: blur(5px);
     align-items: center;
     justify-content: space-around;
+    height: 500px;
 }
 img{
     border-radius: 100%;
