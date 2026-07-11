@@ -91,6 +91,15 @@ li:hover{
     font-size: 20px;
     text-align: center;
     align-self: center;
+    
+    border: 1px solid red;
+}
+.sub-txt{
+    margin-top: 70px;
+}
+
+.btns{
+    white-space: nowrap;
 }
 
 h1 {
@@ -120,8 +129,8 @@ h1 {
 }
 img{
     border-radius: 100%;
-    width: 50%;
-    height: 60%;
+    width: 100%;
+    height: 90%;
     transform:rotate(deg);
 }
 .cont1{
@@ -132,13 +141,14 @@ img{
     align-content: center;
 }
 .cont{
-    width: 50%;
+    width: 70%;
     height: 250px;
     padding: 10px;
     align-content: center;
 }
 #designs{
     gap: 30px;
+    height: auto;
 }
 
 #designs:hover{
@@ -210,7 +220,11 @@ button:hover {
 .page-2{
     width: 100%;
 }
-
+/* styling the second html file container  */
+.design{
+    display: flex;
+    flex-direction: column;
+}
 .questions{
     width: 70%;
     min-height: 10vh;
@@ -325,7 +339,8 @@ h3{
        width: 80%;
     }
     img{
-        transform: rotate(43deg);
+        transform: rotate(0deg);
+        width: 60%;
         height: 150px;
     }
     .cont1{
@@ -337,4 +352,5 @@ h3{
         height: 300px;
         padding: 5px;
     }
+    
 }
