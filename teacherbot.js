@@ -29,7 +29,17 @@ const subjects = {
     displayName: "Mathematics",
     early: [
       { question: "What is 1 + 1?", answers: ["1", "2", "3", "4"], correct: 1 },
-      { question: "How many sides does a triangle have?", answers: ["2", "3", "4", "5"], correct: 1 }
+      { question: "How many sides does a triangle have?", answers: ["2", "3", "4", "5"], correct: 1 },
+      { question: "What is the number name for 254?", answers: ["Two five four", "Two hundred and five four", "Two hundred and fifty four", "Two hundred fifty four"], correct: 2 },
+      { question: "WHat is the place value of the number 7 in 376?", answers: ["Once", "Tense", "Hundreds", "Thousand"], correct: 1 },
+      { question: "What is the number name for Six Hnndred and Forty Six?", answers: ["640", "604", "646", "6,046"], correct: 2 },
+      { question: "If Abena has 10 pencils and she gives 5 pencils to Dean. How many pencils does she have?", answers: ["20", "10", "4", "5"], correct: 3 },
+      { question: "Skip count forward by 10s. 10,20,30,40,........", answers: ["60", "70", "50", "40"], correct: 2 },
+      { question: "What is the number name for 25?", answers: ["Twenty Five", "Twenty and five", "Two hundred and five", "Two five"], correct: 0 },
+      { question: "What is the value of 7 in 172?", answers: ["Ones", "Tense", "Hundreds", "Thousands"], correct: 1 },
+      { question: "Expand 456", answers: ["400 + 50 + 6", "40 + 5 + 6", "400 + 5 + 6", "400 + 60 + 5"], correct: 0 },
+      { question: "Compare 56......65", answers: [">", "<", "=", "none"], correct: 1 },
+      { question: "How is 245 written in place values?", answers: ["2 ones ", "4 tens", "5 hundreds", "5 thousdands"], correct: 1 },
     ],
     middle: [
       { question: "What is 12 + 7?", answers: ["17", "19", "20", "21"], correct: 0 },
