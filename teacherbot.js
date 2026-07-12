@@ -1,159 +1,161 @@
 ﻿console.log("Teacher Bot loaded");
 
+const classLevels = {
+  basic1: "early",
+  basic2: "early",
+  basic3: "middle",
+  basic4: "middle",
+  basic5: "upper",
+  basic6: "upper",
+  jhs1: "jhs",
+  jhs2: "jhs",
+  jhs3: "jhs"
+};
+
+const classLabels = {
+  basic1: "Basic 1",
+  basic2: "Basic 2",
+  basic3: "Basic 3",
+  basic4: "Basic 4",
+  basic5: "Basic 5",
+  basic6: "Basic 6",
+  jhs1: "JHS 1",
+  jhs2: "JHS 2",
+  jhs3: "JHS 3"
+};
+
 const subjects = {
   maths: {
     displayName: "Mathematics",
-    questions: [
-      {
-        question: "What is 5 + 3?",
-        answers: ["6", "7", "8", "9"],
-        correct: 2
-      },
-      {
-        question: "What is 7 x 2?",
-        answers: ["12", "14", "16", "10"],
-        correct: 1
-      },
-      {
-        question: "Which shape has 4 equal sides?",
-        answers: ["Triangle", "Circle", "Square", "Rectangle"],
-        correct: 2
-      },
-      {
-        question: "What is 30 + 25?",
-        answers: ["66", "72", "55", "9"],
-        correct: 2
-      },
-      {
-        question: "What is 3 x 9?",
-        answers: ["27", "14", "16", "10"],
-        correct: 0
-      },
-      {
-        question: "identify the next sequence,30, 40,___, 60",
-        answers: ["70", "50", "40", "80"],
-        correct: 2
-      }
+    early: [
+      { question: "What is 1 + 1?", answers: ["1", "2", "3", "4"], correct: 1 },
+      { question: "How many sides does a triangle have?", answers: ["2", "3", "4", "5"], correct: 1 }
+    ],
+    middle: [
+      { question: "What is 12 + 7?", answers: ["17", "19", "20", "21"], correct: 0 },
+      { question: "What is 5 x 3?", answers: ["10", "12", "15", "18"], correct: 2 }
+    ],
+    upper: [
+      { question: "What is 24 + 18?", answers: ["32", "40", "42", "44"], correct: 2 },
+      { question: "What is 8 x 6?", answers: ["42", "46", "48", "50"], correct: 2 }
+    ],
+    jhs: [
+      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 },
+      { question: "What is 15% of 200?", answers: ["20", "25", "30", "35"], correct: 1 }
     ]
   },
   science: {
     displayName: "Science",
-    questions: [
-      {
-        question: "What do plants need to make food?",
-        answers: ["Water, sunlight and air", "Shoes and pencils", "Salt and sugar", "Paper and ink"],
-        correct: 0
-      },
-      {
-        question: "What is the chemical name for water?",
-        answers: ["CO2", "H2O", "O2", "NaCl"],
-        correct: 1
-      },
-      {
-        question: "Which organ pumps blood around the body?",
-        answers: ["Lung", "Brain", "Heart", "Stomach"],
-        correct: 2
-      }
+    early: [
+      { question: "Plants need sunlight to make food.", answers: ["True", "False"], correct: 0 },
+      { question: "What do we breathe in?", answers: ["Oxygen", "Carbon dioxide", "Smoke", "Water"], correct: 0 }
+    ],
+    middle: [
+      { question: "What gas do plants use to make food?", answers: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2 },
+      { question: "Which part of the body helps us think?", answers: ["Lungs", "Brain", "Heart", "Stomach"], correct: 1 }
+    ],
+    upper: [
+      { question: "What is the boiling point of water at sea level?", answers: ["90°C", "100°C", "110°C", "120°C"], correct: 1 },
+      { question: "Which planet is known as the Red Planet?", answers: ["Mercury", "Venus", "Mars", "Jupiter"], correct: 2 }
+    ],
+    jhs: [
+      { question: "What is the chemical symbol for water?", answers: ["O2", "H2O", "CO2", "NaCl"], correct: 1 },
+      { question: "Which organ pumps blood around the body?", answers: ["Lungs", "Kidney", "Heart", "Liver"], correct: 2 }
     ]
   },
   owop: {
     displayName: "Our World Our People",
-    questions: [
-      {
-        question: "On which continent is Ghana located?",
-        answers: ["Asia", "Africa", "Europe", "South America"],
-        correct: 1
-      },
-      {
-        question: "Which of these is a natural resource?",
-        answers: ["Water", "Car", "Computer", "Book"],
-        correct: 0
-      },
-      {
-        question: "Which planet do we live on?",
-        answers: ["Mars", "Earth", "Venus", "Jupiter"],
-        correct: 1
-      }
+    early: [
+      { question: "Ghana is in Africa.", answers: ["True", "False"], correct: 0 },
+      { question: "Which is a natural resource?", answers: ["Water", "Book", "Chair", "Pen"], correct: 0 }
+    ],
+    middle: [
+      { question: "What is the capital city of Ghana?", answers: ["Kumasi", "Accra", "Tamale", "Cape Coast"], correct: 1 },
+      { question: "Which of these is a good civic habit?", answers: ["Littering", "Helping your community", "Breaking rules", "Ignoring elders"], correct: 1 }
+    ],
+    upper: [
+      { question: "Which continent is Ghana found in?", answers: ["Asia", "Europe", "Africa", "Australia"], correct: 2 },
+      { question: "What do people use a map for?", answers: ["To cook", "To find places", "To play music", "To sleep"], correct: 1 }
+    ],
+    jhs: [
+      { question: "Why is it important to protect the environment?", answers: ["To keep it clean and safe", "To waste more", "To make noise", "To destroy trees"], correct: 0 },
+      { question: "What is one major job of a government?", answers: ["To make laws", "To bake bread", "To sell shoes", "To sleep all day"], correct: 0 }
     ]
   },
   history: {
     displayName: "History",
-    questions: [
-      {
-        question: "Who was the first President of Ghana?",
-        answers: ["Kwame Nkrumah", "Jerry Rawlings", "John Mahama", "Kofi Annan"],
-        correct: 0
-      },
-      {
-        question: "A timeline is used to show what?",
-        answers: ["Shapes and colors", "Events in order", "Math problems", "Weather forecasts"],
-        correct: 1
-      },
-      {
-        question: "What is an important national symbol?",
-        answers: ["Flag", "Table", "Shoe", "Plate"],
-        correct: 0
-      }
+    early: [
+      { question: "A family tree shows your family.", answers: ["True", "False"], correct: 0 },
+      { question: "What is a timeline used for?", answers: ["To tell time", "To show events in order", "To count money", "To draw"], correct: 1 }
+    ],
+    middle: [
+      { question: "Who was the first President of Ghana?", answers: ["Kwame Nkrumah", "Jerry Rawlings", "John Mahama", "Kofi Annan"], correct: 0 },
+      { question: "What is an important national symbol?", answers: ["Flag", "Table", "Plate", "Radio"], correct: 0 }
+    ],
+    upper: [
+      { question: "What does history teach us?", answers: ["Past events and lessons", "Only songs", "Only games", "Only jokes"], correct: 0 },
+      { question: "Why do we learn about our ancestors?", answers: ["To remember and respect them", "To forget them", "To ignore them", "To fight them"], correct: 0 }
+    ],
+    jhs: [
+      { question: "Which event changed Ghana's history greatly?", answers: ["The independence movement", "A football match", "A school holiday", "Rainfall"], correct: 0 },
+      { question: "What can a historical source be?", answers: ["A book or object from the past", "A toy", "A snack", "A shoe"], correct: 0 }
     ]
   },
   english: {
     displayName: "English",
-    questions: [
-      {
-        question: "Choose the correct plural form of 'child'.",
-        answers: ["Childs", "Children", "Childes", "Child"],
-        correct: 1
-      },
-      {
-        question: "Which word is a verb?",
-        answers: ["Run", "Blue", "Happy", "Dog"],
-        correct: 0
-      },
-      {
-        question: "What is the opposite of 'hot'?",
-        answers: ["Wet", "Cold", "Tall", "Fast"],
-        correct: 1
-      }
+    early: [
+      { question: "Choose the correct word: I ___ happy.", answers: ["am", "is", "are", "was"], correct: 0 },
+      { question: "What is the plural of 'book'?", answers: ["books", "bookes", "booksies", "book"], correct: 0 }
+    ],
+    middle: [
+      { question: "Which word is a verb?", answers: ["Run", "Blue", "Happy", "Table"], correct: 0 },
+      { question: "What is the opposite of 'hot'?", answers: ["Wet", "Cold", "Tall", "Fast"], correct: 1 }
+    ],
+    upper: [
+      { question: "Choose the correct sentence.", answers: ["She go to school.", "She goes to school.", "She going to school.", "She gone to school."], correct: 1 },
+      { question: "Which word means 'very big'?", answers: ["Small", "Tiny", "Huge", "Thin"], correct: 2 }
+    ],
+    jhs: [
+      { question: "What is the past tense of 'eat'?", answers: ["eated", "ate", "eaten", "eats"], correct: 1 },
+      { question: "Which is a complete sentence?", answers: ["Running quickly.", "The bright sun.", "The dog barked loudly.", "Very happy."], correct: 2 }
     ]
   },
   rme: {
     displayName: "Religious and Moral Education",
-    questions: [
-      {
-        question: "Which value means always telling the truth?",
-        answers: ["Kindness", "Honesty", "Greed", "Laziness"],
-        correct: 1
-      },
-      {
-        question: "What should you do when someone is sad?",
-        answers: ["Ignore them", "Laugh", "Help and listen", "Push them"],
-        correct: 2
-      },
-      {
-        question: "Which is a good way to treat others?",
-        answers: ["Poorly", "Rudely", "Respectfully", "Carelessly"],
-        correct: 2
-      }
+    early: [
+      { question: "Honesty means telling the truth.", answers: ["True", "False"], correct: 0 },
+      { question: "What should you do when someone is sad?", answers: ["Ignore them", "Laugh at them", "Help and listen", "Push them"], correct: 2 }
+    ],
+    middle: [
+      { question: "Respect means showing good manners.", answers: ["True", "False"], correct: 0 },
+      { question: "Which is a good moral value?", answers: ["Greed", "Kindness", "Laziness", "Cruelty"], correct: 1 }
+    ],
+    upper: [
+      { question: "What should you do when you make a mistake?", answers: ["Hide it", "Apologize", "Blame others", "Run away"], correct: 1 },
+      { question: "Why should we help others?", answers: ["To be selfish", "To show love and care", "To cause trouble", "To ignore them"], correct: 1 }
+    ],
+    jhs: [
+      { question: "Which value helps people live together peacefully?", answers: ["Conflict", "Justice", "Hatred", "Rudeness"], correct: 1 },
+      { question: "Why is forgiveness important?", answers: ["It creates peace", "It causes harm", "It creates fear", "It creates anger"], correct: 0 }
     ]
   },
   creative: {
     displayName: "Creative Arts",
-    questions: [
-      {
-        question: "Which is a primary colour?",
-        answers: ["Green", "Purple", "Red", "Pink"],
-        correct: 2
-      },
-      {
-        question: "What do you need to draw with?",
-        answers: ["Knife", "Pencil", "Spoon", "Phone"],
-        correct: 1
-      },
-      {
-        question: "Which item is used for painting?",
-        answers: ["Brush", "Fork", "Ruler", "Scissors"],
-        correct: 0
-      }
+    early: [
+      { question: "A pencil is used for drawing.", answers: ["True", "False"], correct: 0 },
+      { question: "Which color is a primary color?", answers: ["Green", "Purple", "Red", "Orange"], correct: 2 }
+    ],
+    middle: [
+      { question: "A brush is used for painting.", answers: ["True", "False"], correct: 0 },
+      { question: "What can you make with clay?", answers: ["A toy", "A house", "A shoe", "A pencil"], correct: 0 }
+    ],
+    upper: [
+      { question: "What is a collage?", answers: ["A type of music", "Art made by pasting pieces together", "A kind of dance", "A sport"], correct: 1 },
+      { question: "Which tool is used for cutting paper?", answers: ["Brush", "Scissors", "Pencil", "Hammer"], correct: 1 }
+    ],
+    jhs: [
+      { question: "What is rhythm in music?", answers: ["The beat of music", "A type of paint", "A drawing tool", "A story"], correct: 0 },
+      { question: "What is the main purpose of a poster?", answers: ["To decorate a wall and share information", "To eat", "To sleep", "To build houses"], correct: 0 }
     ]
   }
 };
@@ -167,8 +169,59 @@ function getSubjectKey() {
   return params.get("subject")?.toLowerCase();
 }
 
+function getClassKey() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("class")?.toLowerCase() || "basic1";
+}
+
+function setupSubjectLinks() {
+  const classSelect = document.getElementById("class-select");
+  const links = document.querySelectorAll(".subject-link");
+
+  if (!classSelect || links.length === 0) {
+    return;
+  }
+
+  const selectedClass = getClassKey();
+  classSelect.value = selectedClass;
+
+  links.forEach((link) => {
+    const href = new URL(link.getAttribute("href"), window.location.href);
+    href.searchParams.set("class", classSelect.value);
+    link.setAttribute("href", href.pathname + href.search);
+  });
+
+  classSelect.addEventListener("change", () => {
+    links.forEach((link) => {
+      const href = new URL(link.getAttribute("href"), window.location.href);
+      href.searchParams.set("class", classSelect.value);
+      link.setAttribute("href", href.pathname + href.search);
+    });
+  });
+}
+
+function setupQuizPage() {
+  const classSelect = document.getElementById("class-select");
+  const loadBtn = document.getElementById("load-class-btn");
+
+  if (!classSelect) {
+    return;
+  }
+
+  classSelect.value = getClassKey();
+
+  if (loadBtn) {
+    loadBtn.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("class", classSelect.value);
+      window.location.search = params.toString();
+    });
+  }
+}
+
 function setupQuiz() {
   const subjectKey = getSubjectKey();
+  const classKey = getClassKey();
   const subjectData = subjects[subjectKey];
 
   const questionEl = document.getElementById("questions");
@@ -190,10 +243,11 @@ function setupQuiz() {
     return;
   }
 
-  quizQuestions = subjectData.questions;
+  const levelKey = classLevels[classKey] || "early";
+  quizQuestions = subjectData[levelKey] || subjectData.early;
   currentQuestionIndex = 0;
   score = 0;
-  subjectTitle.textContent = subjectData.displayName;
+  subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
   scoreEl.textContent = `Score: ${score} / ${quizQuestions.length}`;
   feedbackEl.textContent = "";
   nextBtn.textContent = "Next Question";
@@ -245,7 +299,7 @@ function selectAnswer(button, selectedIndex) {
     if (correctButton) correctButton.style.background = "#4CAF50";
   }
 
-  Array.from(answersEl.children).forEach(btn => {
+  Array.from(answersEl.children).forEach((btn) => {
     btn.disabled = true;
   });
 
@@ -276,8 +330,13 @@ function nextQuestion() {
 
 if (document.getElementById("questions") && document.getElementById("answers")) {
   document.addEventListener("DOMContentLoaded", () => {
+    setupQuizPage();
     setupQuiz();
     document.getElementById("nextbtn").addEventListener("click", nextQuestion);
+  });
+} else {
+  document.addEventListener("DOMContentLoaded", () => {
+    setupSubjectLinks();
   });
 }
 

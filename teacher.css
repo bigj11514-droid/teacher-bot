@@ -152,6 +152,36 @@ img{
     height: auto;
 }
 
+.class-picker,
+.quiz-controls{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 18px auto 0;
+    flex-wrap: wrap;
+    color: white;
+    font-family: 'Trebuchet MS', sans-serif;
+}
+
+.class-picker select,
+.quiz-controls select{
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #8fd4e8;
+    outline: none;
+}
+
+.small-btn{
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    background: #7dd3fc;
+    color: #05253a;
+    cursor: pointer;
+    font-weight: 600;
+}
+
 #designs:hover{
     transform: none;
     transition: none;
