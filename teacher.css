@@ -259,7 +259,7 @@ button:hover {
 }
 .questions{
     width: 70%;
-    min-height: 10vh;
+    min-height: 6vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -345,6 +345,8 @@ h3{
 #subject-title{
     box-shadow: 0px 2px 10px  rgb(122, 201, 201);
     margin: 10px 0px ;
+    height: fit-content;
+    text-align: center;
 }
 #score{
     width: 100%;
