@@ -351,10 +351,10 @@ function selectAnswer(button, selectedIndex) {
   if (selectedIndex === correctIndex) {
     score++;
     button.style.background = "#4CAF50";
-    feedbackEl.textContent = "✅ Correct!";
+    feedbackEl.textContent = "😉 Correct!";
   } else {
     button.style.background = "#E74C3C";
-    feedbackEl.textContent = `❌ Wrong. Correct answer: ${current.answers[correctIndex]}`;
+    feedbackEl.textContent = `😡 Wrong. Correct answer: ${current.answers[correctIndex]}`;
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
   }
@@ -378,7 +378,7 @@ function nextQuestion() {
     feedbackEl.textContent = "";
     loadQuestion();
   } else {
-    questionEl.textContent = "Quiz finished!";
+    questionEl.textContent = "Quiz finished! Well Done!👏🏼";
     answersEl.innerHTML = "";
     feedbackEl.textContent = `You scored ${score} out of ${quizQuestions.length}.`;
     nextBtn.textContent = "Choose another subject";
