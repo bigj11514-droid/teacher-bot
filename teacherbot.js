@@ -66,11 +66,11 @@ const subjects = {
       { question: "What is the number name for 35?", answers: ["Thirty Five", "Twenty and five", "Two hundred and five", "Three five"], correct: 0 },
       { question: "What is the value of 7 in 172?", answers: ["Ones", "Tense", "Hundreds", "Thousands"], correct: 1 },
       { question: "Expand 456", answers: ["400 + 50 + 6", "40 + 5 + 6", "400 + 5 + 6", "400 + 60 + 5"], correct: 0 },
-      { question: "Compare 56......65", answers: [">", "<", "=", "none"], correct: 1 },
+      { question: "Compare 56......65", answers: [">", "<", "=", "none"], correct: 1 }
     ],
     middle: [
       { question: "What is 12 + 7?", answers: ["17", "19", "20", "21"], correct: 0 },
-      { question: "What is 5 - 3?", answers: ["10", "2", "15", "18"], correct: 1 }
+      { question: "What is 5 - 3?", answers: ["10", "2", "15", "18"], correct: 1 },
       { question: "What is 134 + 7?", answers: ["17", "19", "20", "141"], correct: 3 },
       { question: "What is 6 x 4?", answers: ["24", "12", "15", "18"], correct: 0 }
     ],
@@ -108,7 +108,7 @@ const subjects = {
       { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
       { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
       { question: "Which of the following materials is water proof", answers: ["Cotton", "Rubber", "Wood", "Concrete"], correct: 1 },
-      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 },
+      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 }
     ],
     middle: [
       { question: "What gas do plants use to make food?", answers: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2 },
