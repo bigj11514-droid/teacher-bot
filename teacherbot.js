@@ -70,7 +70,9 @@ const subjects = {
     ],
     middle: [
       { question: "What is 12 + 7?", answers: ["17", "19", "20", "21"], correct: 0 },
-      { question: "What is 5 x 3?", answers: ["10", "12", "15", "18"], correct: 2 }
+      { question: "What is 5 - 3?", answers: ["10", "2", "15", "18"], correct: 1 }
+      { question: "What is 134 + 7?", answers: ["17", "19", "20", "141"], correct: 3 },
+      { question: "What is 6 x 4?", answers: ["24", "12", "15", "18"], correct: 0 }
     ],
     upper: [
       { question: "What is 24 + 18?", answers: ["32", "40", "42", "44"], correct: 2 },
@@ -85,7 +87,28 @@ const subjects = {
     displayName: "Science",
     early: [
       { question: "Plants need sunlight to make food.", answers: ["True", "False"], correct: 0 },
-      { question: "What do we breathe in?", answers: ["Oxygen", "Carbon dioxide", "Smoke", "Water"], correct: 0 }
+      { question: "What do we breathe in?", answers: ["Oxygen", "Carbon dioxide", "Smoke", "Water"], correct: 0 },
+      { question: "Plants have different parts just like the human body", answers: ["True", "None", "False", "All of the above"], correct: 0 },
+      { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
+      { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
+      { question: "... are physical substances that are used for making things", answers: ["Metals", "Materials", "Matter", "Heat"], correct: 1 },
+      { question: "Flowers also have different sizes and shape", answers: ["True", "None", "False", "All of the above"], correct: 0 },
+      { question: "Which part of a pant holds the plant firmly to the ground", answers: ["Stem", "Leaves", "Flowers", "Root"], correct: 3 },
+      { question: "The part of the plant that holds the leaves above the soli is called", answers: ["Root", "Fruit", "Flowers", "Stem"], correct: 3 },
+      { question: "Which of the following materials is weak", answers: ["Metal", "Stone", "Paper", "Concrete"], correct: 2 },
+      { question: "Which of the following materials is flexible", answers: ["Rubber", "Stone", "Concrete", "Glass"], correct: 0 },
+      { question: "What do we breathe in?", answers: ["Oxygen", "Carbon dioxide", "Smoke", "Water"], correct: 0 },
+      { question: "Plants have different parts just like the human body", answers: ["True", "None", "False", "All of the above"], correct: 0 },
+      { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
+      { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
+      { question: "... are physical substances that are used for making things", answers: ["Metals", "Materials", "Matter", "Heat"], correct: 1 },
+      { question: "Flowers also have different sizes and shape", answers: ["True", "None", "False", "All of the above"], correct: 0 },
+      { question: "What do we breathe in?", answers: ["Oxygen", "Carbon dioxide", "Smoke", "Water"], correct: 0 },
+      { question: "Plants have different parts just like the human body", answers: ["True", "None", "False", "All of the above"], correct: 0 },
+      { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
+      { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
+      { question: "Which of the following materials is water proof", answers: ["Cotton", "Rubber", "Wood", "Concrete"], correct: 1 },
+      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 },
     ],
     middle: [
       { question: "What gas do plants use to make food?", answers: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2 },
