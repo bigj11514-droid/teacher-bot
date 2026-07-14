@@ -183,6 +183,12 @@ img{
     font-weight: 600;
 }
 
+.mode-badge{
+    margin-top: 8px;
+    font-size: 16px;
+    color: #e6f9ff;
+}
+
 #designs:hover{
     transform: none;
     transition: none;

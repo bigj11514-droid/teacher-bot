@@ -108,7 +108,7 @@ const subjects = {
       { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
       { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
       { question: "Which of the following materials is water proof", answers: ["Cotton", "Rubber", "Wood", "Concrete"], correct: 1 },
-      g{ question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 }
+      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 }
     ],
     middle: [
       { question: "What gas do plants use to make food?", answers: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2 },
@@ -317,6 +317,8 @@ const subjects = {
 let currentQuestionIndex = 0;
 let score = 0;
 let quizQuestions = [];
+let mode = "practice";
+let answeredQuestions = [];
 
 function getSubjectKey() {
   const params = new URLSearchParams(window.location.search);
@@ -326,6 +328,15 @@ function getSubjectKey() {
 function getClassKey() {
   const params = new URLSearchParams(window.location.search);
   return params.get("class")?.toLowerCase() || "basic1";
+}
+
+function shuffleArray(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 function setupSubjectLinks() {
@@ -356,6 +367,7 @@ function setupSubjectLinks() {
 
 function setupQuizPage() {
   const classSelect = document.getElementById("class-select");
+  const modeSelect = document.getElementById("mode-select");
   const loadBtn = document.getElementById("load-class-btn");
 
   if (!classSelect) {
@@ -363,11 +375,17 @@ function setupQuizPage() {
   }
 
   classSelect.value = getClassKey();
+  if (modeSelect) {
+    mode = modeSelect.value;
+  }
 
   if (loadBtn) {
     loadBtn.addEventListener("click", () => {
       const params = new URLSearchParams(window.location.search);
       params.set("class", classSelect.value);
+      if (modeSelect) {
+        params.set("mode", modeSelect.value);
+      }
       window.location.search = params.toString();
     });
   }
@@ -377,6 +395,8 @@ function setupQuiz() {
   const subjectKey = getSubjectKey();
   const classKey = getClassKey();
   const subjectData = subjects[subjectKey];
+  const params = new URLSearchParams(window.location.search);
+  mode = params.get("mode") || "practice";
 
   const questionEl = document.getElementById("questions");
   const answersEl = document.getElementById("answers");
@@ -384,6 +404,7 @@ function setupQuiz() {
   const feedbackEl = document.getElementById("feedback");
   const nextBtn = document.getElementById("nextbtn");
   const subjectTitle = document.getElementById("subject-title");
+  const modeBadge = document.getElementById("mode-badge");
 
   if (!questionEl || !answersEl || !scoreEl || !feedbackEl || !nextBtn || !subjectTitle) {
     return;
@@ -398,12 +419,17 @@ function setupQuiz() {
   }
 
   const levelKey = classLevels[classKey] || "early";
-  quizQuestions = subjectData[levelKey] || subjectData.early;
+  const baseQuestions = subjectData[levelKey] || subjectData.early;
+  quizQuestions = shuffleArray(baseQuestions);
   currentQuestionIndex = 0;
   score = 0;
+  answeredQuestions = [];
   subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
   scoreEl.textContent = `Score: ${score} / ${quizQuestions.length}`;
   feedbackEl.textContent = "";
+  if (modeBadge) {
+    modeBadge.textContent = mode === "exam" ? "Exam Mode • no hints after wrong answers" : "Practice Mode • explanations are shown";
+  }
   nextBtn.textContent = "Next Question";
   nextBtn.disabled = true;
   nextBtn.style.display = "inline-block";
@@ -441,16 +467,22 @@ function selectAnswer(button, selectedIndex) {
 
   const current = quizQuestions[currentQuestionIndex];
   const correctIndex = current.correct;
+  const isCorrect = selectedIndex === correctIndex;
 
-  if (selectedIndex === correctIndex) {
+  if (isCorrect) {
     score++;
     button.style.background = "#4CAF50";
     feedbackEl.textContent = "😉 Correct!";
   } else {
     button.style.background = "#E74C3C";
-    feedbackEl.textContent = `😡 Wrong. Correct answer: ${current.answers[correctIndex]}`;
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
+    feedbackEl.textContent = `😡 Wrong. Correct answer: ${current.answers[correctIndex]}. ${current.explanation || "Try again and review the lesson."}`;
+  }
+
+  if (mode === "practice") {
+    const explanationText = current.explanation ? ` Explanation: ${current.explanation}` : "";
+    feedbackEl.textContent += explanationText;
   }
 
   Array.from(answersEl.children).forEach((btn) => {
