@@ -72,7 +72,8 @@ const subjects = {
       { question: "What is 12 + 7?", answers: ["17", "19", "20", "21"], correct: 0 },
       { question: "What is 5 - 3?", answers: ["10", "2", "15", "18"], correct: 1 },
       { question: "What is 134 + 7?", answers: ["17", "19", "20", "141"], correct: 3 },
-      { question: "What is 6 x 4?", answers: ["24", "12", "15", "18"], correct: 0 }
+      { question: "What is 6 x 4?", answers: ["24", "12", "15", "18"], correct: 0 },
+      { question: "What is the value of 3 in 3546?", answers: ["Ones", "Tens", "Hundreds", "Thousand"], correct: 3 },
     ],
     upper: [
       { question: "What is 24 + 18?", answers: ["32", "40", "42", "44"], correct: 2 },
