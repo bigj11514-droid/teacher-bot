@@ -127,7 +127,27 @@ const subjects = {
     displayName: "Our World Our People",
     early: [
       { question: "Ghana is in Africa.", answers: ["True", "False"], correct: 0 },
-      { question: "Which is a natural resource?", answers: ["Water", "Book", "Chair", "Pen"], correct: 0 }
+      { question: "Which is a natural resource?", answers: ["Water", "Book", "Chair", "Pen"], correct: 0 },
+  { question: "The ________ is used to communicate to players during games.", answers: ["bell", "whistle", "drum"], correct: 1 },
+  { question: "The thermometer is a communication tool.", answers: ["True", "False", "None"], correct: 1 },
+  { question: "What tool consists of different keys?", answers: ["Keyboard", "Monitor", "Mouse"], correct: 0 },
+  { question: "The computer has ________ parts.", answers: ["three", "two", "four"], correct: 2 },
+  { question: "All the parts of the computer connect together for the computer to work.", answers: ["True", "False", "None"], correct: 0 },
+  { question: "Sheep are reared for their ________.", answers: ["meat", "milk", "litter"], correct: 0 },
+  { question: "Grains are ________-giving food to many people in Ghana.", answers: ["sugar", "energy", "bitter"], correct: 1 },
+  { question: "Which of the following is not a vegetable?", answers: ["Pineapple", "Pepper", "Tomato"], correct: 0 },
+  { question: "The ability to do work is called ________.", answers: ["energy", "source", "renewable"], correct: 0 },
+  { question: "The energy from the sun is called ________ energy.", answers: ["polar", "solar", "wind"], correct: 1 },
+  { question: "Who has authority at home?", answers: ["Teacher", "Father", "Child"], correct: 1 },
+  { question: "Who has power to arrest all the bad citizens?", answers: ["Imam", "Police", "Pastor"], correct: 1 },
+  { question: "We use national ________ to represent Ghana everywhere.", answers: ["assets", "symbols", "service"], correct: 1 },
+  { question: "Being a responsible citizen requires you to be ________.", answers: ["polite", "strict", "hard"], correct: 0 },
+  { question: "People who come from Ghana are called ________.", answers: ["Ghanaians", "foreigners", "Gold Coast"], correct: 0 },
+  { question: "Okomfo Anokye was born in ________.", answers: ["Ejisu", "Awukugua", "Madina"], correct: 1 },
+  { question: "Okomfo Anokye's parents were ________.", answers: ["bankers", "teachers", "farmers"], correct: 2 },
+  { question: "The name Mohammed means ________.", answers: ["praised one", "trusted one", "chosen one"], correct: 0 },
+  { question: "Mohammed was born in ________.", answers: ["Bethlehem", "Madina", "Mecca"], correct: 2 },
+  { question: "Jesus Christ is the leader of ________.", answers: ["Islam", "Traditionalists", "Christianity"], correct: 2 }
     ],
     middle: [
       { question: "What is the capital city of Ghana?", answers: ["Kumasi", "Accra", "Tamale", "Cape Coast"], correct: 1 },
