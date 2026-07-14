@@ -108,7 +108,7 @@ const subjects = {
       { question: "Which of the following is not part of a plant?", answers: ["Root", "Trunk", "Flower", "Stem"], correct: 1 },
       { question: "All the following are parts of animals except....", answers: ["Stem", "Head", "Limbs", "Trunk"], correct: 0 },
       { question: "Which of the following materials is water proof", answers: ["Cotton", "Rubber", "Wood", "Concrete"], correct: 1 },
-      { question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 }
+      g{ question: "Solve: 3x + 4 = 19", answers: ["3", "5", "7", "9"], correct: 2 }
     ],
     middle: [
       { question: "What gas do plants use to make food?", answers: ["Oxygen", "Nitrogen", "Carbon dioxide", "Helium"], correct: 2 },
@@ -184,7 +184,8 @@ const subjects = {
     displayName: "Religious and Moral Education",
     early: [
       { question: "Honesty means telling the truth.", answers: ["True", "False"], correct: 0 },
-      { question: "What should you do when someone is sad?", answers: ["Ignore them", "Laugh at them", "Help and listen", "Push them"], correct: 2 }
+      { question: "What should you do when someone is sad?", answers: ["Ignore them", "Laugh at them", "Help and listen", "Push them"], correct: 2 },
+      
     ],
     middle: [
       { question: "Respect means showing good manners.", answers: ["True", "False"], correct: 0 },
@@ -203,7 +204,31 @@ const subjects = {
     displayName: "Creative Arts",
     early: [
       { question: "A pencil is used for drawing.", answers: ["True", "False"], correct: 0 },
-      { question: "Which color is a primary color?", answers: ["Green", "Purple", "Red", "Orange"], correct: 2 }
+      { question: "Which color is a primary color?", answers: ["Green", "Purple", "Red", "Orange"], correct: 2 },
+  { question: "A ________ is an overflow of water that runs over land that is always dry.", answers: ["flood", "drought", "doubt"], correct: 0 },
+  { question: "Road safety means safe when you are ________.", answers: ["sleeping", "walking", "bathing"], correct: 1 },
+  { question: "A special event where different art works are displayed is called ________.", answers: ["art", "exhibition", "gallery"], correct: 1 },
+  { question: "The elephant is ________ than the bird.", answers: ["smaller", "bigger", "shorter"], correct: 1 },
+  { question: "The bird has ________.", answers: ["feathers", "hairs", "clothes"], correct: 0 },
+  { question: "The Adowa Dance is performed by ________ of all ages.", answers: ["men", "women", "both men and women"], correct: 2 },
+  { question: "The dance mostly performed by the southern Ewes in Ghana is called ________.", answers: ["Agbadza", "Borborbor", "Damba"], correct: 0 },
+  { question: "Which dance is found among the Lobi and Dagomba people?", answers: ["Bawa", "Adowa", "Bamaya"], correct: 2 },
+  { question: "Which tribe in Ghana do the Bamaya Dance?", answers: ["Northern", "Southern", "Volta"], correct: 0 },
+  { question: "What are also signs of authority?", answers: ["Values", "Symbols", "People"], correct: 1 },
+  { question: "What is a way of creating artworks by shaping materials?", answers: ["Modelling", "Carving", "Weaving"], correct: 0 },
+  { question: "________ is a form of drawing.", answers: ["Modelling", "Doodling", "Painting"], correct: 1 },
+  { question: "What is a visual art form in which lines and shapes are used to create an object?", answers: ["Scribbling", "Drawing", "Painting"], correct: 1 },
+  { question: "We draw to express ________.", answers: ["skills", "emotions", "ideas"], correct: 2 },
+  { question: "What do you need to practise and to develop your creative skills?", answers: ["Scribbling", "Painting", "Drawing"], correct: 2 },
+  { question: "A small metallic musical instrument used for time lines is called ________.", answers: ["scale", "castanet", "flute"], correct: 1 },
+  { question: "The \"Attenteban\" instrument is also known as ________ flute.", answers: ["stone", "stick", "bamboo"], correct: 2 },
+  { question: "A ________ is a place for displaying or selling artworks.", answers: ["frontage", "genre", "gallery"], correct: 2 },
+  { question: "Rivers, animals and plants are examples of ________ environment.", answers: ["man-made", "natural", "wild"], correct: 1 },
+  { question: "Which animal does the Akans imitate in creating the Adowa Dance?", answers: ["Elephant", "Bird", "Antelope"], correct: 2 },
+  { question: "The Gonja people lived in the grassland of ________.", answers: ["Ghana", "Mali", "Sudan"], correct: 0 },
+  { question: "The Gonja called their kings ________.", answers: ["Lagbonwura", "None", "Nana"], correct: 0 },
+  { question: "The Fante people settled in the ________ Region.", answers: ["Volta", "Central", "Eastern"], correct: 1 },
+  { question: "The Dagomba people were ruled by ________.", answers: ["Okomfo Anokye", "Ofori Atta", "Ya Na"], correct: 2 }
     ],
     middle: [
       { question: "A brush is used for painting.", answers: ["True", "False"], correct: 0 },
