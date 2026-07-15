@@ -424,4 +424,19 @@ h3{
     #nextbtn{
         width: 90%;
     }
+    .class-picker{
+        margin: 0px;
+    }
+    .design{
+        margin: 0px 0px 20px;
+        padding: 0px;
+    }
+    .select{
+        width: 100%;
+        margin: 10px;
+    }
+    .subject-link{
+        width: 80%;
+       white-space: wrap;
+    }
 }
