@@ -54,6 +54,9 @@ a{
     text-shadow: 2px 2px 2px rgb(7, 55, 75);
 }
 
+.select-link{
+    max-width: 100%;
+}
 li{
     border: 2px solid rgb(247, 247, 247);
     width: auto;
@@ -372,6 +375,7 @@ h3{
 #score{
     width: 100%;
 }
+
 @media (max-width: 900px){
     header{
         width: 100%;
@@ -469,5 +473,9 @@ h3{
     }
     .small-btn{
         display: none;
+    }
+    .select-link{
+        width: 100%;
+
     }
 }
