@@ -29,7 +29,7 @@ header{
 }
 
 .text-design{
-    font-size: 2.5rem;
+    font-size: 4.5rem;
     text-shadow: 1px 1px 5px rgb(125, 205, 236);
     font-size: 1.9rem;
 }
@@ -471,11 +471,11 @@ h3{
         width: auto;
         flex-wrap: wrap;
     }
-    .small-btn{
-        display: none;
-    }
     .select-link{
         width: 100%;
-
+    }
+    .brand{
+        font-size: 1.5rem;
+        padding-left: 5px;
     }
 }
