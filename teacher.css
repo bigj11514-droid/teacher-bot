@@ -479,10 +479,23 @@ h3{
         padding-left: 5px;
     }
     #class-select{
-        width: 50%;
+        max-width: 50%;
         text-align: center;
+        
     }
     label{
-        white-space: nowrap;;
+        white-space: nowrap;
     }
+    .design{
+        margin: 10px;
+        padding: 10px;
+    }
+}
+#class-select {
+    width: 60%;
+    text-align: center;
+}
+option{
+    width: 100%;
+    border: 1px solid red;
 }
