@@ -9,7 +9,10 @@ const classLevels = {
   basic6: "upper",
   jhs1: "jhs",
   jhs2: "jhs",
-  jhs3: "jhs"
+  jhs3: "jhs",
+  shs1: "shs",
+  shs2: "shs",
+  shs3: "shs"
 };
 
 const classLabels = {
@@ -21,7 +24,10 @@ const classLabels = {
   basic6: "Basic 6",
   jhs1: "JHS 1",
   jhs2: "JHS 2",
-  jhs3: "JHS 3"
+  jhs3: "JHS 3",
+  shs1: "SHS 1",
+  shs2: "SHS 2",
+  shs3: "SHS 3"
 };
 
 const subjects = {
@@ -402,6 +408,62 @@ const subjects = {
       { question: "What is rhythm in music?", answers: ["The beat of music", "A type of paint", "A drawing tool", "A story"], correct: 0 },
       { question: "What is the main purpose of a poster?", answers: ["To decorate a wall and share information", "To eat", "To sleep", "To build houses"], correct: 0 }
     ]
+  },
+  "core-maths": {
+    displayName: "Core Mathematics",
+    shs: [
+      { question: "Solve for x: 2x + 5 = 15", answers: ["5", "6", "7", "8"], correct: 2 },
+      { question: "What is 25% of 80?", answers: ["10", "15", "20", "25"], correct: 2 }
+    ]
+  },
+  "elective-maths": {
+    displayName: "Elective Mathematics",
+    shs: [
+      { question: "If f(x) = 2x + 3, what is f(4)?", answers: ["7", "8", "9", "11"], correct: 2 },
+      { question: "What is the value of sin 90°?", answers: ["0", "1/2", "1", "√3/2"], correct: 2 }
+    ]
+  },
+  "english-language": {
+    displayName: "English Language",
+    shs: [
+      { question: "Choose the correct sentence: She ___ to school every day.", answers: ["go", "goes", "going", "gone"], correct: 1 },
+      { question: "Which word is a conjunction?", answers: ["and", "quickly", "beautiful", "house"], correct: 0 }
+    ]
+  },
+  "integrated-science": {
+    displayName: "Integrated Science",
+    shs: [
+      { question: "What is the SI unit of force?", answers: ["Watt", "Newton", "Joule", "Ampere"], correct: 1 },
+      { question: "Which gas is most abundant in the atmosphere?", answers: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"], correct: 2 }
+    ]
+  },
+  "social-studies": {
+    displayName: "Social Studies",
+    shs: [
+      { question: "What is the capital city of Ghana?", answers: ["Kumasi", "Accra", "Tamale", "Cape Coast"], correct: 1 },
+      { question: "Which institution makes laws in Ghana?", answers: ["The Executive", "The Judiciary", "The Legislature", "The Police"], correct: 2 }
+    ]
+  },
+  economics: {
+    displayName: "Economics",
+    shs: [
+      { question: "What is scarcity in economics?", answers: ["Unlimited resources", "Limited resources", "No trade", "No taxes"], correct: 1 },
+      { question: "What does demand mean?", answers: ["The price of goods", "The supply of goods", "The willingness to buy a product", "The cost of production"], correct: 2 }
+    ]
+  },
+  government: {
+    displayName: "Government",
+    shs: [
+      { question: "Which arm of government interprets laws?", answers: ["Executive", "Legislature", "Judiciary", "Police"], correct: 2 },
+      { question: "A constitution is a set of ________.", answers: ["Laws", "Books", "Schools", "Trees"], correct: 0 }
+    ]
+  },
+  ict: {
+    displayName: "ICT",
+    shs: [
+      { question: "What does ICT stand for?", answers: ["Information and Communication Technology", "Internet and Computer Tools", "Internal Computer Training", "Important Computer Technology"], correct: 0 },
+      { question: "Which device is used to input data into a computer?", answers: ["Monitor", "Keyboard", "Speaker", "Printer"], correct: 1 }
+    ]
   }
 };
 
@@ -410,6 +472,37 @@ let score = 0;
 let quizQuestions = [];
 let mode = "practice";
 let answeredQuestions = [];
+
+const subjectCatalog = {
+  basic: [
+    { key: "maths", label: "Mathematics" },
+    { key: "science", label: "Science" },
+    { key: "owop", label: "Our World Our People" },
+    { key: "history", label: "History" },
+    { key: "english", label: "English" },
+    { key: "rme", label: "Religious & Moral Education" },
+    { key: "creative", label: "Creative Arts" }
+  ],
+  jhs: [
+    { key: "maths", label: "Mathematics" },
+    { key: "science", label: "Science" },
+    { key: "owop", label: "Our World Our People" },
+    { key: "history", label: "History" },
+    { key: "english", label: "English" },
+    { key: "rme", label: "Religious & Moral Education" },
+    { key: "creative", label: "Creative Arts" }
+  ],
+  shs: [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "elective-maths", label: "Elective Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "integrated-science", label: "Integrated Science" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "economics", label: "Economics" },
+    { key: "government", label: "Government" },
+    { key: "ict", label: "ICT" }
+  ]
+};
 
 function getSubjectKey() {
   const params = new URLSearchParams(window.location.search);
@@ -421,6 +514,22 @@ function getClassKey() {
   return params.get("class")?.toLowerCase() || "basic1";
 }
 
+function getDepartmentKey() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("department")?.toLowerCase() || "";
+}
+
+function getDepartmentFromClass(classKey) {
+  if (classKey.startsWith("shs")) return "shs";
+  if (classKey.startsWith("jhs")) return "jhs";
+  return "basic";
+}
+
+function getSubjectCatalogForClass(classKey) {
+  const department = getDepartmentFromClass(classKey);
+  return subjectCatalog[department] || subjectCatalog.basic;
+}
+
 function shuffleArray(items) {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -430,29 +539,124 @@ function shuffleArray(items) {
   return copy;
 }
 
+function buildShuffledQuestion(question) {
+  const answerItems = question.answers.map((answer, index) => ({ answer, index }));
+  const shuffledItems = shuffleArray(answerItems);
+  const correctAnswer = question.answers[question.correct];
+  const correctIndex = shuffledItems.findIndex((item) => item.answer === correctAnswer);
+
+  return {
+    ...question,
+    answers: shuffledItems.map((item) => item.answer),
+    correct: correctIndex
+  };
+}
+
+function renderSubjectLinks(selectedClass, container) {
+  const subjectsForClass = getSubjectCatalogForClass(selectedClass);
+  container.innerHTML = "";
+
+  const intro = document.createElement("p");
+  intro.className = "select";
+  intro.textContent = `${classLabels[selectedClass] || "Your class"} has ${subjectsForClass.length} subject options ready for you.`;
+  container.appendChild(intro);
+
+  subjectsForClass.forEach((subject) => {
+    const item = document.createElement("p");
+    item.className = "select";
+
+    const link = document.createElement("a");
+    link.href = `quiz.html?subject=${subject.key}&class=${selectedClass}`;
+    link.className = "p btns subject-link";
+    link.textContent = subject.label;
+
+    item.appendChild(link);
+    container.appendChild(item);
+  });
+}
+
 function setupSubjectLinks() {
   const classSelect = document.getElementById("class-select");
-  const links = document.querySelectorAll(".subject-link");
+  const subjectLinksContainer = document.getElementById("subject-links");
+  const departmentMessage = document.getElementById("department-message");
 
-  if (!classSelect || links.length === 0) {
+  if (!classSelect || !subjectLinksContainer) {
     return;
   }
 
   const selectedClass = getClassKey();
   classSelect.value = selectedClass;
 
-  links.forEach((link) => {
-    const href = new URL(link.getAttribute("href"), window.location.href);
-    href.searchParams.set("class", classSelect.value);
-    link.setAttribute("href", href.pathname + href.search);
-  });
+  if (departmentMessage) {
+    const department = getDepartmentFromClass(classSelect.value);
+    departmentMessage.textContent = department === "shs"
+      ? "Senior High students can choose from SHS subjects such as Core Mathematics and Economics."
+      : "Choose a subject for your class and start a fresh quiz session.";
+  }
+
+  renderSubjectLinks(selectedClass, subjectLinksContainer);
 
   classSelect.addEventListener("change", () => {
-    links.forEach((link) => {
-      const href = new URL(link.getAttribute("href"), window.location.href);
-      href.searchParams.set("class", classSelect.value);
-      link.setAttribute("href", href.pathname + href.search);
+    const activeClass = classSelect.value;
+    renderSubjectLinks(activeClass, subjectLinksContainer);
+
+    if (departmentMessage) {
+      const department = getDepartmentFromClass(activeClass);
+      departmentMessage.textContent = department === "shs"
+        ? "Senior High students can choose from SHS subjects such as Core Mathematics and Economics."
+        : "Choose a subject for your class and start a fresh quiz session.";
+    }
+  });
+}
+
+function setupDepartmentPage() {
+  const departmentSelect = document.getElementById("department-select");
+  const classSelect = document.getElementById("class-select");
+  const continueBtn = document.getElementById("continue-btn");
+  const departmentMessage = document.getElementById("department-message");
+
+  if (!departmentSelect || !classSelect || !continueBtn) {
+    return;
+  }
+
+  const optionsByDepartment = {
+    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
+    jhs: ["jhs1", "jhs2", "jhs3"],
+    shs: ["shs1", "shs2", "shs3"]
+  };
+
+  function updateClassOptions() {
+    const selectedDepartment = departmentSelect.value;
+    classSelect.innerHTML = "";
+
+    optionsByDepartment[selectedDepartment].forEach((value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = classLabels[value] || value;
+      classSelect.appendChild(option);
     });
+
+    if (departmentMessage) {
+      departmentMessage.textContent = selectedDepartment === "shs"
+        ? "Senior High students can pick from SHS subjects such as Core Mathematics and Government."
+        : selectedDepartment === "jhs"
+          ? "Junior High students can move to the subject page for JHS questions."
+          : "Basic students can move to the subject page for basic-level questions.";
+    }
+  }
+
+  const initialDepartment = getDepartmentKey() || "basic";
+  const initialClass = getClassKey();
+  departmentSelect.value = initialDepartment;
+  updateClassOptions();
+  classSelect.value = optionsByDepartment[initialDepartment].includes(initialClass) ? initialClass : optionsByDepartment[initialDepartment][0];
+
+  departmentSelect.addEventListener("change", updateClassOptions);
+  continueBtn.addEventListener("click", () => {
+    const params = new URLSearchParams();
+    params.set("class", classSelect.value);
+    params.set("department", departmentSelect.value);
+    window.location.href = `-index.html?${params.toString()}`;
   });
 }
 
@@ -511,7 +715,7 @@ function setupQuiz() {
 
   const levelKey = classLevels[classKey] || "early";
   const baseQuestions = subjectData[levelKey] || subjectData.early;
-  quizQuestions = shuffleArray(baseQuestions);
+  quizQuestions = shuffleArray(baseQuestions).map(buildShuffledQuestion);
   currentQuestionIndex = 0;
   score = 0;
   answeredQuestions = [];
@@ -605,7 +809,11 @@ function nextQuestion() {
   }
 }
 
-if (document.getElementById("questions") && document.getElementById("answers")) {
+if (document.getElementById("department-select")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    setupDepartmentPage();
+  });
+} else if (document.getElementById("questions") && document.getElementById("answers")) {
   document.addEventListener("DOMContentLoaded", () => {
     setupQuizPage();
     setupQuiz();

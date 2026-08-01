@@ -183,6 +183,39 @@ img{
     flex-wrap: nowrap;
 }
 
+.department-card{
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 760px;
+}
+
+#department-message{
+    width: 100%;
+    display: block;
+    padding: 10px 12px;
+    margin: 12px 0 0;
+}
+
+#subject-links{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#subject-links .select{
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+}
+
+#subject-links .subject-link{
+    display: block;
+    width: 100%;
+}
+
 .class-picker select,
 .quiz-controls select{
     padding: 8px 10px;

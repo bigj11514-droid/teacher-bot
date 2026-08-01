@@ -17,19 +17,20 @@
       </ul>
     </header>
     <div class="container1">
-        <h2 class="sub-txt">Select your Department🤖</h2>
-        <div class="class-picker">
-            <label for="class-select">Departments</label>
-            <select id="class-select">
-                <option value="basic1">Basic Department</option>
-                <option value="basic2">Middle Department</option>
-                <option value="basic3">J.h.s Department</option>
+        <h2 class="sub-txt">Select your department and class 🤖</h2>
+        <div class="class-picker department-card">
+            <label for="department-select">Department</label>
+            <select id="department-select">
+                <option value="basic">Basic Department</option>
+                <option value="jhs">Junior High Department</option>
+                <option value="shs">Senior High Department</option>
             </select>
+            <label for="class-select">Class</label>
+            <select id="class-select"></select>
+            <button id="continue-btn" class="small-btn">Continue</button>
         </div>
         <div class="design" id="designs">
-            <p class="select">Please Select the Department or Class you are in. </p>
-            <p class="select">Basic  and Middle Department are from class one to Basic 6.</p>
-            <p class="select">Junior High School(J.H.S). These are department from jhs one to jhs 3.</p>
+            <p id="department-message" class="select">Choose your department and class to continue.</p>
         </div>
     </div>
     <script src="teacherbot.js"></script>
