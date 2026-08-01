@@ -7,14 +7,29 @@
     <title>Teacher Bot</title>
   </head>
   <body>
-    <header>
-      <h1>Y_<span class="text-design">Cohde</span></h1>
-      <ul>
-        <li><a href="index.html" id="Home">Dashboard</a></li>
-        <li><a href="-index.html" id="sub">Course</a></li>
-        <li><a href="department.html" id="sub">Department</a></li>
-        <li><a href="https://wa.me/0207918169" id="contacts">Socials</a></li>
-      </ul>
+    <header class="site-header">
+      <div class="header-inner">
+        <h1>Y_<span class="text-design">Cohde</span></h1>
+        <button
+          class="menu-toggle"
+          id="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+        <nav class="site-nav" id="site-nav">
+          <ul>
+            <li><a href="index.html" id="Home">Dashboard</a></li>
+            <li><a href="-index.html" id="sub">Course</a></li>
+            <li><a href="department.html" id="sub">Department</a></li>
+            <li>
+              <a href="https://wa.me/0207918169" id="contacts">Socials</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </header>
     <div class="container1">
       <h2 class="sub-txt">Select your department and class 🤖</h2>
@@ -27,6 +42,16 @@
         </select>
         <label for="class-select">Class</label>
         <select id="class-select"></select>
+        <label for="course-select" id="course-label" style="display: none"
+          >SHS Course</label
+        >
+        <select id="course-select" style="display: none">
+          <option value="general-arts">General Arts</option>
+          <option value="general-science">General Science</option>
+          <option value="business">Business</option>
+          <option value="home-economics">Home Economics</option>
+          <option value="visual-arts">Visual Arts</option>
+        </select>
         <button id="continue-btn" class="small-btn">Continue</button>
       </div>
       <div class="design" id="designs">

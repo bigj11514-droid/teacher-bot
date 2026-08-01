@@ -7,14 +7,19 @@
     <title>Quiz</title>
   </head>
   <body>
-    <header>
-      <h1>Y_<span class="text-design">Cohde</span></h1>
-      <ul>
-        <li><a href="index.html" id="Home">Dashboard</a></li>
-        <li><a href="-index.html" id="sub">Course</a></li>
-        <li><a href="department.html" id="sub">Department</a></li>
-        <li><a href="http://wa.me/0207918169" id="contacts">Socials</a></li>
-      </ul>
+    <header class="site-header">
+      <div class="header-inner">
+        <h1>Y_<span class="text-design">Cohde</span></h1>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+        <nav class="site-nav" id="site-nav">
+          <ul>
+            <li><a href="index.html" id="Home">Dashboard</a></li>
+            <li><a href="-index.html" id="sub">Course</a></li>
+            <li><a href="department.html" id="sub">Department</a></li>
+            <li><a href="http://wa.me/0207918169" id="contacts">Socials</a></li>
+          </ul>
+        </nav>
+      </div>
     </header>
     <div class="container2">
       <div class="quiz-controls">
@@ -40,8 +45,10 @@
       <h3 id="subject-title">Quiz</h3>
       <div id="progress" class="questions">Question 1 of 1</div>
       <div id="questions" class="questions">Question text</div>
+      <div id="timer" class="timer">Time left: 15s</div>
       <div id="answers" class="answers"></div>
       <div id="feedback" class="questions"></div>
+      <div id="explanation" class="questions explanation">Explanations are shown here</div>
       <div id="mode-badge" class="mode-badge"></div>
       <div id="score"></div>
       <button id="nextbtn" class="btn">Next Question</button>

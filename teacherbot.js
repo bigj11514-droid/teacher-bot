@@ -472,6 +472,47 @@ let score = 0;
 let quizQuestions = [];
 let mode = "practice";
 let answeredQuestions = [];
+let timerId = null;
+let timeLeft = 15;
+
+const shsCourseCatalog = {
+  "general-arts": [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "economics", label: "Economics" },
+    { key: "government", label: "Government" },
+    { key: "ict", label: "ICT" }
+  ],
+  "general-science": [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "integrated-science", label: "Integrated Science" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "ict", label: "ICT" }
+  ],
+  business: [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "economics", label: "Economics" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "ict", label: "ICT" }
+  ],
+  "home-economics": [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "economics", label: "Economics" },
+    { key: "ict", label: "ICT" }
+  ],
+  "visual-arts": [
+    { key: "core-maths", label: "Core Mathematics" },
+    { key: "english-language", label: "English Language" },
+    { key: "social-studies", label: "Social Studies" },
+    { key: "ict", label: "ICT" },
+    { key: "government", label: "Government" }
+  ]
+};
 
 const subjectCatalog = {
   basic: [
@@ -519,6 +560,11 @@ function getDepartmentKey() {
   return params.get("department")?.toLowerCase() || "";
 }
 
+function getCourseKey() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("course")?.toLowerCase() || "general-arts";
+}
+
 function getDepartmentFromClass(classKey) {
   if (classKey.startsWith("shs")) return "shs";
   if (classKey.startsWith("jhs")) return "jhs";
@@ -527,6 +573,9 @@ function getDepartmentFromClass(classKey) {
 
 function getSubjectCatalogForClass(classKey) {
   const department = getDepartmentFromClass(classKey);
+  if (department === "shs") {
+    return shsCourseCatalog[getCourseKey()] || shsCourseCatalog["general-arts"];
+  }
   return subjectCatalog[department] || subjectCatalog.basic;
 }
 
@@ -566,7 +615,8 @@ function renderSubjectLinks(selectedClass, container) {
     item.className = "select";
 
     const link = document.createElement("a");
-    link.href = `quiz.html?subject=${subject.key}&class=${selectedClass}`;
+    const courseParam = selectedClass.startsWith("shs") ? `&course=${getCourseKey()}` : "";
+    link.href = `quiz.html?subject=${subject.key}&class=${selectedClass}${courseParam}`;
     link.className = "p btns subject-link";
     link.textContent = subject.label;
 
@@ -612,6 +662,8 @@ function setupSubjectLinks() {
 function setupDepartmentPage() {
   const departmentSelect = document.getElementById("department-select");
   const classSelect = document.getElementById("class-select");
+  const courseSelect = document.getElementById("course-select");
+  const courseLabel = document.getElementById("course-label");
   const continueBtn = document.getElementById("continue-btn");
   const departmentMessage = document.getElementById("department-message");
 
@@ -625,6 +677,14 @@ function setupDepartmentPage() {
     shs: ["shs1", "shs2", "shs3"]
   };
 
+  function updateCourseVisibility() {
+    if (courseSelect && courseLabel) {
+      const showCourse = departmentSelect.value === "shs";
+      courseSelect.style.display = showCourse ? "inline-block" : "none";
+      courseLabel.style.display = showCourse ? "inline-block" : "none";
+    }
+  }
+
   function updateClassOptions() {
     const selectedDepartment = departmentSelect.value;
     classSelect.innerHTML = "";
@@ -636,9 +696,11 @@ function setupDepartmentPage() {
       classSelect.appendChild(option);
     });
 
+    updateCourseVisibility();
+
     if (departmentMessage) {
       departmentMessage.textContent = selectedDepartment === "shs"
-        ? "Senior High students can pick from SHS subjects such as Core Mathematics and Government."
+        ? "Senior High students can pick their course first, then choose the subjects they study."
         : selectedDepartment === "jhs"
           ? "Junior High students can move to the subject page for JHS questions."
           : "Basic students can move to the subject page for basic-level questions.";
@@ -647,15 +709,22 @@ function setupDepartmentPage() {
 
   const initialDepartment = getDepartmentKey() || "basic";
   const initialClass = getClassKey();
+  const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
   updateClassOptions();
   classSelect.value = optionsByDepartment[initialDepartment].includes(initialClass) ? initialClass : optionsByDepartment[initialDepartment][0];
+  if (courseSelect) {
+    courseSelect.value = initialCourse;
+  }
 
   departmentSelect.addEventListener("change", updateClassOptions);
   continueBtn.addEventListener("click", () => {
     const params = new URLSearchParams();
     params.set("class", classSelect.value);
     params.set("department", departmentSelect.value);
+    if (departmentSelect.value === "shs" && courseSelect) {
+      params.set("course", courseSelect.value);
+    }
     window.location.href = `-index.html?${params.toString()}`;
   });
 }
@@ -681,6 +750,9 @@ function setupQuizPage() {
       if (modeSelect) {
         params.set("mode", modeSelect.value);
       }
+      if (getCourseKey()) {
+        params.set("course", getCourseKey());
+      }
       window.location.search = params.toString();
     });
   }
@@ -697,9 +769,11 @@ function setupQuiz() {
   const answersEl = document.getElementById("answers");
   const scoreEl = document.getElementById("score");
   const feedbackEl = document.getElementById("feedback");
+  const explanationEl = document.getElementById("explanation");
   const nextBtn = document.getElementById("nextbtn");
   const subjectTitle = document.getElementById("subject-title");
   const modeBadge = document.getElementById("mode-badge");
+  const timerEl = document.getElementById("timer");
 
   if (!questionEl || !answersEl || !scoreEl || !feedbackEl || !nextBtn || !subjectTitle) {
     return;
@@ -722,6 +796,12 @@ function setupQuiz() {
   subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
   scoreEl.textContent = `Score: ${score} / ${quizQuestions.length}`;
   feedbackEl.textContent = "";
+  if (explanationEl) {
+    explanationEl.textContent = "Explanations are shown here";
+  }
+  if (timerEl) {
+    timerEl.textContent = "Time left: 15s";
+  }
   if (modeBadge) {
     modeBadge.textContent = mode === "exam" ? "Exam Mode • no hints after wrong answers" : "Practice Mode • explanations are shown";
   }
@@ -729,7 +809,54 @@ function setupQuiz() {
   nextBtn.disabled = true;
   nextBtn.style.display = "inline-block";
 
+  clearInterval(timerId);
   loadQuestion();
+}
+
+function getExplanationForCurrentQuestion(current) {
+  if (current.explanation) {
+    return current.explanation;
+  }
+  return `The correct answer is "${current.answers[current.correct]}". Review the lesson note to understand why.`;
+}
+
+function startTimer() {
+  const timerEl = document.getElementById("timer");
+  timeLeft = 15;
+  if (timerEl) {
+    timerEl.textContent = `Time left: ${timeLeft}s`;
+  }
+
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    timeLeft -= 1;
+    if (timerEl) {
+      timerEl.textContent = `Time left: ${timeLeft}s`;
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function handleTimeout() {
+  const answersEl = document.getElementById("answers");
+  const feedbackEl = document.getElementById("feedback");
+  const explanationEl = document.getElementById("explanation");
+  const nextBtn = document.getElementById("nextbtn");
+  const current = quizQuestions[currentQuestionIndex];
+
+  if (!current) return;
+
+  Array.from(answersEl.children).forEach((btn) => {
+    btn.disabled = true;
+  });
+
+  feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
+  explanationEl.textContent = `Explanations: ${getExplanationForCurrentQuestion(current)}`;
+  nextBtn.disabled = false;
 }
 
 function loadQuestion() {
@@ -752,13 +879,17 @@ function loadQuestion() {
 
   progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
+  startTimer();
 }
 
 function selectAnswer(button, selectedIndex) {
   const answersEl = document.getElementById("answers");
   const feedbackEl = document.getElementById("feedback");
+  const explanationEl = document.getElementById("explanation");
   const scoreEl = document.getElementById("score");
   const nextBtn = document.getElementById("nextbtn");
+
+  clearInterval(timerId);
 
   const current = quizQuestions[currentQuestionIndex];
   const correctIndex = current.correct;
@@ -768,16 +899,13 @@ function selectAnswer(button, selectedIndex) {
     score++;
     button.style.background = "#4CAF50";
     feedbackEl.textContent = "😉 Correct!";
+    explanationEl.textContent = "";
   } else {
     button.style.background = "#E74C3C";
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
-    feedbackEl.textContent = `😡 Wrong. Correct answer: ${current.answers[correctIndex]}. ${current.explanation || "Try again and review the lesson."}`;
-  }
-
-  if (mode === "practice") {
-    const explanationText = current.explanation ? ` Explanation: ${current.explanation}` : "";
-    feedbackEl.textContent += explanationText;
+    feedbackEl.textContent = "😡 Wrong. The correct answer is highlighted in green.";
+    explanationEl.textContent = `Explanations: ${getExplanationForCurrentQuestion(current)}`;
   }
 
   Array.from(answersEl.children).forEach((btn) => {
@@ -797,6 +925,9 @@ function nextQuestion() {
   if (currentQuestionIndex + 1 < quizQuestions.length) {
     currentQuestionIndex++;
     feedbackEl.textContent = "";
+    if (document.getElementById("explanation")) {
+      document.getElementById("explanation").textContent = "Explanations are shown here";
+    }
     loadQuestion();
   } else {
     questionEl.textContent = "Quiz finished! Well Done!👏🏼";
@@ -809,18 +940,49 @@ function nextQuestion() {
   }
 }
 
+function setupMobileMenu() {
+  const menuToggle = document.getElementById("menu-toggle");
+  const siteNav = document.getElementById("site-nav");
+
+  if (!menuToggle || !siteNav) {
+    return;
+  }
+
+  menuToggle.addEventListener("click", () => {
+    const isOpen = siteNav.classList.toggle("open");
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!siteNav.contains(event.target) && !menuToggle.contains(event.target)) {
+      siteNav.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) {
+      siteNav.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
 if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
+    setupMobileMenu();
     setupDepartmentPage();
   });
 } else if (document.getElementById("questions") && document.getElementById("answers")) {
   document.addEventListener("DOMContentLoaded", () => {
+    setupMobileMenu();
     setupQuizPage();
     setupQuiz();
     document.getElementById("nextbtn").addEventListener("click", nextQuestion);
   });
 } else {
   document.addEventListener("DOMContentLoaded", () => {
+    setupMobileMenu();
     setupSubjectLinks();
   });
 }
