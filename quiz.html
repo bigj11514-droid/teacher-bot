@@ -3,13 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="teacher.css" />
-    <title>Quiz</title>
+    <title>Quiz Studio</title>
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <h1>Y_<span class="text-design">Cohde</span></h1>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-mark">Y</div>
+          <div>
+            <h3>Y_Cohde</h3>
+            <p>Learning platform</p>
+          </div>
+        </div>
         <button
           class="menu-toggle"
           id="menu-toggle"
@@ -20,70 +32,100 @@
           ☰
         </button>
         <nav class="site-nav" id="site-nav">
-          <ul>
-            <li><a href="index.html" id="Home">Dashboard</a></li>
-            <li><a href="-index.html" id="sub">Course</a></li>
-            <li><a href="department.html" id="sub">Department</a></li>
-            <li><a href="index.html#subscribe-section">Subscribe</a></li>
-            <li><a href="http://wa.me/0207918169" id="contacts">Socials</a></li>
-          </ul>
+          <a href="index.html" class="nav-item"
+            ><span>▣</span><span>Dashboard</span></a
+          >
+          <a href="-index.html" class="nav-item"
+            ><span>◧</span><span>Courses</span></a
+          >
+          <a href="department.html" class="nav-item"
+            ><span>◨</span><span>Departments</span></a
+          >
+          <a href="index.html#subscribe-section" class="nav-item"
+            ><span>✉</span><span>Subscribe</span></a
+          >
+          <a href="https://wa.me/0207918169" class="nav-item"
+            ><span>☏</span><span>Socials</span></a
+          >
         </nav>
+        <div class="sidebar-card">
+          <p>Quiz session</p>
+          <strong>Focus mode on</strong>
+          <a href="department.html" class="small-btn">Change class</a>
+        </div>
+      </aside>
+
+      <div class="main-panel">
+        <header class="site-header">
+          <div class="header-inner">
+            <div class="search-box">
+              <span>🔎</span>
+              <input type="text" placeholder="Search questions or lessons" />
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <div class="profile-pill">
+                <span>ES</span>
+                <div>
+                  <strong>Emmanuel</strong>
+                  <small>Student</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <div class="container2">
+            <div class="quiz-controls">
+              <label for="class-select">Select Your Class</label>
+              <select id="class-select">
+                <option value="basic1">Basic 1</option>
+                <option value="basic2">Basic 2</option>
+                <option value="basic3">Basic 3</option>
+                <option value="basic4">Basic 4</option>
+                <option value="basic5">Basic 5</option>
+                <option value="basic6">Basic 6</option>
+                <option value="jhs1">JHS 1</option>
+                <option value="jhs2">JHS 2</option>
+                <option value="jhs3">JHS 3</option>
+              </select>
+              <label for="mode-select">Mode</label>
+              <select id="mode-select">
+                <option value="practice">Practice Mode</option>
+                <option value="exam">Exam Mode</option>
+              </select>
+              <button id="load-class-btn" class="small-btn">Load Class</button>
+            </div>
+            <h3 id="subject-title">Quiz</h3>
+            <div id="progress" class="questions">Question 1 of 1</div>
+            <div id="diagram-area" class="diagram-area"></div>
+            <div id="questions" class="questions">Question text</div>
+            <div id="timer" class="timer">Time left: 15s</div>
+            <div class="reminder-card">
+              <label for="reminder-select">Reminder</label>
+              <select id="reminder-select">
+                <option value="5">5 min</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+              </select>
+              <button id="reminder-btn" class="small-btn">Set reminder</button>
+            </div>
+            <p id="reminder-status" class="reminder-status">
+              Set a reminder to return to your study plan.
+            </p>
+            <div id="answers" class="answers"></div>
+            <div id="feedback" class="questions"></div>
+            <div id="explanation" class="questions explanation">
+              Explanations are shown here
+            </div>
+            <div id="mode-badge" class="mode-badge"></div>
+            <div id="score"></div>
+            <button id="nextbtn" class="btn">Next Question</button>
+          </div>
+        </main>
       </div>
-    </header>
-    <div class="container2">
-      <div class="quiz-controls">
-        <label for="class-select">Select Your Class</label>
-        <select id="class-select">
-          <option value="basic1">Basic 1</option>
-          <option value="basic2">Basic 2</option>
-          <option value="basic3">Basic 3</option>
-          <option value="basic4">Basic 4</option>
-          <option value="basic5">Basic 5</option>
-          <option value="basic6">Basic 6</option>
-          <option value="jhs1">JHS 1</option>
-          <option value="jhs2">JHS 2</option>
-          <option value="jhs3">JHS 3</option>
-        </select>
-        <label for="mode-select">Mode</label>
-        <select id="mode-select">
-          <option value="practice">Practice Mode</option>
-          <option value="exam">Exam Mode</option>
-        </select>
-        <button id="load-class-btn" class="small-btn">Load Class</button>
-      </div>
-      <h3 id="subject-title">Quiz</h3>
-      <div id="progress" class="questions">Question 1 of 1</div>
-      <div id="diagram-area" class="diagram-area"></div>
-      <div id="questions" class="questions">Question text</div>
-      <div id="timer" class="timer">Time left: 15s</div>
-      <div class="reminder-card">
-        <label for="reminder-select">Reminder</label>
-        <select id="reminder-select">
-          <option value="5">5 min</option>
-          <option value="15">15 min</option>
-          <option value="30">30 min</option>
-        </select>
-        <button id="reminder-btn" class="small-btn">Set reminder</button>
-      </div>
-      <p id="reminder-status" class="reminder-status">
-        Set a reminder to return to your study plan.
-      </p>
-      <div id="answers" class="answers"></div>
-      <div id="feedback" class="questions"></div>
-      <div id="explanation" class="questions explanation">
-        Explanations are shown here
-      </div>
-      <div id="mode-badge" class="mode-badge"></div>
-      <div id="score"></div>
-      <button id="nextbtn" class="btn">Next Question</button>
     </div>
-    <footer class="site-footer">
-      <p>Stay on track with timed practice and helpful reminders.</p>
-      <div class="footer-links">
-        <a href="index.html#subscribe-section">Subscribe</a>
-        <a href="index.html#about-section">About</a>
-      </div>
-    </footer>
 
     <script src="teacherbot.js"></script>
   </body>

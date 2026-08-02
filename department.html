@@ -3,13 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="teacher.css" />
-    <title>Teacher Bot</title>
+    <title>Choose Department</title>
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <h1>Y_<span class="text-design">Cohde</span></h1>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-mark">Y</div>
+          <div>
+            <h3>Y_Cohde</h3>
+            <p>Learning platform</p>
+          </div>
+        </div>
         <button
           class="menu-toggle"
           id="menu-toggle"
@@ -20,57 +32,90 @@
           ☰
         </button>
         <nav class="site-nav" id="site-nav">
-          <ul>
-            <li><a href="index.html" id="Home">Dashboard</a></li>
-            <li><a href="-index.html" id="sub">Course</a></li>
-            <li><a href="department.html" id="sub">Department</a></li>
-            <li><a href="index.html#subscribe-section">Subscribe</a></li>
-            <li>
-              <a href="https://wa.me/0207918169" id="contacts">Socials</a>
-            </li>
-          </ul>
+          <a href="index.html" class="nav-item"
+            ><span>▣</span><span>Dashboard</span></a
+          >
+          <a href="-index.html" class="nav-item"
+            ><span>◧</span><span>Courses</span></a
+          >
+          <a href="department.html" class="nav-item active"
+            ><span>◨</span><span>Departments</span></a
+          >
+          <a href="index.html#subscribe-section" class="nav-item"
+            ><span>✉</span><span>Subscribe</span></a
+          >
+          <a href="https://wa.me/0207918169" class="nav-item"
+            ><span>☏</span><span>Socials</span></a
+          >
         </nav>
-      </div>
-    </header>
-    <div class="container1">
-      <h2 class="sub-txt">Select your department and class 🤖</h2>
-      <div class="class-picker department-card">
-        <label for="department-select">Department</label>
-        <select id="department-select">
-          <option value="basic">Basic Department</option>
-          <option value="jhs">Junior High Department</option>
-          <option value="shs">Senior High Department</option>
-        </select>
-        <label for="class-select">Class</label>
-        <select id="class-select"></select>
-        <label for="course-select" id="course-label" style="display: none"
-          >SHS Course</label
-        >
-        <select id="course-select" style="display: none">
-          <option value="general-arts">General Arts</option>
-          <option value="general-science">General Science</option>
-          <option value="business">Business</option>
-          <option value="home-economics">Home Economics</option>
-          <option value="visual-arts">Visual Arts</option>
-        </select>
-        <button id="continue-btn" class="small-btn">Continue</button>
-      </div>
-      <div class="design" id="designs">
-        <p id="department-message" class="select">
-          Choose your department and class to continue.
-        </p>
+        <div class="sidebar-card">
+          <p>Department flow</p>
+          <strong>Switch with ease</strong>
+          <a href="-index.html" class="small-btn">View subjects</a>
+        </div>
+      </aside>
+
+      <div class="main-panel">
+        <header class="site-header">
+          <div class="header-inner">
+            <div class="search-box">
+              <span>🔎</span>
+              <input type="text" placeholder="Search departments or classes" />
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <div class="profile-pill">
+                <span>ES</span>
+                <div>
+                  <strong>Emmanuel</strong>
+                  <small>Student</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <div class="container1">
+            <section class="page-panel">
+              <div class="panel-header">
+                <p class="eyebrow">Department selection</p>
+                <h2 class="sub-txt">Select your department and class</h2>
+              </div>
+              <div class="class-picker department-card">
+                <label for="department-select">Department</label>
+                <select id="department-select">
+                  <option value="basic">Basic Department</option>
+                  <option value="jhs">Junior High Department</option>
+                  <option value="shs">Senior High Department</option>
+                </select>
+                <label for="class-select">Class</label>
+                <select id="class-select"></select>
+                <label
+                  for="course-select"
+                  id="course-label"
+                  style="display: none"
+                  >SHS Course</label
+                >
+                <select id="course-select" style="display: none">
+                  <option value="general-arts">General Arts</option>
+                  <option value="general-science">General Science</option>
+                  <option value="business">Business</option>
+                  <option value="home-economics">Home Economics</option>
+                  <option value="visual-arts">Visual Arts</option>
+                </select>
+                <button id="continue-btn" class="small-btn">Continue</button>
+              </div>
+              <div class="design" id="designs">
+                <p id="department-message" class="select">
+                  Choose your department and class to continue.
+                </p>
+              </div>
+            </section>
+          </div>
+        </main>
       </div>
     </div>
-    <footer class="site-footer">
-      <p>
-        Choose your department, pick your class, and begin a smart revision
-        session.
-      </p>
-      <div class="footer-links">
-        <a href="https://wa.me/0207918169">WhatsApp</a>
-        <a href="index.html#about-section">About Y_Cohde</a>
-      </div>
-    </footer>
 
     <script src="teacherbot.js"></script>
   </body>

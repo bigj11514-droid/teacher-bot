@@ -1,5 +1,8 @@
 ﻿console.log("Teacher Bot loaded");
 
+// Dashboard shell interactions keep the existing quiz logic intact while
+// supporting the new sidebar and top navigation experience.
+
 const classLevels = {
   basic1: "early",
   basic2: "early",
@@ -1024,26 +1027,37 @@ function showDiagramForQuestion(current) {
 function setupMobileMenu() {
   const menuToggle = document.getElementById("menu-toggle");
   const siteNav = document.getElementById("site-nav");
+  const sidebar = document.querySelector(".sidebar");
 
-  if (!menuToggle || !siteNav) {
+  if (!menuToggle || !siteNav || !sidebar) {
     return;
   }
 
-  menuToggle.addEventListener("click", () => {
-    const isOpen = siteNav.classList.toggle("open");
+  menuToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = sidebar.classList.toggle("open");
     menuToggle.setAttribute("aria-expanded", String(isOpen));
   });
 
+  siteNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 900) {
+        sidebar.classList.remove("open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
+
   document.addEventListener("click", (event) => {
-    if (!siteNav.contains(event.target) && !menuToggle.contains(event.target)) {
-      siteNav.classList.remove("open");
+    if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+      sidebar.classList.remove("open");
       menuToggle.setAttribute("aria-expanded", "false");
     }
   });
 
   window.addEventListener("resize", () => {
     if (window.innerWidth > 900) {
-      siteNav.classList.remove("open");
+      sidebar.classList.remove("open");
       menuToggle.setAttribute("aria-expanded", "false");
     }
   });

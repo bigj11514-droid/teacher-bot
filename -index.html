@@ -3,13 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="teacher.css" />
-    <title>Learning System</title>
+    <title>Course Selection</title>
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <h1>Y_<span class="text-design">Cohde</span></h1>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-mark">Y</div>
+          <div>
+            <h3>Y_Cohde</h3>
+            <p>Learning platform</p>
+          </div>
+        </div>
         <button
           class="menu-toggle"
           id="menu-toggle"
@@ -20,49 +32,80 @@
           ☰
         </button>
         <nav class="site-nav" id="site-nav">
-          <ul>
-            <li><a href="index.html" id="Home">Dashboard</a></li>
-            <li><a href="-index.html" id="sub">Course</a></li>
-            <li><a href="department.html" id="sub">Department</a></li>
-            <li><a href="index.html#subscribe-section">Subscribe</a></li>
-            <li>
-              <a href="https://wa.me/0207918169" id="contacts">Socials</a>
-            </li>
-          </ul>
+          <a href="index.html" class="nav-item"
+            ><span>▣</span><span>Dashboard</span></a
+          >
+          <a href="-index.html" class="nav-item active"
+            ><span>◧</span><span>Courses</span></a
+          >
+          <a href="department.html" class="nav-item"
+            ><span>◨</span><span>Departments</span></a
+          >
+          <a href="index.html#subscribe-section" class="nav-item"
+            ><span>✉</span><span>Subscribe</span></a
+          >
+          <a href="https://wa.me/0207918169" class="nav-item"
+            ><span>☏</span><span>Socials</span></a
+          >
         </nav>
+        <div class="sidebar-card">
+          <p>Course view</p>
+          <strong>Choose your next lesson</strong>
+          <a href="quiz.html" class="small-btn">Open quiz</a>
+        </div>
+      </aside>
+
+      <div class="main-panel">
+        <header class="site-header">
+          <div class="header-inner">
+            <div class="search-box">
+              <span>🔎</span>
+              <input type="text" placeholder="Search classes or subjects" />
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <div class="profile-pill">
+                <span>ES</span>
+                <div>
+                  <strong>Emmanuel</strong>
+                  <small>Student</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <div class="container1">
+            <section class="page-panel">
+              <div class="panel-header">
+                <p class="eyebrow">Course explorer</p>
+                <h2 class="sub-txt">Select your class and subject</h2>
+              </div>
+              <div class="class-picker">
+                <label for="class-select">Choose your class</label>
+                <select id="class-select">
+                  <option value="basic1">Basic 1</option>
+                  <option value="basic2">Basic 2</option>
+                  <option value="basic3">Basic 3</option>
+                  <option value="basic4">Basic 4</option>
+                  <option value="basic5">Basic 5</option>
+                  <option value="basic6">Basic 6</option>
+                  <option value="jhs1">JHS 1</option>
+                  <option value="jhs2">JHS 2</option>
+                  <option value="jhs3">JHS 3</option>
+                  <option value="shs1">SHS 1</option>
+                  <option value="shs2">SHS 2</option>
+                  <option value="shs3">SHS 3</option>
+                </select>
+              </div>
+              <p id="department-message" class="select"></p>
+              <div class="design" id="subject-links"></div>
+            </section>
+          </div>
+        </main>
       </div>
-    </header>
-    <div class="container1">
-      <h2 class="sub-txt">Select your class and subject 🤖</h2>
-      <div class="class-picker">
-        <label for="class-select">Choose your class</label>
-        <select id="class-select">
-          <option value="basic1">Basic 1</option>
-          <option value="basic2">Basic 2</option>
-          <option value="basic3">Basic 3</option>
-          <option value="basic4">Basic 4</option>
-          <option value="basic5">Basic 5</option>
-          <option value="basic6">Basic 6</option>
-          <option value="jhs1">JHS 1</option>
-          <option value="jhs2">JHS 2</option>
-          <option value="jhs3">JHS 3</option>
-          <option value="shs1">SHS 1</option>
-          <option value="shs2">SHS 2</option>
-          <option value="shs3">SHS 3</option>
-        </select>
-      </div>
-      <p id="department-message" class="select"></p>
-      <div class="design" id="subject-links"></div>
     </div>
-    <footer class="site-footer">
-      <p>
-        Explore the course subjects and start a guided practice session tonight.
-      </p>
-      <div class="footer-links">
-        <a href="https://wa.me/0207918169">WhatsApp</a>
-        <a href="index.html#share-section">Share</a>
-      </div>
-    </footer>
 
     <script src="teacherbot.js"></script>
   </body>
