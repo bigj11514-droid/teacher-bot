@@ -15,13 +15,18 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="sidebar-brand">
+        <a
+          class="sidebar-brand brand-link"
+          href="https://bigj11514-droid.github.io/Y_Cohde-officail-landing-page-/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <div class="brand-mark">Y</div>
           <div>
             <h3>Y_Cohde</h3>
-            <p>Learning platform</p>
+            <p>Future-ready learning</p>
           </div>
-        </div>
+        </a>
         <button
           class="menu-toggle"
           id="menu-toggle"
@@ -41,11 +46,17 @@
           <a href="department.html" class="nav-item"
             ><span>◨</span><span>Departments</span></a
           >
+          <a href="index.html#about-section" class="nav-item"
+            ><span>✦</span><span>Why Y_Cohde</span></a
+          >
+          <a href="index.html#share-section" class="nav-item"
+            ><span>★</span><span>Reviews</span></a
+          >
           <a href="index.html#subscribe-section" class="nav-item"
-            ><span>✉</span><span>Subscribe</span></a
+            ><span>✉</span><span>Study plans</span></a
           >
           <a href="https://wa.me/0207918169" class="nav-item"
-            ><span>☏</span><span>Socials</span></a
+            ><span>☏</span><span>Contact</span></a
           >
         </nav>
         <div class="sidebar-card">
@@ -97,11 +108,13 @@
               </select>
               <button id="load-class-btn" class="small-btn">Load Class</button>
             </div>
-            <h3 id="subject-title">Quiz</h3>
             <div id="progress" class="questions">Question 1 of 1</div>
+            <div class="quiz-heading">
+              <div id="timer" class="timer">Time left: 15s</div>
+              <h3 id="subject-title">Quiz</h3>
+            </div>
             <div id="diagram-area" class="diagram-area"></div>
             <div id="questions" class="questions">Question text</div>
-            <div id="timer" class="timer">Time left: 15s</div>
             <div class="reminder-card">
               <label for="reminder-select">Reminder</label>
               <select id="reminder-select">
@@ -121,6 +134,7 @@
             </div>
             <div id="mode-badge" class="mode-badge"></div>
             <div id="score"></div>
+            <div id="review-section" class="review-section"></div>
             <button id="nextbtn" class="btn">Next Question</button>
           </div>
         </main>

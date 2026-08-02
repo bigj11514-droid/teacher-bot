@@ -662,6 +662,32 @@ function setupSubjectLinks() {
   });
 }
 
+function updateDepartmentVisual(selectedDepartment) {
+  const visualContainer = document.getElementById("department-visual");
+  if (!visualContainer) return;
+
+  const visuals = {
+    basic: {
+      title: "Basic learners grow through joyful practice.",
+      image: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80"
+    },
+    jhs: {
+      title: "JHS learners build confidence with guided revision.",
+      image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+    },
+    shs: {
+      title: "SHS students prepare for bigger academic goals.",
+      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80"
+    }
+  };
+
+  const selected = visuals[selectedDepartment] || visuals.basic;
+  visualContainer.innerHTML = `
+    <img src="${selected.image}" alt="${selected.title}" />
+    <p class="select">${selected.title}</p>
+  `;
+}
+
 function setupDepartmentPage() {
   const departmentSelect = document.getElementById("department-select");
   const classSelect = document.getElementById("class-select");
@@ -708,6 +734,8 @@ function setupDepartmentPage() {
           ? "Junior High students can move to the subject page for JHS questions."
           : "Basic students can move to the subject page for basic-level questions.";
     }
+
+    updateDepartmentVisual(selectedDepartment);
   }
 
   const initialDepartment = getDepartmentKey() || "basic";
@@ -716,6 +744,7 @@ function setupDepartmentPage() {
   departmentSelect.value = initialDepartment;
   updateClassOptions();
   classSelect.value = optionsByDepartment[initialDepartment].includes(initialClass) ? initialClass : optionsByDepartment[initialDepartment][0];
+  updateDepartmentVisual(initialDepartment);
   if (courseSelect) {
     courseSelect.value = initialCourse;
   }
@@ -938,11 +967,61 @@ function nextQuestion() {
     questionEl.textContent = "Quiz finished! Well Done!👏🏼";
     answersEl.innerHTML = "";
     feedbackEl.textContent = `You scored ${score} out of ${quizQuestions.length}.`;
+    const subjectLabel = document.getElementById("subject-title")?.textContent || "this subject";
+    renderReviewForm(subjectLabel);
     nextBtn.textContent = "Choose another subject";
     nextBtn.disabled = false;
     nextBtn.removeEventListener("click", nextQuestion);
     nextBtn.addEventListener("click", () => window.location.href = "-index.html");
   }
+}
+
+function renderReviewForm(subjectLabel) {
+  const reviewSection = document.getElementById("review-section");
+  if (!reviewSection) return;
+
+  const label = (subjectLabel || "this subject").toString();
+  reviewSection.innerHTML = `
+    <div class="review-card">
+      <h3>Leave a review</h3>
+      <p>Tell us how ${label} felt for you. Your feedback helps future learners choose their path with confidence.</p>
+      <div class="review-stars" aria-label="Rating">
+        ${[1, 2, 3, 4, 5].map((value) => `<button type="button" class="review-star" data-value="${value}">★</button>`).join("")}
+      </div>
+      <form class="review-form" id="review-form">
+        <textarea id="review-text" placeholder="Share what helped you most" required></textarea>
+        <button type="submit" class="small-btn">Submit review</button>
+      </form>
+      <p id="review-feedback" class="feedback-text">Your opinion matters to the Y_Cohde community.</p>
+    </div>
+  `;
+
+  let selectedRating = 5;
+  reviewSection.querySelectorAll(".review-star").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedRating = Number(button.dataset.value);
+      reviewSection.querySelectorAll(".review-star").forEach((star) => {
+        star.classList.toggle("active", Number(star.dataset.value) <= selectedRating);
+      });
+    });
+  });
+
+  const form = reviewSection.querySelector("#review-form");
+  const feedback = reviewSection.querySelector("#review-feedback");
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = reviewSection.querySelector("#review-text").value.trim();
+    if (!text) return;
+
+    const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
+    reviews.push({ rating: selectedRating, text, subject: label, createdAt: new Date().toLocaleString() });
+    localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
+
+    if (feedback) {
+      feedback.textContent = "Thanks for your review. Your feedback has been saved.";
+    }
+    form.reset();
+  });
 }
 
 function setupEngagementFeatures() {
@@ -1036,6 +1115,7 @@ function setupMobileMenu() {
   menuToggle.addEventListener("click", (event) => {
     event.stopPropagation();
     const isOpen = sidebar.classList.toggle("open");
+    document.body.classList.toggle("menu-open", isOpen);
     menuToggle.setAttribute("aria-expanded", String(isOpen));
   });
 
@@ -1043,6 +1123,7 @@ function setupMobileMenu() {
     link.addEventListener("click", () => {
       if (window.innerWidth <= 900) {
         sidebar.classList.remove("open");
+        document.body.classList.remove("menu-open");
         menuToggle.setAttribute("aria-expanded", "false");
       }
     });
@@ -1051,6 +1132,7 @@ function setupMobileMenu() {
   document.addEventListener("click", (event) => {
     if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
       sidebar.classList.remove("open");
+      document.body.classList.remove("menu-open");
       menuToggle.setAttribute("aria-expanded", "false");
     }
   });
@@ -1058,6 +1140,7 @@ function setupMobileMenu() {
   window.addEventListener("resize", () => {
     if (window.innerWidth > 900) {
       sidebar.classList.remove("open");
+      document.body.classList.remove("menu-open");
       menuToggle.setAttribute("aria-expanded", "false");
     }
   });
