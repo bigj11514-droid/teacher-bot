@@ -799,6 +799,7 @@ function setupQuiz() {
   if (explanationEl) {
     explanationEl.textContent = "Explanations are shown here";
   }
+  showDiagramForQuestion(quizQuestions[0]);
   if (timerEl) {
     timerEl.textContent = "Time left: 15s";
   }
@@ -879,6 +880,7 @@ function loadQuestion() {
 
   progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
+  showDiagramForQuestion(current);
   startTimer();
 }
 
@@ -940,6 +942,85 @@ function nextQuestion() {
   }
 }
 
+function setupEngagementFeatures() {
+  const newsletterForm = document.getElementById("newsletter-form");
+  const newsletterStatus = document.getElementById("newsletter-status");
+  const shareBtn = document.getElementById("share-btn");
+  const recommendBtn = document.getElementById("recommend-btn");
+  const shareFeedback = document.getElementById("share-feedback");
+  const reminderBtn = document.getElementById("reminder-btn");
+  const reminderStatus = document.getElementById("reminder-status");
+  const reminderSelect = document.getElementById("reminder-select");
+
+  if (newsletterForm && newsletterStatus) {
+    newsletterForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const emailInput = document.getElementById("newsletter-email");
+      if (emailInput && emailInput.value.trim()) {
+        newsletterStatus.textContent = `Thanks! ${emailInput.value.trim()} has joined the reminder list.`;
+        emailInput.value = "";
+      }
+    });
+  }
+
+  if (shareBtn && shareFeedback) {
+    shareBtn.addEventListener("click", async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Y_Cohde Study Page",
+            text: "Check out this learning platform for students.",
+            url: window.location.href
+          });
+          shareFeedback.textContent = "Thanks for sharing Y_Cohde with others.";
+        } catch (error) {
+          shareFeedback.textContent = "Sharing was cancelled, but the idea is still great.";
+        }
+      } else {
+        shareFeedback.textContent = "Copy the page link to share it with a friend.";
+      }
+    });
+  }
+
+  if (recommendBtn && shareFeedback) {
+    recommendBtn.addEventListener("click", () => {
+      shareFeedback.textContent = "Recommended! Keep learning and invite a friend to join the next quiz.";
+    });
+  }
+
+  if (reminderBtn && reminderStatus && reminderSelect) {
+    reminderBtn.addEventListener("click", () => {
+      const minutes = reminderSelect.value;
+      reminderStatus.textContent = `Reminder set for ${minutes} minutes from now. Return to your study plan soon.`;
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Y_Cohde reminder", {
+          body: `Time to continue studying for ${minutes} minutes.`
+        });
+      } else if ("Notification" in window && Notification.permission !== "denied") {
+        Notification.requestPermission().then(() => {
+          if (Notification.permission === "granted") {
+            new Notification("Y_Cohde reminder", {
+              body: `Time to continue studying for ${minutes} minutes.`
+            });
+          }
+        });
+      }
+    });
+  }
+}
+
+function showDiagramForQuestion(current) {
+  const diagramArea = document.getElementById("diagram-area");
+  if (!diagramArea) return;
+
+  const text = (current.question || "").toLowerCase();
+  if (text.includes("diagram") || text.includes("sketch") || text.includes("shape") || text.includes("draw")) {
+    diagramArea.innerHTML = `<img src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=800&q=80" alt="Study diagram" />`;
+  } else {
+    diagramArea.innerHTML = "Sketch-style questions will appear here when the topic needs a visual prompt.";
+  }
+}
+
 function setupMobileMenu() {
   const menuToggle = document.getElementById("menu-toggle");
   const siteNav = document.getElementById("site-nav");
@@ -978,12 +1059,14 @@ if (document.getElementById("department-select")) {
     setupMobileMenu();
     setupQuizPage();
     setupQuiz();
+    setupEngagementFeatures();
     document.getElementById("nextbtn").addEventListener("click", nextQuestion);
   });
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     setupMobileMenu();
     setupSubjectLinks();
+    setupEngagementFeatures();
   });
 }
 
