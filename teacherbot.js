@@ -762,32 +762,39 @@ function setupDepartmentPage() {
 }
 
 function setupQuizPage() {
-  const classSelect = document.getElementById("class-select");
-  const modeSelect = document.getElementById("mode-select");
-  const loadBtn = document.getElementById("load-class-btn");
+  const quizSetup = document.getElementById("quiz-setup");
+  const startBtn = document.getElementById("start-quiz-btn");
+  const timerSelect = document.getElementById("timer-select");
+  const setupClassLabel = document.getElementById("setup-class-label");
+  const setupSubjectLabel = document.getElementById("setup-subject-label");
+  const activeArea = document.getElementById("quiz-active-area");
 
-  if (!classSelect) {
+  if (!quizSetup || !startBtn || !timerSelect) {
     return;
   }
 
-  classSelect.value = getClassKey();
-  if (modeSelect) {
-    mode = modeSelect.value;
+  const subjectKey = getSubjectKey();
+  const classKey = getClassKey();
+  const subjectData = subjects[subjectKey];
+  const className = classLabels[classKey] || "Your class";
+
+  if (setupClassLabel) {
+    setupClassLabel.textContent = className;
   }
 
-  if (loadBtn) {
-    loadBtn.addEventListener("click", () => {
-      const params = new URLSearchParams(window.location.search);
-      params.set("class", classSelect.value);
-      if (modeSelect) {
-        params.set("mode", modeSelect.value);
-      }
-      if (getCourseKey()) {
-        params.set("course", getCourseKey());
-      }
-      window.location.search = params.toString();
-    });
+  if (setupSubjectLabel) {
+    setupSubjectLabel.textContent = subjectData ? `${subjectData.displayName} is ready for you.` : "Choose a subject first.";
   }
+
+  startBtn.addEventListener("click", () => {
+    quizTimerSeconds = Number(timerSelect.value) || 15;
+    quizStarted = true;
+    if (activeArea) {
+      activeArea.style.display = "flex";
+    }
+    quizSetup.style.display = "none";
+    setupQuiz();
+  });
 }
 
 function setupQuiz() {
@@ -806,6 +813,7 @@ function setupQuiz() {
   const subjectTitle = document.getElementById("subject-title");
   const modeBadge = document.getElementById("mode-badge");
   const timerEl = document.getElementById("timer");
+  const timerSelect = document.getElementById("timer-select");
 
   if (!questionEl || !answersEl || !scoreEl || !feedbackEl || !nextBtn || !subjectTitle) {
     return;
@@ -833,7 +841,10 @@ function setupQuiz() {
   }
   showDiagramForQuestion(quizQuestions[0]);
   if (timerEl) {
-    timerEl.textContent = "Time left: 15s";
+    timerEl.textContent = `Time left: ${quizTimerSeconds}s`;
+  }
+  if (timerSelect) {
+    timerSelect.value = String(quizTimerSeconds);
   }
   if (modeBadge) {
     modeBadge.textContent = mode === "exam" ? "Exam Mode • no hints after wrong answers" : "Practice Mode • explanations are shown";
@@ -850,12 +861,13 @@ function getExplanationForCurrentQuestion(current) {
   if (current.explanation) {
     return current.explanation;
   }
-  return `The correct answer is "${current.answers[current.correct]}". Review the lesson note to understand why.`;
+  const correctAnswer = current.answers[current.correct];
+  return `The correct answer is "${correctAnswer}". ${current.question} is answered correctly when you choose ${correctAnswer} because it matches the idea being tested. Review the lesson note again and remember the reason behind it.`;
 }
 
 function startTimer() {
   const timerEl = document.getElementById("timer");
-  timeLeft = 15;
+  timeLeft = quizTimerSeconds;
   if (timerEl) {
     timerEl.textContent = `Time left: ${timeLeft}s`;
   }
@@ -888,7 +900,7 @@ function handleTimeout() {
   });
 
   feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
-  explanationEl.textContent = `Explanations: ${getExplanationForCurrentQuestion(current)}`;
+  explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   nextBtn.disabled = false;
 }
 
@@ -939,7 +951,7 @@ function selectAnswer(button, selectedIndex) {
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
     feedbackEl.textContent = "😡 Wrong. The correct answer is highlighted in green.";
-    explanationEl.textContent = `Explanations: ${getExplanationForCurrentQuestion(current)}`;
+    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   }
 
   Array.from(answersEl.children).forEach((btn) => {
@@ -1014,14 +1026,42 @@ function renderReviewForm(subjectLabel) {
     if (!text) return;
 
     const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
-    reviews.push({ rating: selectedRating, text, subject: label, createdAt: new Date().toLocaleString() });
+    reviews.push({
+      rating: selectedRating,
+      text,
+      subject: label,
+      studentName: "A student",
+      createdAt: new Date().toLocaleString()
+    });
     localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
 
     if (feedback) {
       feedback.textContent = "Thanks for your review. Your feedback has been saved.";
     }
     form.reset();
+    renderPublicReviews();
   });
+}
+
+function renderPublicReviews() {
+  const reviewList = document.getElementById("public-reviews-list");
+  if (!reviewList) return;
+
+  const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse();
+
+  if (!reviews.length) {
+    reviewList.innerHTML = '<p class="empty-state">No reviews yet. Complete a quiz and be the first to leave one.</p>';
+    return;
+  }
+
+  reviewList.innerHTML = reviews.map((review) => `
+    <article class="review-post">
+      <strong>${review.studentName}</strong>
+      <div class="stars">${"★".repeat(review.rating)}</div>
+      <p>${review.text}</p>
+      <small>${review.subject} • ${review.createdAt}</small>
+    </article>
+  `).join("");
 }
 
 function setupEngagementFeatures() {
@@ -1151,20 +1191,17 @@ if (document.getElementById("department-select")) {
     setupMobileMenu();
     setupDepartmentPage();
   });
-} else if (document.getElementById("questions") && document.getElementById("answers")) {
+} else if (document.getElementById("quiz-setup") && document.getElementById("quiz-active-area")) {
   document.addEventListener("DOMContentLoaded", () => {
     setupMobileMenu();
     setupQuizPage();
-    setupQuiz();
     setupEngagementFeatures();
-    document.getElementById("nextbtn").addEventListener("click", nextQuestion);
+    renderPublicReviews();
+    document.getElementById("nextbtn")?.addEventListener("click", nextQuestion);
   });
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     setupMobileMenu();
     setupSubjectLinks();
     setupEngagementFeatures();
-  });
-}
-
-console.log("Quiz script ready");
+    renderPublicReviews();
