@@ -477,6 +477,8 @@ let mode = "practice";
 let answeredQuestions = [];
 let timerId = null;
 let timeLeft = 15;
+let quizTimerSeconds = 15;
+let quizStarted = false;
 
 const shsCourseCatalog = {
   "general-arts": [
@@ -1001,6 +1003,7 @@ function renderReviewForm(subjectLabel) {
         ${[1, 2, 3, 4, 5].map((value) => `<button type="button" class="review-star" data-value="${value}">★</button>`).join("")}
       </div>
       <form class="review-form" id="review-form">
+        <input id="review-name" type="text" placeholder="Your name" required />
         <textarea id="review-text" placeholder="Share what helped you most" required></textarea>
         <button type="submit" class="small-btn">Submit review</button>
       </form>
@@ -1023,6 +1026,7 @@ function renderReviewForm(subjectLabel) {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const text = reviewSection.querySelector("#review-text").value.trim();
+    const studentName = reviewSection.querySelector("#review-name").value.trim() || "A student";
     if (!text) return;
 
     const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
@@ -1030,7 +1034,7 @@ function renderReviewForm(subjectLabel) {
       rating: selectedRating,
       text,
       subject: label,
-      studentName: "A student",
+      studentName,
       createdAt: new Date().toLocaleString()
     });
     localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
@@ -1205,3 +1209,5 @@ if (document.getElementById("department-select")) {
     setupSubjectLinks();
     setupEngagementFeatures();
     renderPublicReviews();
+  });
+}
