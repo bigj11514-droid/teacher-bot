@@ -117,6 +117,9 @@ a {
   border-radius: 12px;
   color: var(--muted);
   transition: all 0.25s ease;
+  border: 1px solid rgba(127, 232, 255, 0.973);
+  border-top: transparent;
+  border-bottom: transparent;
 }
 
 .nav-item:hover,
@@ -265,6 +268,7 @@ a {
   align-items: center;
   overflow: hidden;
   border-right: 3px solid rgba(127, 232, 255, 0.973);
+  border-left:3px solid rgba(127, 232, 255, 0.973) ;
   background-image: linear-gradient( 150deg, rgb(5, 99, 99) 30%, rgba(78, 168, 255, 0.08) 50%);
 }
 
@@ -278,7 +282,7 @@ a {
 }
 
 .cont1 {
-  min-height: 240px;
+  min-height: 140px;
 }
 
 .cont {
@@ -688,6 +692,8 @@ body.menu-open::before {
 .design:hover {
   transform: translateY(-4px);
   box-shadow: 0 22px 44px rgba(2, 15, 28, 0.42);
+  border-top: 2px solid rgba(127, 232, 255, 0.973);
+
 }
 
 .btn,
