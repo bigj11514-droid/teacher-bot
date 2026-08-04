@@ -177,7 +177,7 @@ a {
   padding: 12px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(127, 232, 255, 0.973);
 }
 
 .search-box input {
@@ -264,7 +264,10 @@ a {
   padding: 24px;
   align-items: center;
   overflow: hidden;
+  border-right: 3px solid rgba(127, 232, 255, 0.973);
+  background-image: linear-gradient( 150deg, rgb(5, 99, 99) 30%, rgba(78, 168, 255, 0.08) 50%);
 }
+
 
 .hero-card::before {
   content: '';
