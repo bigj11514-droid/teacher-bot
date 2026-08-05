@@ -455,7 +455,8 @@ h3 {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-  min-width: 220px;
+  width: 100%;
+  border: 1px solid rgba(65, 218, 238, 0.918);
 }
 
 .plan-card {
