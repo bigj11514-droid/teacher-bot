@@ -433,6 +433,8 @@ h3 {
   color: rgba(127, 232, 255, 0.973);
   font-weight: 600;
   text-align: center;
+  padding: 15px;
+  border: 1px solid cyan;
 }
 
 .action-row,
@@ -941,3 +943,5 @@ body.menu-open::before {
     font-size: 1rem;
   }
 }
+
+
