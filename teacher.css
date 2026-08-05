@@ -5,6 +5,15 @@
   box-sizing: border-box;
 }
 
+@keyframes menuBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.03);
+  }
+}
+
 :root {
   --bg: #031a2b;
   --panel: rgba(7, 28, 44, 0.9);
@@ -101,6 +110,22 @@ a {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.menu-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.menu-toggle.active {
+  animation: menuBounce 0.9s ease-in-out infinite;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(127, 231, 255, 0.2), 0 0 22px rgba(127, 231, 255, 0.25);
+  color: var(--accent);
+}
+
+.header-menu-toggle {
+  margin-left: 4px;
 }
 
 .site-nav {

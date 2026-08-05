@@ -472,6 +472,7 @@ const subjects = {
 
 let currentQuestionIndex = 0;
 let score = 0;
+let mistakes = 0;
 let quizQuestions = [];
 let mode = "practice";
 let answeredQuestions = [];
@@ -834,9 +835,10 @@ function setupQuiz() {
   quizQuestions = shuffleArray(baseQuestions).map(buildShuffledQuestion);
   currentQuestionIndex = 0;
   score = 0;
+  mistakes = 0;
   answeredQuestions = [];
   subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
-  scoreEl.textContent = `Score: ${score} / ${quizQuestions.length}`;
+  updateScoreDisplay();
   feedbackEl.textContent = "";
   if (explanationEl) {
     explanationEl.textContent = "Explanations are shown here";
@@ -857,6 +859,13 @@ function setupQuiz() {
 
   clearInterval(timerId);
   loadQuestion();
+}
+
+function updateScoreDisplay() {
+  const scoreEl = document.getElementById("score");
+  if (scoreEl) {
+    scoreEl.textContent = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
+  }
 }
 
 function getExplanationForCurrentQuestion(current) {
@@ -901,8 +910,10 @@ function handleTimeout() {
     btn.disabled = true;
   });
 
+  mistakes += 1;
   feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
   explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+  updateScoreDisplay();
   nextBtn.disabled = false;
 }
 
@@ -949,6 +960,7 @@ function selectAnswer(button, selectedIndex) {
     feedbackEl.textContent = "😉 Correct!";
     explanationEl.textContent = "";
   } else {
+    mistakes += 1;
     button.style.background = "#E74C3C";
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
@@ -960,7 +972,7 @@ function selectAnswer(button, selectedIndex) {
     btn.disabled = true;
   });
 
-  scoreEl.textContent = `Score: ${score} / ${quizQuestions.length}`;
+  updateScoreDisplay();
   nextBtn.disabled = false;
 }
 
@@ -978,11 +990,34 @@ function nextQuestion() {
     }
     loadQuestion();
   } else {
-    questionEl.textContent = "Quiz finished! Well Done!👏🏼";
+    const summary = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
+    questionEl.textContent = summary;
     answersEl.innerHTML = "";
-    feedbackEl.textContent = `You scored ${score} out of ${quizQuestions.length}.`;
-    const subjectLabel = document.getElementById("subject-title")?.textContent || "this subject";
-    renderReviewForm(subjectLabel);
+    feedbackEl.textContent = "";
+    const explanationEl = document.getElementById("explanation");
+    if (explanationEl) {
+      explanationEl.textContent = "";
+    }
+    const reviewSection = document.getElementById("review-section");
+    if (reviewSection) {
+      reviewSection.innerHTML = "";
+    }
+    const progressEl = document.getElementById("progress");
+    if (progressEl) {
+      progressEl.textContent = "Quiz complete";
+    }
+    const timerEl = document.getElementById("timer");
+    if (timerEl) {
+      timerEl.textContent = "";
+    }
+    const modeBadge = document.getElementById("mode-badge");
+    if (modeBadge) {
+      modeBadge.textContent = "";
+    }
+    const diagramArea = document.getElementById("diagram-area");
+    if (diagramArea) {
+      diagramArea.innerHTML = "";
+    }
     nextBtn.textContent = "Choose another subject";
     nextBtn.disabled = false;
     nextBtn.removeEventListener("click", nextQuestion);
@@ -1148,44 +1183,52 @@ function showDiagramForQuestion(current) {
 }
 
 function setupMobileMenu() {
-  const menuToggle = document.getElementById("menu-toggle");
+  const menuToggles = Array.from(document.querySelectorAll(".menu-toggle"));
   const siteNav = document.getElementById("site-nav");
   const sidebar = document.querySelector(".sidebar");
 
-  if (!menuToggle || !siteNav || !sidebar) {
+  if (!siteNav || !sidebar || menuToggles.length === 0) {
     return;
   }
 
-  menuToggle.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const isOpen = sidebar.classList.toggle("open");
-    document.body.classList.toggle("menu-open", isOpen);
-    menuToggle.setAttribute("aria-expanded", String(isOpen));
+  const closeMenu = () => {
+    sidebar.classList.remove("open");
+    document.body.classList.remove("menu-open");
+    menuToggles.forEach((toggle) => {
+      toggle.classList.remove("active");
+      toggle.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  menuToggles.forEach((menuToggle) => {
+    menuToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = sidebar.classList.toggle("open");
+      document.body.classList.toggle("menu-open", isOpen);
+      menuToggles.forEach((toggle) => {
+        toggle.classList.toggle("active", isOpen);
+        toggle.setAttribute("aria-expanded", String(isOpen));
+      });
+    });
   });
 
   siteNav.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
       if (window.innerWidth <= 900) {
-        sidebar.classList.remove("open");
-        document.body.classList.remove("menu-open");
-        menuToggle.setAttribute("aria-expanded", "false");
+        closeMenu();
       }
     });
   });
 
   document.addEventListener("click", (event) => {
-    if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-      sidebar.classList.remove("open");
-      document.body.classList.remove("menu-open");
-      menuToggle.setAttribute("aria-expanded", "false");
+    if (!sidebar.contains(event.target) && !menuToggles.some((toggle) => toggle.contains(event.target))) {
+      closeMenu();
     }
   });
 
   window.addEventListener("resize", () => {
     if (window.innerWidth > 900) {
-      sidebar.classList.remove("open");
-      document.body.classList.remove("menu-open");
-      menuToggle.setAttribute("aria-expanded", "false");
+      closeMenu();
     }
   });
 }
