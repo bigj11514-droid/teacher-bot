@@ -338,11 +338,15 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 0;
+  padding: 15px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(127, 232, 255, 0.973);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  width: 100%;
+  border-top: transparent;
+  border-bottom: transparent;
+  
 }
 
 .btn,
@@ -401,8 +405,9 @@ h3 {
 }
 
 .text-link {
-  color: var(--accent-2);
+  color: rgba(127, 232, 255, 0.973);
   font-weight: 600;
+  text-align: center;
 }
 
 .action-row,
