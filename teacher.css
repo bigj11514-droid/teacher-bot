@@ -975,3 +975,14 @@ body.menu-open::before {
 .text-link:hover{
   border-radius: 15px;
 }
+
+.timer{
+  color: red;
+  border: 1px solid red;
+ border-radius: 10px;
+ border-top: transparent;
+ border-bottom: transparent;
+ box-shadow: 1px 1px 19px red;
+ letter-spacing: 2px;
+
+}

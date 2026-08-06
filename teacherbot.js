@@ -1176,7 +1176,7 @@ function showDiagramForQuestion(current) {
 
   const text = (current.question || "").toLowerCase();
   if (text.includes("diagram") || text.includes("sketch") || text.includes("shape") || text.includes("draw")) {
-    diagramArea.innerHTML = `<img src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=800&q=80" alt="Study diagram" />`;
+    diagramArea.innerHTML = `<img src="" alt="Study diagram" />`;
   } else {
     diagramArea.innerHTML = "Sketch-style questions will appear here when the topic needs a visual prompt.";
   }
