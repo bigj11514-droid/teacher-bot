@@ -946,15 +946,28 @@ body.menu-open::before {
 }
 
 .btn, .small-btn{
- animation: bounce 1.2s infinite;
+ animation: bounce 5.4s infinite;
 }
 @keyframes bounce{
   0%, 100%{
-    transform: translateX(5px);
+    transform: translateX(2px);
     animation-timing-function: cubic-bezier(0.8, 0, 0.07, 1);
   }
   50%{
-    transform: translateX(-5px);
+    transform: translateX(-2px);
     animation-timing-function:cubic-bezier(0.8, 0, 0.07, 1) ;
   }
  }
+
+.menu-toggle{
+  animation: bounce 4.4s infinite;
+}
+@keyframes bounce{
+  0%, 100%{
+    transform: translateY(5);
+  }
+  50%{
+    transform: translateY(-5px);
+    animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+  }
+}
