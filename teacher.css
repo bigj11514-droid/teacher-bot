@@ -971,3 +971,7 @@ body.menu-open::before {
     animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
   }
 }
+
+.text-link:hover{
+  border-radius: 15px;
+}
