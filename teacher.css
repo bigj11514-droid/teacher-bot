@@ -322,6 +322,7 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.24em;
   color: var(--accent-2);
+  margin: 10px 0px;
 }
 
 h2,
