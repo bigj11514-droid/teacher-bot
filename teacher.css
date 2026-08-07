@@ -41,6 +41,7 @@ img {
   width: 100%;
   height: auto;
   border-radius: 20px;
+  margin: 10px;
 }
 
 button,
@@ -564,7 +565,7 @@ h3 {
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 10px
 }
 
 #subject-links {
@@ -794,6 +795,7 @@ body.menu-open::before {
   overflow: hidden;
   border: 1px solid rgba(127, 231, 255, 0.18);
   background: rgba(255,255,255,0.04);
+  margin: 10px;
 }
 
 .department-visual img {
