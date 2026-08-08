@@ -10,6 +10,7 @@
     <title>Student Login | Y_Cohde</title>
   </head>
   <body class="login-page">
+    <header class="simple-site-header"><a href="login.html" class="simple-brand">Y_Cohde</a><button class="simple-menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">☰</button><nav class="simple-nav" id="simple-nav"><a href="login.html">Log in</a><a href="-index.html">Courses</a><a href="index.html">Dashboard</a></nav></header>
     <main class="login-card">
       <div class="brand-mark">Y</div>
       <h1>Welcome to Y_Cohde</h1>
@@ -23,6 +24,9 @@
       </form>
     </main>
     <script>
+      const menuButton = document.querySelector(".simple-menu-toggle");
+      const navigation = document.getElementById("simple-nav");
+      menuButton.addEventListener("click", () => { const open = navigation.classList.toggle("open"); menuButton.setAttribute("aria-expanded", open); });
       const sessionKey = "ycohdeStudentSession";
       if (localStorage.getItem(sessionKey)) window.location.replace("index.html");
       document.getElementById("login-form").addEventListener("submit", (event) => {

@@ -47,6 +47,94 @@ function setupStudentSession() {
   });
 }
 
+const learningCatalog = {
+  ges: {
+    name: "GES Standard-Based Curriculum",
+    years: ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "JHS 1", "JHS 2", "JHS 3"],
+    topics: {
+      "Mathematics": {
+        "Numbers and operations": {
+          "Place value": { lesson: "Place value tells us what each digit is worth because of its position. In 4,582, the 4 means 4 thousands, the 5 means 5 hundreds, the 8 means 8 tens, and the 2 means 2 ones.", questions: [["What is the value of 5 in 4,582?", ["5", "50", "500", "5,000"], 2], ["Which digit is in the tens place in 4,582?", ["4", "5", "8", "2"], 2]] },
+          "Addition": { lesson: "Addition combines quantities. Line up numbers by ones, tens and hundreds, then add each column from right to left. Regroup ten ones as one ten when needed.", questions: [["What is 27 + 15?", ["32", "42", "52", "41"], 1], ["Which column do you add first?", ["Hundreds", "Tens", "Ones", "Thousands"], 2]] }
+        },
+        "Shapes and measurement": {
+          "2D shapes": { lesson: "A 2D shape is flat. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.", questions: [["How many sides does a triangle have?", ["2", "3", "4", "5"], 1], ["Which shape has four equal sides?", ["Triangle", "Rectangle", "Square", "Circle"], 2]] },
+          "Length": { lesson: "Length tells us how long something is. We can measure small objects in centimetres and longer distances in metres. Always start the ruler at zero.", questions: [["What unit is useful for measuring a pencil?", ["Kilometres", "Metres", "Centimetres", "Litres"], 2], ["Where should a ruler start?", ["At 1", "At zero", "At the end", "Anywhere"], 1]] }
+        }
+      },
+      "Science": {
+        "Living things": {
+          "Parts of a plant": { lesson: "Plants have roots, stems, leaves, flowers and fruits. Roots hold the plant in soil and take in water. Leaves use sunlight to help make food.", questions: [["Which part takes in water from the soil?", ["Flower", "Root", "Leaf", "Fruit"], 1], ["What do leaves use to help make food?", ["Moonlight", "Sunlight", "Sand", "Wind"], 1]] },
+          "The human body": { lesson: "The human body has systems that work together. The heart pumps blood, the lungs help us breathe, and the brain helps us think and control actions.", questions: [["Which organ pumps blood?", ["Lung", "Brain", "Heart", "Stomach"], 2], ["Which organ helps us think?", ["Brain", "Heart", "Skin", "Bone"], 0]] }
+        }
+      }
+    }
+  },
+  cambridge: {
+    name: "Cambridge Primary",
+    years: ["Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"],
+    topics: {
+      "English": {
+        "Reading": {
+          "Main idea": { lesson: "The main idea is the most important message in a text. Look at the title, repeated words, and what most sentences are about to find it.", questions: [["What is the main idea?", ["A tiny detail", "The main message", "A page number", "A character name"], 1], ["What can help you find the main idea?", ["Repeated words", "Only punctuation", "The last letter", "The page colour"], 0]] },
+          "Vocabulary": { lesson: "Vocabulary means the words we know and use. When you meet a new word, read the sentence around it for clues, then check a dictionary if you can.", questions: [["What can help explain a new word?", ["Sentence clues", "Skipping it", "Guessing randomly", "Closing the book"], 0], ["Vocabulary is about…", ["Numbers", "Words", "Maps", "Sports"], 1]] }
+        }
+      },
+      "Mathematics": {
+        "Fractions": {
+          "Equal parts": { lesson: "A fraction shows equal parts of one whole. In one half, the whole is split into two equal parts. The bottom number tells how many equal parts there are.", questions: [["One half means a whole split into how many equal parts?", ["1", "2", "3", "4"], 1], ["What does the bottom number in a fraction show?", ["Equal parts", "The colour", "The answer", "The shape"], 0]] }
+        }
+      }
+    }
+  }
+};
+
+function setupLearningExplorer() {
+  const explorer = document.getElementById("learning-explorer");
+  if (!explorer) return;
+  explorer.innerHTML = `<div class="syllabus-table-wrap"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(learningCatalog).map(([key, syllabus]) => `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map(year => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`).join("")}</tbody></table></div>`;
+}
+
+function setupLearningSpace() {
+  const space = document.getElementById("learning-space");
+  if (!space) return;
+  const syllabusKey = new URLSearchParams(window.location.search).get("syllabus") || "ges";
+  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const selectedYear = new URLSearchParams(window.location.search).get("year");
+  let activeLesson;
+  const renderTopics = () => {
+    space.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(syllabus.topics).map(([subject, topics]) => `<article class="topic-card"><h3>${subject}</h3>${Object.entries(topics).map(([topic, subtopics]) => `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(subtopics).map(subtopic => `<button class="subtopic-btn" data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${subtopic}</button>`).join("")}</div></details>`).join("")}</article>`).join("")}</div>`;
+    space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
+  };
+  const renderLesson = (subject, topic, subtopic) => {
+    activeLesson = syllabus.topics[subject][topic][subtopic];
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><h2>${subtopic}</h2><div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
+    document.getElementById("back-to-topics").addEventListener("click", renderTopics);
+    document.getElementById("finish-lesson").addEventListener("click", () => document.getElementById("understanding-modal").classList.add("visible"));
+  };
+  const modal = document.getElementById("understanding-modal");
+  document.getElementById("understood-yes").addEventListener("click", () => { modal.classList.remove("visible"); renderTopicQuiz(activeLesson); });
+  document.getElementById("understood-no").addEventListener("click", () => { modal.classList.remove("visible"); space.querySelector(".lesson-copy").insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>"); });
+  renderTopics();
+}
+
+function renderTopicQuiz(lesson) {
+  const space = document.getElementById("learning-space");
+  let index = 0, score = 0;
+  const showQuestion = () => {
+    const [question, answers, correct] = lesson.questions[index];
+    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${lesson.questions.length}</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><p id="topic-feedback" class="feedback-text"></p></article>`;
+    space.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => {
+      const selected = Number(button.dataset.answer);
+      space.querySelectorAll("[data-answer]").forEach(item => item.disabled = true);
+      if (selected === correct) { score++; document.getElementById("topic-feedback").textContent = "Correct! Great learning."; } else document.getElementById("topic-feedback").textContent = `Not quite. The correct answer is ${answers[correct]}.`;
+      setTimeout(() => { index++; index < lesson.questions.length ? showQuestion() : finishQuiz(); }, 1100);
+    }));
+  };
+  const finishQuiz = () => { space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${lesson.questions.length}</h2><p>${score === lesson.questions.length ? "Excellent work—you understood this topic well." : "Keep practising. You can review the lesson and try again."}</p><button class="btn" id="choose-another-topic">Choose another topic</button></article>`; document.getElementById("choose-another-topic").addEventListener("click", () => setupLearningSpace()); };
+  showQuestion();
+}
+
 // Dashboard shell interactions keep the existing quiz logic intact while
 // supporting the new sidebar and top navigation experience.
 
@@ -1280,11 +1368,26 @@ function setupMobileMenu() {
   });
 }
 
+function setupSimpleHamburgerMenu() {
+  const button = document.querySelector(".simple-menu-toggle");
+  const navigation = document.getElementById("simple-nav");
+  if (!button || !navigation) return;
+  button.addEventListener("click", () => {
+    const open = navigation.classList.toggle("open");
+    button.setAttribute("aria-expanded", String(open));
+  });
+  navigation.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
+    navigation.classList.remove("open");
+    button.setAttribute("aria-expanded", "false");
+  }));
+}
+
 if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireStudentLogin()) return;
     setupStudentSession();
     setupMobileMenu();
+    setupSimpleHamburgerMenu();
     setupDepartmentPage();
   });
 } else if (document.getElementById("quiz-setup") && document.getElementById("quiz-active-area")) {
@@ -1292,6 +1395,7 @@ if (document.getElementById("department-select")) {
     if (!requireStudentLogin()) return;
     setupStudentSession();
     setupMobileMenu();
+    setupSimpleHamburgerMenu();
     setupQuizPage();
     setupEngagementFeatures();
     renderPublicReviews();
@@ -1302,6 +1406,9 @@ if (document.getElementById("department-select")) {
     if (!requireStudentLogin()) return;
     setupStudentSession();
     setupMobileMenu();
+    setupSimpleHamburgerMenu();
+    setupLearningExplorer();
+    setupLearningSpace();
     setupSubjectLinks();
     setupEngagementFeatures();
     renderPublicReviews();
