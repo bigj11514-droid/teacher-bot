@@ -91,6 +91,10 @@ const learningCatalog = {
         "Shapes and measurement": {
           "2D shapes": { lesson: "A 2D shape is flat. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.", questions: [["How many sides does a triangle have?", ["2", "3", "4", "5"], 1], ["Which shape has four equal sides?", ["Triangle", "Rectangle", "Square", "Circle"], 2]] },
           "Length": { lesson: "Length tells us how long something is. We can measure small objects in centimetres and longer distances in metres. Always start the ruler at zero.", questions: [["What unit is useful for measuring a pencil?", ["Kilometres", "Metres", "Centimetres", "Litres"], 2], ["Where should a ruler start?", ["At 1", "At zero", "At the end", "Anywhere"], 1]] }
+        },
+        "Data and patterns": {
+          "Pictographs": { lesson: "A pictograph uses pictures or symbols to show information. Always read the key first, because one picture can stand for more than one item.", questions: [["What should you read first on a pictograph?", ["The key", "The title only", "The answer", "A story"], 0], ["A pictograph uses what to show data?", ["Pictures or symbols", "Only letters", "Songs", "Maps"], 0]] },
+          "Number patterns": { lesson: "A number pattern follows a rule. Look at how one number changes to the next. The rule may be adding, subtracting, multiplying or dividing.", questions: [["What comes next: 2, 4, 6, 8?", ["9", "10", "11", "12"], 1], ["The pattern 5, 10, 15 is adding…", ["2", "5", "10", "15"], 1]] }
         }
       },
       "Science": {
@@ -100,6 +104,108 @@ const learningCatalog = {
           "Parts of a plant": { lesson: "Plants have roots, stems, leaves, flowers and fruits. Roots hold the plant in soil and take in water. The stem supports the plant, while leaves use sunlight to help make food.", image: "https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?auto=format&fit=crop&w=900&q=80", questions: [["Which part takes in water from the soil?", ["Flower", "Root", "Leaf", "Fruit"], 1], ["What do leaves use to help make food?", ["Moonlight", "Sunlight", "Sand", "Wind"], 1]], next: { subject: "Science", topic: "Living things", subtopic: "What plants need" } },
           "What plants need": { lesson: "Plants need sunlight, water, air, space and nutrients from the soil. Without these, a plant may not grow well. Caring for plants means watering them, giving them enough light, and protecting them from harm.", image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80", questions: [["Which of these does a plant need to grow?", ["Water", "A television", "A shoe", "A toy"], 0], ["Where do plants get nutrients?", ["From the soil", "From a book", "From a chair", "From a phone"], 0]] },
           "The human body": { lesson: "The human body has systems that work together. The heart pumps blood, the lungs help us breathe, and the brain helps us think and control actions.", questions: [["Which organ pumps blood?", ["Lung", "Brain", "Heart", "Stomach"], 2], ["Which organ helps us think?", ["Brain", "Heart", "Skin", "Bone"], 0]] }
+        },
+        "Materials and energy": {
+          "Solids, liquids and gases": { lesson: "Materials can be solids, liquids or gases. A solid keeps its shape, a liquid flows and takes the shape of its container, and a gas spreads out to fill space.", questions: [["Which state of matter flows?", ["Solid", "Liquid", "Stone", "Metal"], 1], ["Which state fills its container?", ["Gas", "Solid", "Wood", "Ice"], 0]] },
+          "Sources of energy": { lesson: "Energy helps us do work. We get energy from the sun, food, fuel, wind and moving water. Solar energy comes from sunlight.", questions: [["Solar energy comes from…", ["The sun", "The moon", "Soil", "Paper"], 0], ["What gives our bodies energy?", ["Food", "A chair", "A pencil", "A book"], 0]] }
+        }
+      },
+      "English Language": {
+        "Reading and comprehension": {
+          "Main idea": { lesson: "The main idea is the most important point in a passage. Think about what the whole passage is mostly telling you.", questions: [["The main idea is…", ["The main point", "A spelling mistake", "A picture", "A page number"], 0], ["A main idea comes from the…", ["Whole passage", "First letter only", "Last word only", "Book cover only"], 0]] },
+          "Sequence of events": { lesson: "Sequence tells the order in which events happen. Words such as first, next, then and finally help us follow a sequence.", questions: [["Which word can begin a sequence?", ["First", "Blue", "Jump", "Quiet"], 0], ["Sequence means…", ["Order of events", "A colour", "A game", "A question"], 0]] }
+        },
+        "Writing and grammar": {
+          "Nouns": { lesson: "A noun names a person, place, animal or thing. For example, Ama, school, dog and book are nouns.", questions: [["Which word is a noun?", ["Run", "Happy", "Book", "Quickly"], 2], ["A noun can name a…", ["Person", "Only action", "Only colour", "Only sound"], 0]] },
+          "Sentences": { lesson: "A complete sentence has a capital letter at the beginning, words that make sense together, and a punctuation mark at the end.", questions: [["What begins a sentence?", ["A capital letter", "A full stop", "A comma", "A number"], 0], ["What can end a statement?", ["Full stop", "Capital letter", "Space", "Heading"], 0]] }
+        }
+      },
+      "Our World Our People": {
+        "Ghana and community": {
+          "National symbols": { lesson: "National symbols represent a country. Ghana's flag, coat of arms and national anthem help show Ghana's identity.", questions: [["Which is a national symbol?", ["National flag", "School bag", "Pencil", "Desk"], 0], ["The national anthem represents…", ["The country", "One classroom", "One book", "A toy"], 0]] },
+          "Community helpers": { lesson: "Community helpers have jobs that support people. Teachers educate, nurses care for patients, police officers help keep people safe, and farmers grow food.", questions: [["Who helps to educate learners?", ["Teacher", "Farmer", "Driver", "Tailor"], 0], ["Who grows food for people?", ["Farmer", "Nurse", "Pilot", "Artist"], 0]] }
+        },
+        "Environment": {
+          "Keeping clean": { lesson: "A clean environment protects our health. Use bins, avoid littering, and help keep classrooms, homes and public spaces tidy.", questions: [["Where should rubbish go?", ["In a bin", "On the road", "In a river", "Under a desk"], 0], ["A clean environment helps our…", ["Health", "Litter", "Noise", "Waste"], 0]] },
+          "Natural resources": { lesson: "Natural resources come from nature. Water, soil, trees, sunlight and minerals are resources we should use carefully.", questions: [["Which is a natural resource?", ["Water", "Plastic ruler", "Notebook", "Shoe"], 0], ["Trees are important because they are…", ["Natural resources", "Machines", "Toys", "Buildings"], 0]] }
+        }
+      },
+      "History": {
+        "Ghana's past": {
+          "Early communities": { lesson: "Long ago, people in Ghana lived in communities where they farmed, fished, traded and supported one another. Communities grew near places with water, fertile land and useful resources.", questions: [["Why did many early communities grow near water?", ["For water and food", "For computers", "For airports", "For cinemas"], 0], ["People in early communities often…", ["Farmed and traded", "Used smartphones", "Drove buses", "Built rockets"], 0]] },
+          "Traditional leadership": { lesson: "Traditional leaders help guide their communities. Chiefs and elders work with community members to preserve customs, settle disagreements and promote development.", questions: [["Who may help guide a traditional community?", ["Chiefs and elders", "Only tourists", "Only children", "Nobody"], 0], ["Traditional leaders can help settle…", ["Disagreements", "Rainfall", "Homework only", "Television shows"], 0]] }
+        },
+        "National history": {
+          "Independence": { lesson: "Ghana became independent on 6 March 1957. Independence means a country governs itself instead of being ruled by another country.", questions: [["When did Ghana become independent?", ["6 March 1957", "1 January 2000", "25 December 1900", "6 March 2020"], 0], ["Independence means a country…", ["Governs itself", "Stops learning", "Has no people", "Has no flag"], 0]] },
+          "Important national events": { lesson: "National events help us remember important moments in Ghana's story. We learn from the past so we can make thoughtful choices for the future.", questions: [["Why do we learn national history?", ["To understand the past", "To forget everything", "To avoid books", "To stop asking questions"], 0], ["History can help us make…", ["Thoughtful choices", "No choices", "Only mistakes", "Random noise"], 0]] }
+        },
+        "Historical skills": {
+          "Timelines": { lesson: "A timeline places events in the order they happened. It helps us see what happened first, next and later.", questions: [["A timeline shows events in…", ["Order", "A circle only", "A song", "A colour list"], 0], ["What comes first on a timeline?", ["The earliest event", "The newest event", "Any event", "A question"], 0]] },
+          "Historical sources": { lesson: "Historical sources give us clues about the past. They can include stories, photographs, objects, letters, buildings and records.", questions: [["Which can be a historical source?", ["An old photograph", "Only a future plan", "A made-up answer", "Nothing"], 0], ["Sources give us clues about…", ["The past", "Only the future", "Only games", "Only weather"], 0]] }
+        }
+      },
+      "Computing": {
+        "Computer basics": {
+          "Parts of a computer": { lesson: "A computer has parts with different jobs. The monitor shows information, the keyboard enters letters, and the mouse helps us select items.", questions: [["Which part shows information?", ["Monitor", "Keyboard", "Mouse", "Speaker"], 0], ["Which part is used to type letters?", ["Keyboard", "Monitor", "Printer", "Camera"], 0]] },
+          "Using a mouse": { lesson: "A mouse moves the pointer on a screen. You can click to choose something, double-click to open it, and drag to move it.", questions: [["What does a click help you do?", ["Choose an item", "Print a book", "Wash a screen", "Turn off the sun"], 0], ["What can you do to move an item?", ["Drag it", "Sing to it", "Fold it", "Paint it"], 0]] }
+        },
+        "Digital safety": {
+          "Personal information": { lesson: "Personal information includes your full name, address, school and passwords. Keep it private and ask a trusted adult before sharing online.", questions: [["Which should stay private?", ["Password", "Favourite colour", "A drawing", "A song"], 0], ["Who can help you online?", ["A trusted adult", "A stranger", "Nobody", "Any message"], 0]] },
+          "Kind online behaviour": { lesson: "Be kind and respectful online. Use friendly words, do not bully others, and tell a trusted adult if something makes you uncomfortable.", questions: [["What should you do if a message makes you uncomfortable?", ["Tell a trusted adult", "Keep it secret", "Reply angrily", "Share it everywhere"], 0], ["Online behaviour should be…", ["Kind", "Hurtful", "Secretive", "Rude"], 0]] }
+        }
+      },
+      "ICT": {
+        "Digital devices": {
+          "Input and output devices": { lesson: "Input devices send information to a computer. A keyboard, mouse and microphone are input devices. Output devices show results from a computer, such as a monitor, printer and speakers.", questions: [["Which is an input device?", ["Keyboard", "Monitor", "Printer", "Speaker"], 0], ["Which is an output device?", ["Monitor", "Mouse", "Microphone", "Keyboard"], 0]] },
+          "Storage devices": { lesson: "Storage devices keep files and information for later use. A hard drive, memory card and USB flash drive can store digital files.", questions: [["Which can store files?", ["USB flash drive", "Monitor", "Mouse pad", "Speaker"], 0], ["A storage device keeps information for…", ["Later use", "One second only", "No use", "Printing only"], 0]] }
+        },
+        "Creating digital work": {
+          "Word processing": { lesson: "Word processing lets us create and edit documents using a computer. We can type, correct mistakes, change text size and save our work.", questions: [["Word processing helps you create…", ["Documents", "Plants", "Shoes", "Food"], 0], ["What should you do after typing a document?", ["Save it", "Throw the computer", "Delete it always", "Ignore it"], 0]] },
+          "Presentations": { lesson: "A presentation shares ideas using slides. Good slides use a clear title, short points and useful pictures without too much text.", questions: [["A presentation is made from…", ["Slides", "Only pencils", "Only games", "Only tables"], 0], ["Good slides should use…", ["Short clear points", "Very long paragraphs", "No title", "Random letters"], 0]] }
+        },
+        "Internet and communication": {
+          "Searching safely": { lesson: "A search engine helps people find information online. Use clear keywords, check trusted sources and ask a teacher or parent when you are unsure.", questions: [["What helps you find information online?", ["A search engine", "A ruler", "A calculator only", "A pencil case"], 0], ["Who can help if you are unsure online?", ["A trusted adult", "Any stranger", "Nobody", "A random message"], 0]] },
+          "Email basics": { lesson: "Email is a way to send messages online. A polite email has a subject, greeting, clear message and respectful closing. Never share passwords by email.", questions: [["What should an email include?", ["A clear message", "A password", "Only emojis", "No greeting"], 0], ["Should you share passwords by email?", ["No", "Yes", "Only at night", "Only with strangers"], 0]] }
+        }
+      },
+      "Creative Arts": {
+        "Visual arts": {
+          "Primary colours": { lesson: "The primary colours are red, yellow and blue. Artists can mix these colours to create other colours.", questions: [["Which is a primary colour?", ["Red", "Green", "Purple", "Brown"], 0], ["How many primary colours are there?", ["Three", "One", "Five", "Ten"], 0]] },
+          "Patterns": { lesson: "A pattern repeats in a planned way. Patterns can use lines, shapes, colours, sounds or movements.", questions: [["A pattern does what?", ["Repeats", "Disappears", "Sleeps", "Breaks"], 0], ["Patterns can use…", ["Shapes", "Only food", "Only books", "Only numbers"], 0]] }
+        },
+        "Music and movement": {
+          "Rhythm": { lesson: "Rhythm is a steady pattern of sounds and beats in music. You can clap, tap or move to show a rhythm.", questions: [["Rhythm is a pattern of…", ["Beats", "Colours", "Pictures", "Smells"], 0], ["How can you show rhythm?", ["Clapping", "Sleeping", "Reading only", "Drawing only"], 0]] },
+          "Traditional dance": { lesson: "Traditional dances can tell stories and celebrate culture. They use planned body movements, music and sometimes special clothing.", questions: [["Traditional dance can celebrate…", ["Culture", "A spelling test", "A computer", "A ruler"], 0], ["Dance uses planned…", ["Body movements", "Only silence", "Only paper", "Only numbers"], 0]] }
+        }
+      },
+      "French": {
+        "Greetings and introductions": {
+          "Saying hello": { lesson: "In French, Bonjour means hello or good day. Bonsoir means good evening. You can say Bonjour when greeting someone during the day.", questions: [["What does Bonjour mean?", ["Hello", "Goodbye", "Thank you", "Please"], 0], ["When can you say Bonsoir?", ["In the evening", "At breakfast", "At noon only", "Never"], 0]] },
+          "Introducing yourself": { lesson: "Je m'appelle means my name is. You can say Je m'appelle Ama to introduce yourself politely in French.", questions: [["What does Je m'appelle mean?", ["My name is", "Good morning", "Thank you", "See you"], 0], ["How do you introduce your name in French?", ["Je m'appelle…", "Bonjour…", "Merci…", "Au revoir…"], 0]] }
+        },
+        "Everyday vocabulary": {
+          "Colours": { lesson: "Some French colours are rouge for red, bleu for blue, jaune for yellow and vert for green. Learning colours helps you describe objects.", questions: [["What is bleu in English?", ["Blue", "Red", "Green", "Yellow"], 0], ["What is rouge in English?", ["Red", "White", "Black", "Purple"], 0]] },
+          "Numbers 1 to 10": { lesson: "French numbers begin un, deux, trois, quatre and cinq. Practise saying them slowly, then count familiar objects around you.", questions: [["What is deux?", ["Two", "Three", "Five", "Ten"], 0], ["What is cinq?", ["Five", "One", "Four", "Eight"], 0]] }
+        }
+      },
+      "Religious and Moral Education": {
+        "Values": {
+          "Honesty": { lesson: "Honesty means telling the truth and doing what is right, even when nobody is watching. It helps people trust us.", questions: [["Honesty means telling the…", ["Truth", "Funniest story", "Longest sentence", "Secret only"], 0], ["Honesty helps build…", ["Trust", "Litter", "Noise", "Confusion"], 0]] },
+          "Respect": { lesson: "Respect means treating people, places and property with care. We show respect by listening, using kind words and following fair rules.", questions: [["Respect can be shown by…", ["Listening", "Insulting", "Breaking things", "Ignoring rules"], 0], ["Respect means treating others with…", ["Care", "Rudeness", "Anger", "Silence only"], 0]] }
+        },
+        "Peace and responsibility": {
+          "Solving disagreements": { lesson: "When people disagree, they can speak calmly, listen to each other and look for a fair solution. Fighting usually makes problems worse.", questions: [["A peaceful way to solve a disagreement is to…", ["Speak calmly", "Fight", "Shout", "Ignore everyone"], 0], ["Listening helps people find a…", ["Fair solution", "Bigger problem", "Louder voice", "New argument"], 0]] },
+          "Caring for others": { lesson: "Caring for others means noticing when someone needs help and acting with kindness. Small helpful actions can make a big difference.", questions: [["Caring for others means acting with…", ["Kindness", "Cruelty", "Laziness", "Jealousy"], 0], ["Helping someone can make a…", ["Difference", "Mess", "Rule", "Problem only"], 0]] }
+        }
+      },
+      "Physical Education": {
+        "Healthy living": {
+          "Exercise": { lesson: "Exercise keeps the body strong and healthy. Walking, running, skipping and playing active games are all forms of exercise.", questions: [["Which is exercise?", ["Skipping", "Watching a wall", "Sleeping in class", "Reading one word"], 0], ["Exercise helps keep the body…", ["Healthy", "Broken", "Invisible", "Untidy"], 0]] },
+          "Healthy food": { lesson: "A balanced meal includes different healthy foods such as fruits, vegetables, grains and protein foods. Drinking water is also important.", questions: [["Which is a healthy food?", ["Fruit", "Only sweets", "Plastic", "Sand"], 0], ["What is important to drink?", ["Water", "Ink", "Paint", "Soap"], 0]] }
+        },
+        "Games and safety": {
+          "Fair play": { lesson: "Fair play means following rules, taking turns and treating other players with respect. Winning is enjoyable, but playing fairly matters too.", questions: [["Fair play includes…", ["Following rules", "Cheating", "Pushing", "Insulting"], 0], ["Players should treat each other with…", ["Respect", "Anger", "Rudeness", "Fear"], 0]] },
+          "Safe movement": { lesson: "Safe movement means checking your space, wearing suitable clothing and listening to instructions before active games or exercise.", questions: [["Before a game, you should check your…", ["Space", "Phone only", "Homework only", "Desk only"], 0], ["Safe movement includes listening to…", ["Instructions", "Rumours", "Music only", "Nobody"], 0]] }
         }
       }
     }
@@ -112,11 +218,39 @@ const learningCatalog = {
         "Reading": {
           "Main idea": { lesson: "The main idea is the most important message in a text. Look at the title, repeated words, and what most sentences are about to find it.", questions: [["What is the main idea?", ["A tiny detail", "The main message", "A page number", "A character name"], 1], ["What can help you find the main idea?", ["Repeated words", "Only punctuation", "The last letter", "The page colour"], 0]] },
           "Vocabulary": { lesson: "Vocabulary means the words we know and use. When you meet a new word, read the sentence around it for clues, then check a dictionary if you can.", questions: [["What can help explain a new word?", ["Sentence clues", "Skipping it", "Guessing randomly", "Closing the book"], 0], ["Vocabulary is about…", ["Numbers", "Words", "Maps", "Sports"], 1]] }
+        },
+        "Writing": {
+          "Paragraphs": { lesson: "A paragraph is a group of sentences about one main idea. It usually has a topic sentence, supporting details and a closing sentence.", questions: [["A paragraph focuses on…", ["One main idea", "Many random ideas", "Only a title", "Only a question"], 0], ["What can a paragraph include?", ["Supporting details", "Only numbers", "No sentences", "Only pictures"], 0]] },
+          "Punctuation": { lesson: "Punctuation helps readers understand writing. A full stop ends a statement, a question mark ends a question, and a comma can separate ideas in a list.", questions: [["Which mark ends a question?", ["Question mark", "Full stop", "Comma", "Apostrophe"], 0], ["Which mark ends a statement?", ["Full stop", "Question mark", "Comma", "Dash"], 0]] }
         }
       },
       "Mathematics": {
         "Fractions": {
           "Equal parts": { lesson: "A fraction shows equal parts of one whole. In one half, the whole is split into two equal parts. The bottom number tells how many equal parts there are.", questions: [["One half means a whole split into how many equal parts?", ["1", "2", "3", "4"], 1], ["What does the bottom number in a fraction show?", ["Equal parts", "The colour", "The answer", "The shape"], 0]] }
+        },
+        "Geometry": {
+          "Angles": { lesson: "An angle is made when two lines meet. A right angle is a square corner and measures 90 degrees.", questions: [["A right angle measures…", ["90°", "45°", "180°", "360°"], 0], ["An angle is made when…", ["Two lines meet", "A circle moves", "A number repeats", "A word ends"], 0]] },
+          "Perimeter": { lesson: "Perimeter is the distance around the outside of a shape. Add the lengths of all its sides to find it.", questions: [["Perimeter means the distance…", ["Around a shape", "Inside a shape", "Above a shape", "Below a shape"], 0], ["How do you find perimeter?", ["Add side lengths", "Multiply colours", "Count letters", "Measure weight"], 0]] }
+        }
+      },
+      "Science": {
+        "Forces and motion": {
+          "Pushes and pulls": { lesson: "A force is a push or a pull. Forces can make objects start moving, stop moving, speed up, slow down or change direction.", questions: [["A force can be a…", ["Push or pull", "Colour", "Sound only", "Story"], 0], ["A push can make an object…", ["Move", "Disappear", "Read", "Sleep"], 0]] },
+          "Friction": { lesson: "Friction is a force that happens when surfaces rub together. It can slow moving objects down.", questions: [["Friction happens when surfaces…", ["Rub together", "Float apart", "Change colour", "Grow"], 0], ["Friction can make objects…", ["Slow down", "Fly away", "Turn into water", "Read"], 0]] }
+        },
+        "Earth and space": {
+          "The solar system": { lesson: "The solar system includes the Sun, planets, moons and other objects. Earth is the planet where we live.", questions: [["What is at the centre of our solar system?", ["The Sun", "Earth", "The Moon", "Mars"], 0], ["Which planet do we live on?", ["Earth", "Venus", "Jupiter", "Saturn"], 0]] },
+          "Day and night": { lesson: "Day and night happen because Earth rotates. The side facing the Sun has day, while the side facing away has night.", questions: [["Day and night happen because Earth…", ["Rotates", "Stops", "Melts", "Shrinks"], 0], ["The side facing the Sun has…", ["Day", "Night", "Rain only", "Snow only"], 0]] }
+        }
+      },
+      "Global Perspectives": {
+        "Community": {
+          "Working together": { lesson: "Working together means sharing ideas and helping one another reach a goal. Listening respectfully makes teamwork stronger.", questions: [["Teamwork means…", ["Working together", "Working alone always", "Ignoring others", "Stopping early"], 0], ["A good teammate should…", ["Listen respectfully", "Interrupt everyone", "Refuse to help", "Ignore the goal"], 0]] },
+          "Helping others": { lesson: "Helping others can make a community safer and kinder. Small actions, such as sharing, volunteering and including others, can make a difference.", questions: [["Which action helps a community?", ["Volunteering", "Littering", "Bullying", "Excluding others"], 0], ["Helping others can make a community…", ["Kinder", "Noisier only", "Smaller", "Empty"], 0]] }
+        },
+        "Sustainability": {
+          "Reducing waste": { lesson: "We can reduce waste by using less, reusing useful items and recycling materials when possible.", questions: [["Which action reduces waste?", ["Reusing a bottle", "Throwing away everything", "Littering", "Wasting paper"], 0], ["Recycling helps us…", ["Use materials again", "Create more litter", "Waste water", "Avoid learning"], 0]] },
+          "Saving water": { lesson: "Fresh water is important for people, plants and animals. Turn taps off when not in use and report leaks to help save water.", questions: [["How can you save water?", ["Turn taps off", "Leave taps running", "Spill water", "Ignore leaks"], 0], ["Water is important for…", ["People, plants and animals", "Only cars", "Only toys", "Only buildings"], 0]] }
         }
       }
     }
