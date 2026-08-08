@@ -66,6 +66,8 @@ a {
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px 18px;
   background: rgba(4, 15, 28, 0.95);
   border-right: 1px solid var(--border);
@@ -1041,6 +1043,18 @@ body.menu-open::before {
 .syllabus-table th { color: var(--accent); background: rgba(127, 231, 255, .07); }
 .syllabus-table .small-btn { width: auto; padding: 10px 14px; }
 .year-chip { display: inline-block; padding: 5px 8px; margin: 0 5px 6px 0; border-radius: 999px; background: rgba(127, 231, 255, .12); color: var(--muted); font-size: .82rem; }
+
+/* The Learning Explorer keeps the syllabus data in a table, but presents it as
+   a clear vertical learning path rather than wide side-by-side columns. */
+.learning-vertical { overflow: visible; border: 0; }
+.learning-vertical .syllabus-table { min-width: 0; display: block; }
+.learning-vertical .syllabus-table thead { display: none; }
+.learning-vertical .syllabus-table tbody { display: grid; gap: 18px; }
+.learning-vertical .syllabus-table tr { display: grid; gap: 14px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.04); }
+.learning-vertical .syllabus-table td { display: block; padding: 0; border: 0; }
+.learning-vertical .syllabus-table td:first-child { font-size: 1.08rem; color: var(--text); }
+.learning-vertical .year-chip { display: block; width: 100%; margin: 0 0 8px; padding: 10px 12px; }
+.learning-vertical .syllabus-table .small-btn { width: 100%; }
 .topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
 .topic-card, .lesson-card { padding: 22px; border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,.045); }
 .topic-card h3 { margin-bottom: 12px; }

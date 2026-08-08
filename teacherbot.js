@@ -108,7 +108,7 @@ const learningCatalog = {
 function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
-  explorer.innerHTML = `<div class="syllabus-table-wrap"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(learningCatalog).map(([key, syllabus]) => `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map(year => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`).join("")}</tbody></table></div>`;
+  explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(learningCatalog).map(([key, syllabus]) => `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map(year => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`).join("")}</tbody></table></div>`;
 }
 
 function setupLearningSpace() {
