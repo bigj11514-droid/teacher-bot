@@ -52,9 +52,9 @@ function setupStudentSession() {
       quizMenu.className = "department-quiz-nav";
       quizMenu.innerHTML = `
         <summary>📝 Department quizzes</summary>
-        <a href="quiz.html?department=basic&class=basic4&subject=maths">Basic quiz</a>
-        <a href="quiz.html?department=jhs&class=jhs1&subject=maths">JHS quiz</a>
-        <a href="quiz.html?department=shs&class=shs1&subject=core-maths&course=general-arts">SHS quiz</a>
+        <a href="quiz.html?department=basic">Basic quiz</a>
+        <a href="quiz.html?department=jhs">JHS quiz</a>
+        <a href="quiz.html?department=shs">SHS quiz</a>
       `;
       navigation.append(quizMenu);
     }
@@ -922,25 +922,57 @@ function setupQuizPage() {
   const setupClassLabel = document.getElementById("setup-class-label");
   const setupSubjectLabel = document.getElementById("setup-subject-label");
   const activeArea = document.getElementById("quiz-active-area");
+  const departmentSelect = document.getElementById("quiz-department-select");
+  const classSelect = document.getElementById("quiz-class-select");
+  const subjectSelect = document.getElementById("quiz-subject-select");
 
   if (!quizSetup || !startBtn || !timerSelect) {
     return;
   }
 
-  const subjectKey = getSubjectKey();
-  const classKey = getClassKey();
-  const subjectData = subjects[subjectKey];
-  const className = classLabels[classKey] || "Your class";
+  const classesByDepartment = {
+    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
+    jhs: ["jhs1", "jhs2", "jhs3"],
+    shs: ["shs1", "shs2", "shs3"]
+  };
 
-  if (setupClassLabel) {
-    setupClassLabel.textContent = className;
-  }
+  const updateSubjects = (useRequestedSubject = false) => {
+    const options = getSubjectCatalogForClass(classSelect.value);
+    subjectSelect.innerHTML = options.map((subject) => `<option value="${subject.key}">${subject.label}</option>`).join("");
+    const requestedSubject = getSubjectKey();
+    if (useRequestedSubject && options.some((subject) => subject.key === requestedSubject)) subjectSelect.value = requestedSubject;
+    const selected = subjects[subjectSelect.value];
+    if (setupClassLabel) setupClassLabel.textContent = classLabels[classSelect.value] || "Your class";
+    if (setupSubjectLabel) setupSubjectLabel.textContent = selected ? `${selected.displayName} is ready. Now choose a timer.` : "Choose a subject first.";
+  };
 
-  if (setupSubjectLabel) {
-    setupSubjectLabel.textContent = subjectData ? `${subjectData.displayName} is ready for you.` : "Choose a subject first.";
+  const updateClasses = () => {
+    const options = classesByDepartment[departmentSelect.value] || classesByDepartment.basic;
+    classSelect.innerHTML = options.map((classKey) => `<option value="${classKey}">${classLabels[classKey]}</option>`).join("");
+    const requestedClass = getClassKey();
+    if (options.includes(requestedClass)) classSelect.value = requestedClass;
+    updateSubjects(true);
+  };
+
+  if (departmentSelect && classSelect && subjectSelect) {
+    const requestedDepartment = getDepartmentKey();
+    departmentSelect.value = classesByDepartment[requestedDepartment] ? requestedDepartment : getDepartmentFromClass(getClassKey());
+    updateClasses();
+    departmentSelect.addEventListener("change", updateClasses);
+    classSelect.addEventListener("change", () => updateSubjects(false));
+    subjectSelect.addEventListener("change", () => updateSubjects(false));
   }
 
   startBtn.addEventListener("click", () => {
+    if (departmentSelect && classSelect && subjectSelect) {
+      const params = new URLSearchParams({
+        department: departmentSelect.value,
+        class: classSelect.value,
+        subject: subjectSelect.value
+      });
+      if (departmentSelect.value === "shs") params.set("course", "general-arts");
+      window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
+    }
     quizTimerSeconds = Number(timerSelect.value) || 15;
     quizStarted = true;
     if (activeArea) {

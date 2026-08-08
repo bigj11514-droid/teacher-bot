@@ -91,10 +91,20 @@
             <div class="quiz-controls" id="quiz-setup">
               <div class="setup-card">
                 <div class="setup-summary">
-                  <p class="eyebrow">Quick start</p>
-                  <h3 id="setup-class-label">Your class</h3>
-                  <p id="setup-subject-label">Subject will appear here</p>
+                  <p class="eyebrow">Quiz setup</p>
+                  <h3 id="setup-class-label">Choose your department</h3>
+                  <p id="setup-subject-label">Select your class before setting the timer.</p>
                 </div>
+                <label for="quiz-department-select">Choose department</label>
+                <select id="quiz-department-select">
+                  <option value="basic">Basic</option>
+                  <option value="jhs">JHS</option>
+                  <option value="shs">SHS</option>
+                </select>
+                <label for="quiz-class-select">Choose class</label>
+                <select id="quiz-class-select"></select>
+                <label for="quiz-subject-select">Choose subject</label>
+                <select id="quiz-subject-select"></select>
                 <label for="timer-select">Choose quiz timer</label>
                 <select id="timer-select">
                   <option value="15">15 seconds</option>
