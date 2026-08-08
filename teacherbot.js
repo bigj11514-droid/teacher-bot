@@ -123,6 +123,30 @@ const learningCatalog = {
   }
 };
 
+let lessonTimerId = null;
+
+function startLessonTimer(seconds = 600) {
+  clearInterval(lessonTimerId);
+  let timeLeft = seconds;
+  const timerElement = document.getElementById("lesson-timer");
+  const updateTimer = () => {
+    if (!timerElement) return;
+    const minutes = Math.floor(timeLeft / 60);
+    const remainingSeconds = String(timeLeft % 60).padStart(2, "0");
+    timerElement.textContent = `Lesson time: ${minutes}:${remainingSeconds}`;
+  };
+  updateTimer();
+  lessonTimerId = setInterval(() => {
+    timeLeft -= 1;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(lessonTimerId);
+      lessonTimerId = null;
+      if (timerElement) timerElement.textContent = "Lesson time is complete — finish when you are ready.";
+    }
+  }, 1000);
+}
+
 function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
@@ -137,19 +161,28 @@ function setupLearningSpace() {
   const selectedYear = new URLSearchParams(window.location.search).get("year");
   let activeLesson;
   const renderTopics = () => {
+    clearInterval(lessonTimerId);
+    lessonTimerId = null;
     space.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(syllabus.topics).map(([subject, topics]) => `<article class="topic-card"><h3>${subject}</h3>${Object.entries(topics).map(([topic, subtopics]) => `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(subtopics).map(subtopic => `<button class="subtopic-btn" data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${subtopic}</button>`).join("")}</div></details>`).join("")}</article>`).join("")}</div>`;
     space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
   };
   const renderLesson = (subject, topic, subtopic) => {
     activeLesson = syllabus.topics[subject][topic][subtopic];
     const lessonImage = activeLesson.image ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />` : "";
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
+    startLessonTimer();
     document.getElementById("back-to-topics").addEventListener("click", renderTopics);
-    document.getElementById("finish-lesson").addEventListener("click", () => document.getElementById("understanding-modal").classList.add("visible"));
+    document.getElementById("finish-lesson").addEventListener("click", () => {
+      clearInterval(lessonTimerId);
+      lessonTimerId = null;
+      document.getElementById("understanding-modal").classList.add("visible");
+    });
   };
   const modal = document.getElementById("understanding-modal");
   document.getElementById("understood-yes").addEventListener("click", () => {
     modal.classList.remove("visible");
+    clearInterval(lessonTimerId);
+    lessonTimerId = null;
     renderTopicQuiz(activeLesson, () => {
       if (activeLesson.next) renderLesson(activeLesson.next.subject, activeLesson.next.topic, activeLesson.next.subtopic);
       else renderTopics();
@@ -160,6 +193,8 @@ function setupLearningSpace() {
 }
 
 function renderTopicQuiz(lesson, afterQuiz) {
+  clearInterval(lessonTimerId);
+  lessonTimerId = null;
   const space = document.getElementById("learning-space");
   let index = 0, score = 0;
   const showQuestion = () => {

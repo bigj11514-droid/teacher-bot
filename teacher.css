@@ -1075,6 +1075,7 @@ body.menu-open::before {
 .subtopic-btn:hover, .back-link:hover { border-color: var(--accent); }
 .back-link { margin-bottom: 16px; }
 .lesson-card { max-width: 760px; }
+.lesson-timer { display: inline-flex; margin: 12px 0; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); background: rgba(127, 231, 255, .1); font-weight: 700; }
 .lesson-image { width: 100%; height: min(300px, 42vw); margin: 18px 0 0; object-fit: cover; border: 1px solid var(--border); border-radius: 16px; }
 .lesson-copy { margin: 18px 0; padding: 18px; border-radius: 14px; background: rgba(127,231,255,.07); }
 .lesson-copy p, .lesson-card > p { line-height: 1.75; color: var(--muted); }
