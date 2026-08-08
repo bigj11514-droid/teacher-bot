@@ -1002,6 +1002,23 @@ body.menu-open::before {
 
 .logout-btn:hover { border-color: var(--accent); color: var(--text); }
 
+.site-nav .logout-btn {
+  width: 100%;
+  text-align: left;
+  color: var(--muted);
+}
+
+.department-quiz-nav {
+  border: 1px solid rgba(127, 231, 255, .18);
+  border-radius: 12px;
+  color: var(--muted);
+}
+
+.department-quiz-nav summary { padding: 12px 14px; cursor: pointer; }
+.department-quiz-nav a { display: block; padding: 9px 14px 9px 30px; color: var(--muted); }
+.department-quiz-nav a:hover { color: var(--accent); background: rgba(127, 231, 255, .08); }
+.simple-nav-logout { border: 0; background: transparent; color: var(--muted); text-align: left; padding: 0; cursor: pointer; }
+
 .login-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
 .login-card {
   width: min(100%, 460px); padding: 36px; border: 1px solid var(--border);

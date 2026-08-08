@@ -33,18 +33,34 @@ function setupStudentSession() {
     if (initialsElement) initialsElement.textContent = initials || "ST";
   });
 
-  document.querySelectorAll(".header-actions").forEach((actions) => {
-    if (actions.querySelector(".logout-btn")) return;
+  const addLogout = (navigation, className) => {
+    if (!navigation || navigation.querySelector(".logout-btn")) return;
     const logoutButton = document.createElement("button");
     logoutButton.type = "button";
-    logoutButton.className = "logout-btn";
+    logoutButton.className = `${className} logout-btn`;
     logoutButton.textContent = "Log out";
     logoutButton.addEventListener("click", () => {
       localStorage.removeItem(STUDENT_SESSION_KEY);
       window.location.replace("login.html");
     });
-    actions.append(logoutButton);
+    navigation.append(logoutButton);
+  };
+
+  document.querySelectorAll(".site-nav").forEach((navigation) => {
+    if (!navigation.querySelector(".department-quiz-nav")) {
+      const quizMenu = document.createElement("details");
+      quizMenu.className = "department-quiz-nav";
+      quizMenu.innerHTML = `
+        <summary>📝 Department quizzes</summary>
+        <a href="quiz.html?department=basic&class=basic4&subject=maths">Basic quiz</a>
+        <a href="quiz.html?department=jhs&class=jhs1&subject=maths">JHS quiz</a>
+        <a href="quiz.html?department=shs&class=shs1&subject=core-maths&course=general-arts">SHS quiz</a>
+      `;
+      navigation.append(quizMenu);
+    }
+    addLogout(navigation, "nav-item");
   });
+  addLogout(document.getElementById("simple-nav"), "simple-nav-logout");
 }
 
 const learningCatalog = {
