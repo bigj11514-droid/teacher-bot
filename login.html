@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="teacher.css" />
+    <title>Student Login | Y_Cohde</title>
+  </head>
+  <body class="login-page">
+    <main class="login-card">
+      <div class="brand-mark">Y</div>
+      <h1>Welcome to Y_Cohde</h1>
+      <p>Log in to open your personal learning dashboard.</p>
+      <form class="login-form" id="login-form">
+        <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
+        <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+        <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
+        <p id="login-error" class="login-error" role="alert"></p>
+        <button class="btn" type="submit">Log in to dashboard</button>
+      </form>
+    </main>
+    <script>
+      const sessionKey = "ycohdeStudentSession";
+      if (localStorage.getItem(sessionKey)) window.location.replace("index.html");
+      document.getElementById("login-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("student-name").value.trim();
+        const email = document.getElementById("student-email").value.trim();
+        const password = document.getElementById("student-password").value;
+        const error = document.getElementById("login-error");
+        if (!name || !email || password.length < 4) {
+          error.textContent = "Enter your name, a valid email, and a password of at least 4 characters.";
+          return;
+        }
+        localStorage.setItem(sessionKey, JSON.stringify({ name, email }));
+        window.location.replace("index.html");
+      });
+    </script>
+  </body>
+</html>

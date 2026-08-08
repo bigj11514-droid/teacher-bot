@@ -1,5 +1,52 @@
 ﻿console.log("Teacher Bot loaded");
 
+// Student sign-in for this static site. This stores only the display name in
+// the browser; a real password system needs a server-side authentication API.
+const STUDENT_SESSION_KEY = "ycohdeStudentSession";
+
+function getStudentSession() {
+  try {
+    return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function requireStudentLogin() {
+  if (!getStudentSession()) {
+    window.location.replace("login.html");
+    return false;
+  }
+  return true;
+}
+
+function setupStudentSession() {
+  const student = getStudentSession();
+  if (!student) return;
+
+  document.querySelectorAll(".profile-pill").forEach((profile) => {
+    const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2)
+      .map((part) => part[0]).join("").toUpperCase();
+    const nameElement = profile.querySelector("strong");
+    const initialsElement = profile.querySelector("span");
+    if (nameElement) nameElement.textContent = student.name;
+    if (initialsElement) initialsElement.textContent = initials || "ST";
+  });
+
+  document.querySelectorAll(".header-actions").forEach((actions) => {
+    if (actions.querySelector(".logout-btn")) return;
+    const logoutButton = document.createElement("button");
+    logoutButton.type = "button";
+    logoutButton.className = "logout-btn";
+    logoutButton.textContent = "Log out";
+    logoutButton.addEventListener("click", () => {
+      localStorage.removeItem(STUDENT_SESSION_KEY);
+      window.location.replace("login.html");
+    });
+    actions.append(logoutButton);
+  });
+}
+
 // Dashboard shell interactions keep the existing quiz logic intact while
 // supporting the new sidebar and top navigation experience.
 
@@ -1235,11 +1282,15 @@ function setupMobileMenu() {
 
 if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
+    if (!requireStudentLogin()) return;
+    setupStudentSession();
     setupMobileMenu();
     setupDepartmentPage();
   });
 } else if (document.getElementById("quiz-setup") && document.getElementById("quiz-active-area")) {
   document.addEventListener("DOMContentLoaded", () => {
+    if (!requireStudentLogin()) return;
+    setupStudentSession();
     setupMobileMenu();
     setupQuizPage();
     setupEngagementFeatures();
@@ -1248,6 +1299,8 @@ if (document.getElementById("department-select")) {
   });
 } else {
   document.addEventListener("DOMContentLoaded", () => {
+    if (!requireStudentLogin()) return;
+    setupStudentSession();
     setupMobileMenu();
     setupSubjectLinks();
     setupEngagementFeatures();
