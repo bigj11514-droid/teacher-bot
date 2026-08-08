@@ -47,6 +47,13 @@ function setupStudentSession() {
   };
 
   document.querySelectorAll(".site-nav").forEach((navigation) => {
+    if (!navigation.querySelector(".community-nav-link")) {
+      const communityLink = document.createElement("a");
+      communityLink.className = "nav-item community-nav-link";
+      communityLink.href = "community.html";
+      communityLink.innerHTML = "<span>👥</span><span>Student community</span>";
+      navigation.append(communityLink);
+    }
     if (!navigation.querySelector(".department-quiz-nav")) {
       const quizMenu = document.createElement("details");
       quizMenu.className = "department-quiz-nav";
@@ -60,7 +67,15 @@ function setupStudentSession() {
     }
     addLogout(navigation, "nav-item");
   });
-  addLogout(document.getElementById("simple-nav"), "simple-nav-logout");
+  const simpleNav = document.getElementById("simple-nav");
+  if (simpleNav && !simpleNav.querySelector(".community-nav-link")) {
+    const communityLink = document.createElement("a");
+    communityLink.className = "community-nav-link";
+    communityLink.href = "community.html";
+    communityLink.textContent = "Student community";
+    simpleNav.append(communityLink);
+  }
+  addLogout(simpleNav, "simple-nav-logout");
 }
 
 const learningCatalog = {
@@ -80,7 +95,10 @@ const learningCatalog = {
       },
       "Science": {
         "Living things": {
-          "Parts of a plant": { lesson: "Plants have roots, stems, leaves, flowers and fruits. Roots hold the plant in soil and take in water. Leaves use sunlight to help make food.", questions: [["Which part takes in water from the soil?", ["Flower", "Root", "Leaf", "Fruit"], 1], ["What do leaves use to help make food?", ["Moonlight", "Sunlight", "Sand", "Wind"], 1]] },
+          "What is a plant?": { lesson: "A plant is a living thing. Most plants grow in the ground, make their own food using sunlight, and need water and air to stay healthy. Trees, grass, flowers and vegetables are all plants.", image: "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=900&q=80", questions: [["Is a plant a living thing?", ["Yes", "No"], 0], ["What do most plants use to make food?", ["Sunlight", "Plastic", "Stones", "Toys"], 0]], next: { subject: "Science", topic: "Living things", subtopic: "Types of plants" } },
+          "Types of plants": { lesson: "Plants come in different types. Trees are tall and have hard woody stems. Shrubs are shorter and bushy. Herbs are small plants with soft stems. Climbers need support to grow upward, while creepers spread along the ground.", image: "https://images.unsplash.com/photo-1466781783364-36c955e42a7f?auto=format&fit=crop&w=900&q=80", questions: [["Which plant type usually has a hard woody stem?", ["Herb", "Tree", "Creeper", "Climber"], 1], ["Which plants grow along the ground?", ["Trees", "Shrubs", "Creepers", "Herbs"], 2]], next: { subject: "Science", topic: "Living things", subtopic: "Parts of a plant" } },
+          "Parts of a plant": { lesson: "Plants have roots, stems, leaves, flowers and fruits. Roots hold the plant in soil and take in water. The stem supports the plant, while leaves use sunlight to help make food.", image: "https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?auto=format&fit=crop&w=900&q=80", questions: [["Which part takes in water from the soil?", ["Flower", "Root", "Leaf", "Fruit"], 1], ["What do leaves use to help make food?", ["Moonlight", "Sunlight", "Sand", "Wind"], 1]], next: { subject: "Science", topic: "Living things", subtopic: "What plants need" } },
+          "What plants need": { lesson: "Plants need sunlight, water, air, space and nutrients from the soil. Without these, a plant may not grow well. Caring for plants means watering them, giving them enough light, and protecting them from harm.", image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80", questions: [["Which of these does a plant need to grow?", ["Water", "A television", "A shoe", "A toy"], 0], ["Where do plants get nutrients?", ["From the soil", "From a book", "From a chair", "From a phone"], 0]] },
           "The human body": { lesson: "The human body has systems that work together. The heart pumps blood, the lungs help us breathe, and the brain helps us think and control actions.", questions: [["Which organ pumps blood?", ["Lung", "Brain", "Heart", "Stomach"], 2], ["Which organ helps us think?", ["Brain", "Heart", "Skin", "Bone"], 0]] }
         }
       }
@@ -124,17 +142,24 @@ function setupLearningSpace() {
   };
   const renderLesson = (subject, topic, subtopic) => {
     activeLesson = syllabus.topics[subject][topic][subtopic];
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><h2>${subtopic}</h2><div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
+    const lessonImage = activeLesson.image ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />` : "";
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
     document.getElementById("back-to-topics").addEventListener("click", renderTopics);
     document.getElementById("finish-lesson").addEventListener("click", () => document.getElementById("understanding-modal").classList.add("visible"));
   };
   const modal = document.getElementById("understanding-modal");
-  document.getElementById("understood-yes").addEventListener("click", () => { modal.classList.remove("visible"); renderTopicQuiz(activeLesson); });
+  document.getElementById("understood-yes").addEventListener("click", () => {
+    modal.classList.remove("visible");
+    renderTopicQuiz(activeLesson, () => {
+      if (activeLesson.next) renderLesson(activeLesson.next.subject, activeLesson.next.topic, activeLesson.next.subtopic);
+      else renderTopics();
+    });
+  });
   document.getElementById("understood-no").addEventListener("click", () => { modal.classList.remove("visible"); space.querySelector(".lesson-copy").insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>"); });
   renderTopics();
 }
 
-function renderTopicQuiz(lesson) {
+function renderTopicQuiz(lesson, afterQuiz) {
   const space = document.getElementById("learning-space");
   let index = 0, score = 0;
   const showQuestion = () => {
@@ -147,7 +172,12 @@ function renderTopicQuiz(lesson) {
       setTimeout(() => { index++; index < lesson.questions.length ? showQuestion() : finishQuiz(); }, 1100);
     }));
   };
-  const finishQuiz = () => { space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${lesson.questions.length}</h2><p>${score === lesson.questions.length ? "Excellent work—you understood this topic well." : "Keep practising. You can review the lesson and try again."}</p><button class="btn" id="choose-another-topic">Choose another topic</button></article>`; document.getElementById("choose-another-topic").addEventListener("click", () => setupLearningSpace()); };
+  const finishQuiz = () => {
+    const nextLabel = lesson.next ? "Continue to the next lesson" : "Choose another topic";
+    const nextMessage = lesson.next ? "Great work. Your next learning step is ready." : "You have completed this learning path. Choose a new topic when you are ready.";
+    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${lesson.questions.length}</h2><p>${score === lesson.questions.length ? "Excellent work—you understood this topic well." : "Keep practising. You can review the lesson and try again."}</p><p class="path-message">${nextMessage}</p><button class="btn" id="choose-another-topic">${nextLabel}</button></article>`;
+    document.getElementById("choose-another-topic").addEventListener("click", afterQuiz || (() => setupLearningSpace()));
+  };
   showQuestion();
 }
 
@@ -938,9 +968,14 @@ function setupQuizPage() {
 
   const updateSubjects = (useRequestedSubject = false) => {
     const options = getSubjectCatalogForClass(classSelect.value);
+    const currentSubject = subjectSelect.value;
     subjectSelect.innerHTML = options.map((subject) => `<option value="${subject.key}">${subject.label}</option>`).join("");
     const requestedSubject = getSubjectKey();
-    if (useRequestedSubject && options.some((subject) => subject.key === requestedSubject)) subjectSelect.value = requestedSubject;
+    if (options.some((subject) => subject.key === currentSubject)) {
+      subjectSelect.value = currentSubject;
+    } else if (useRequestedSubject && options.some((subject) => subject.key === requestedSubject)) {
+      subjectSelect.value = requestedSubject;
+    }
     const selected = subjects[subjectSelect.value];
     if (setupClassLabel) setupClassLabel.textContent = classLabels[classSelect.value] || "Your class";
     if (setupSubjectLabel) setupSubjectLabel.textContent = selected ? `${selected.displayName} is ready. Now choose a timer.` : "Choose a subject first.";
@@ -1181,10 +1216,8 @@ function nextQuestion() {
     if (explanationEl) {
       explanationEl.textContent = "";
     }
-    const reviewSection = document.getElementById("review-section");
-    if (reviewSection) {
-      reviewSection.innerHTML = "";
-    }
+    const completedSubject = subjects[getSubjectKey()]?.displayName || "this quiz";
+    renderReviewForm(completedSubject);
     const progressEl = document.getElementById("progress");
     if (progressEl) {
       progressEl.textContent = "Quiz complete";
@@ -1230,6 +1263,9 @@ function renderReviewForm(subjectLabel) {
   `;
 
   let selectedRating = 5;
+  const currentStudent = getStudentSession();
+  const nameInput = reviewSection.querySelector("#review-name");
+  if (currentStudent?.name && nameInput) nameInput.value = currentStudent.name;
   reviewSection.querySelectorAll(".review-star").forEach((button) => {
     button.addEventListener("click", () => {
       selectedRating = Number(button.dataset.value);
@@ -1284,6 +1320,35 @@ function renderPublicReviews() {
       <small>${review.subject} • ${review.createdAt}</small>
     </article>
   `).join("");
+}
+
+function escapeCommunityText(value) {
+  const element = document.createElement("div");
+  element.textContent = value || "";
+  return element.innerHTML;
+}
+
+function setupCommunityPage() {
+  const communityList = document.getElementById("community-list");
+  if (!communityList) return;
+
+  const communityHighlights = [
+    { name: "Ama K.", className: "Basic 5", rating: 5, text: "The topic lessons make revision easy to follow.", photo: "https://i.pravatar.cc/120?img=47" },
+    { name: "Kwame A.", className: "JHS 2", rating: 5, text: "I like choosing my class and timer before each quiz.", photo: "https://i.pravatar.cc/120?img=12" },
+    { name: "Esi B.", className: "SHS 1", rating: 4, text: "The short questions help me check what I have learned.", photo: "https://i.pravatar.cc/120?img=32" }
+  ];
+  const savedReviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse().map((review, index) => ({
+    name: review.studentName || "Y_Cohde student",
+    className: review.subject || "Learner",
+    rating: Number(review.rating) || 5,
+    text: review.text || "Shared a learning review.",
+    photo: `https://i.pravatar.cc/120?img=${20 + index}`
+  }));
+  const students = [...savedReviews, ...communityHighlights];
+  communityList.innerHTML = students.map((student) => `<article class="community-card">
+    <img class="community-avatar" src="${student.photo}" alt="Profile picture of ${escapeCommunityText(student.name)}" />
+    <div class="community-card-content"><div class="community-name-row"><div><h3>${escapeCommunityText(student.name)}</h3><p>${escapeCommunityText(student.className)}</p></div><span class="community-rating" aria-label="${student.rating} out of 5 stars">${"★".repeat(student.rating)}${"☆".repeat(5 - student.rating)}</span></div><p class="community-review">“${escapeCommunityText(student.text)}”</p></div>
+  </article>`).join("");
 }
 
 function setupEngagementFeatures() {
@@ -1457,6 +1522,7 @@ if (document.getElementById("department-select")) {
     setupSimpleHamburgerMenu();
     setupLearningExplorer();
     setupLearningSpace();
+    setupCommunityPage();
     setupSubjectLinks();
     setupEngagementFeatures();
     renderPublicReviews();

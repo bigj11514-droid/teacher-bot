@@ -1021,6 +1021,16 @@ body.menu-open::before {
 .department-quiz-nav a:hover { color: var(--accent); background: rgba(127, 231, 255, .08); }
 .simple-nav-logout { border: 0; background: transparent; color: var(--muted); text-align: left; padding: 0; cursor: pointer; }
 
+.community-list { display: grid; gap: 14px; }
+.community-card { display: flex; gap: 16px; align-items: flex-start; padding: 18px; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.045); }
+.community-avatar { width: 64px; height: 64px; flex: 0 0 64px; margin: 0; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+.community-card-content { flex: 1; min-width: 0; }
+.community-name-row { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.community-name-row h3 { margin: 0; }
+.community-name-row p, .community-review { color: var(--muted); line-height: 1.6; }
+.community-rating { color: var(--accent); white-space: nowrap; letter-spacing: .08em; }
+.community-review { margin-top: 8px; }
+
 .login-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
 .login-card {
   width: min(100%, 460px); padding: 36px; border: 1px solid var(--border);
@@ -1065,9 +1075,11 @@ body.menu-open::before {
 .subtopic-btn:hover, .back-link:hover { border-color: var(--accent); }
 .back-link { margin-bottom: 16px; }
 .lesson-card { max-width: 760px; }
+.lesson-image { width: 100%; height: min(300px, 42vw); margin: 18px 0 0; object-fit: cover; border: 1px solid var(--border); border-radius: 16px; }
 .lesson-copy { margin: 18px 0; padding: 18px; border-radius: 14px; background: rgba(127,231,255,.07); }
 .lesson-copy p, .lesson-card > p { line-height: 1.75; color: var(--muted); }
 .review-note { margin-top: 14px; color: var(--accent) !important; }
+.path-message { margin: 12px 0 18px; color: var(--accent) !important; }
 .understanding-modal { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 20px; background: rgba(1, 11, 20, .72); }
 .understanding-modal.visible { display: grid; }
 .modal-card { width: min(100%, 420px); padding: 28px; border-radius: 20px; background: var(--panel-strong); border: 1px solid var(--border); box-shadow: var(--shadow); }
