@@ -240,7 +240,7 @@ a {
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border);
 }
@@ -323,8 +323,9 @@ a {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-  color: var(--accent-2);
+  color: rgb(21, 145, 145);
   margin: 10px 0px;
+  
 }
 
 h2,
@@ -335,6 +336,7 @@ h3 {
 .hero-card h2,
 .page-panel h2 {
   font-size: clamp(1.3rem, 2vw, 1.85rem);
+  padding: 10px 0px;
 }
 
 .hero-card p,
