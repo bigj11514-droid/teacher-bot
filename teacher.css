@@ -1030,8 +1030,8 @@ body.menu-open::before {
 .community-name-row { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-direction: column; }
 .community-name-row h3 { margin: 0; }
 .community-name-row p, .community-review { color: var(--muted); line-height: 1.6; }
-.community-rating { color: var(--accent); white-space: nowrap; letter-spacing: .08em; }
-.community-review { margin-top: 8px; border-left: 3px solid rgb(123, 72, 153); padding: 0px 10px; border-radius: 5px;}
+.community-rating { color: rgb(255, 255, 114); white-space: nowrap; letter-spacing: .08em; }
+.community-review { margin-top: 8px; border-left: 3px solid yellow; padding: 0px 10px; border-radius: 5px;}
 
 .login-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
 .login-card {
