@@ -292,6 +292,56 @@ function setupLearningExplorer() {
   explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(learningCatalog).map(([key, syllabus]) => `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map(year => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`).join("")}</tbody></table></div>`;
 }
 
+function getNextLessonTarget(syllabus, subject, topic, subtopic) {
+  const lesson = syllabus.topics[subject]?.[topic]?.[subtopic];
+  if (lesson?.next) return lesson.next;
+
+  const subjectOrder = Object.entries(syllabus.topics);
+  const subjectIndex = subjectOrder.findIndex(([subjectName]) => subjectName === subject);
+
+  if (subjectIndex === -1) return null;
+
+  const topicOrder = Object.entries(syllabus.topics[subject]);
+  const topicIndex = topicOrder.findIndex(([topicName]) => topicName === topic);
+
+  if (topicIndex === -1) return null;
+
+  const subtopics = Object.keys(syllabus.topics[subject][topic]);
+  const subtopicIndex = subtopics.indexOf(subtopic);
+
+  if (subtopicIndex !== -1 && subtopicIndex < subtopics.length - 1) {
+    return {
+      subject,
+      topic,
+      subtopic: subtopics[subtopicIndex + 1]
+    };
+  }
+
+  const nextTopicEntry = topicOrder[topicIndex + 1];
+  if (nextTopicEntry) {
+    const [nextTopicName, nextSubtopics] = nextTopicEntry;
+    const nextSubtopic = Object.keys(nextSubtopics)[0];
+    return {
+      subject,
+      topic: nextTopicName,
+      subtopic: nextSubtopic
+    };
+  }
+
+  const nextSubjectEntry = subjectOrder[subjectIndex + 1];
+  if (nextSubjectEntry) {
+    const [nextSubjectName, nextTopics] = nextSubjectEntry;
+    const [nextTopicName, nextSubtopics] = Object.entries(nextTopics)[0];
+    return {
+      subject: nextSubjectName,
+      topic: nextTopicName,
+      subtopic: Object.keys(nextSubtopics)[0]
+    };
+  }
+
+  return null;
+}
+
 function setupLearningSpace() {
   const space = document.getElementById("learning-space");
   if (!space) return;
@@ -299,6 +349,7 @@ function setupLearningSpace() {
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
   const selectedYear = new URLSearchParams(window.location.search).get("year");
   let activeLesson;
+  let activeLessonMeta = { subject: null, topic: null, subtopic: null };
   const renderTopics = () => {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
@@ -306,6 +357,7 @@ function setupLearningSpace() {
     space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
   };
   const renderLesson = (subject, topic, subtopic) => {
+    activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     const lessonImage = activeLesson.image ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />` : "";
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
@@ -323,7 +375,8 @@ function setupLearningSpace() {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
     renderTopicQuiz(activeLesson, () => {
-      if (activeLesson.next) renderLesson(activeLesson.next.subject, activeLesson.next.topic, activeLesson.next.subtopic);
+      const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
+      if (nextLesson) renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
       else renderTopics();
     });
   });
