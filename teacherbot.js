@@ -93,7 +93,9 @@ const learningCatalog = {
         },
         "Shapes and measurement": {
           "2D shapes": { lesson: "A 2D shape is flat. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.", questions: [["How many sides does a triangle have?", ["2", "3", "4", "5"], 1], ["Which shape has four equal sides?", ["Triangle", "Rectangle", "Square", "Circle"], 2]] },
-          "Length": { lesson: "Length tells us how long something is. We can measure small objects in centimetres and longer distances in metres. Always start the ruler at zero.", questions: [["What unit is useful for measuring a pencil?", ["Kilometres", "Metres", "Centimetres", "Litres"], 2], ["Where should a ruler start?", ["At 1", "At zero", "At the end", "Anywhere"], 1]] }
+          "Length": { lesson: "Length tells us how long something is. We can measure small objects in centimetres and longer distances in metres. Always start the ruler at zero.", questions: [["What unit is useful for measuring a pencil?", ["Kilometres", "Metres", "Centimetres", "Litres"], 2], ["Where should a ruler start?", ["At 1", "At zero", "At the end", "Anywhere"], 1]] },
+          "Width": { lesson: "Width tells us how wide something is. We can measure small objects in centimetres and longer distances in metres. Always start the ruler at zero.", questions: [["What unit is useful for measuring a pencil?", ["Kilometres", "Metres", "Centimetres", "Litres"], 2], ["Where should a ruler start?", ["At 1", "At zero", "At the end", "Anywhere"], 1]] }
+
         },
         "Data and patterns": {
           "Pictographs": { lesson: "A pictograph uses pictures or symbols to show information. Always read the key first, because one picture can stand for more than one item.", questions: [["What should you read first on a pictograph?", ["The key", "The title only", "The answer", "A story"], 0], ["A pictograph uses what to show data?", ["Pictures or symbols", "Only letters", "Songs", "Maps"], 0]] },
