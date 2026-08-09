@@ -1063,7 +1063,7 @@ body.menu-open::before {
 .learning-vertical .syllabus-table tr { display: grid; gap: 14px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,.04); }
 .learning-vertical .syllabus-table td { display: block; padding: 0; border: 0; }
 .learning-vertical .syllabus-table td:first-child { font-size: 1.08rem; color: var(--text); }
-.learning-vertical .year-chip { display: block; width: 100%; margin: 0 0 8px; padding: 10px 12px; }
+.learning-vertical .year-chip { display: block; width: 100%; margin: 0 0 8px; padding: 10px 12px; border-radius: 10px; }
 .learning-vertical .syllabus-table .small-btn { width: 100%; }
 .topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
 .topic-card, .lesson-card { padding: 22px; border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,.045); }
