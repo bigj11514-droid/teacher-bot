@@ -26,9 +26,17 @@
     <script>
       const menuButton = document.querySelector(".simple-menu-toggle");
       const navigation = document.getElementById("simple-nav");
-      menuButton.addEventListener("click", () => { const open = navigation.classList.toggle("open"); menuButton.setAttribute("aria-expanded", open); });
+      if (menuButton && navigation) {
+        menuButton.addEventListener("click", () => { const open = navigation.classList.toggle("open"); menuButton.setAttribute("aria-expanded", String(open)); });
+      }
       const sessionKey = "ycohdeStudentSession";
-      if (localStorage.getItem(sessionKey)) window.location.replace("index.html");
+      let storedSession = null;
+      try {
+        storedSession = localStorage.getItem(sessionKey);
+      } catch (storageError) {
+        console.error("[Y_Cohde] Could not read the saved session", storageError);
+      }
+      if (storedSession) window.location.replace("index.html");
       document.getElementById("login-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const name = document.getElementById("student-name").value.trim();
@@ -39,7 +47,13 @@
           error.textContent = "Enter your name, a valid email, and a password of at least 4 characters.";
           return;
         }
-        localStorage.setItem(sessionKey, JSON.stringify({ name, email }));
+        try {
+          localStorage.setItem(sessionKey, JSON.stringify({ name, email }));
+        } catch (storageError) {
+          console.error("[Y_Cohde] Could not save the session", storageError);
+          error.textContent = "We could not sign you in because browser storage is unavailable. Enable cookies or leave private browsing, then try again.";
+          return;
+        }
         window.location.replace("index.html");
       });
     </script>

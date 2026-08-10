@@ -3,13 +3,77 @@
 // Student sign-in for this static site. This stores only the display name in
 // the browser; a real password system needs a server-side authentication API.
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
+const REVIEWS_KEY = "ycohde-reviews";
 
-function getStudentSession() {
+// Failures are logged with the surrounding context so they can be traced,
+// instead of disappearing into an empty catch block.
+function reportError(context, error) {
+  console.error(`[Y_Cohde] ${context}`, error);
+}
+
+window.addEventListener("error", (event) => reportError("Uncaught error", event.error || event.message));
+window.addEventListener("unhandledrejection", (event) => reportError("Unhandled promise rejection", event.reason));
+
+// localStorage throws when storage is blocked (private mode, disabled
+// cookies) or full, so every access goes through these helpers.
+function readStoredValue(key) {
   try {
-    return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
-  } catch {
+    return localStorage.getItem(key);
+  } catch (error) {
+    reportError(`Could not read "${key}" from local storage`, error);
     return null;
   }
+}
+
+function readStoredJson(key, fallback) {
+  const raw = readStoredValue(key);
+  if (raw === null) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed === null || parsed === undefined ? fallback : parsed;
+  } catch (error) {
+    reportError(`Stored value for "${key}" is not valid JSON and was discarded`, error);
+    removeStoredValue(key);
+    return fallback;
+  }
+}
+
+function readStoredList(key) {
+  const value = readStoredJson(key, []);
+  if (Array.isArray(value)) return value;
+  reportError(`Stored value for "${key}" is not a list and was discarded`, value);
+  removeStoredValue(key);
+  return [];
+}
+
+// Throws so callers decide how to tell the learner that saving failed.
+function writeStoredJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    reportError(`Could not save "${key}" to local storage`, error);
+    throw error;
+  }
+}
+
+function removeStoredValue(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    reportError(`Could not remove "${key}" from local storage`, error);
+  }
+}
+
+function getStudentSession() {
+  const session = readStoredJson(STUDENT_SESSION_KEY, null);
+  if (!session || typeof session !== "object" || typeof session.name !== "string" || !session.name.trim()) {
+    if (session) {
+      reportError("Stored student session is incomplete and was discarded", session);
+      removeStoredValue(STUDENT_SESSION_KEY);
+    }
+    return null;
+  }
+  return session;
 }
 
 function requireStudentLogin() {
@@ -40,7 +104,7 @@ function setupStudentSession() {
     logoutButton.className = `${className} logout-btn`;
     logoutButton.textContent = "Log out";
     logoutButton.addEventListener("click", () => {
-      localStorage.removeItem(STUDENT_SESSION_KEY);
+      removeStoredValue(STUDENT_SESSION_KEY);
       window.location.replace("login.html");
     });
     navigation.append(logoutButton);
@@ -357,8 +421,15 @@ function setupLearningSpace() {
     space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
   };
   const renderLesson = (subject, topic, subtopic) => {
+    const lesson = syllabus.topics?.[subject]?.[topic]?.[subtopic];
+    if (!lesson) {
+      reportError(`Lesson not found for ${subject} / ${topic} / ${subtopic}`, { syllabus: syllabus.name });
+      space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><h2>This lesson is unavailable</h2><p>We could not open that subtopic. Please choose another topic.</p></article>`;
+      document.getElementById("back-to-topics").addEventListener("click", renderTopics);
+      return;
+    }
     activeLessonMeta = { subject, topic, subtopic };
-    activeLesson = syllabus.topics[subject][topic][subtopic];
+    activeLesson = lesson;
     const lessonImage = activeLesson.image ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />` : "";
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
     startLessonTimer();
@@ -366,12 +437,11 @@ function setupLearningSpace() {
     document.getElementById("finish-lesson").addEventListener("click", () => {
       clearInterval(lessonTimerId);
       lessonTimerId = null;
-      document.getElementById("understanding-modal").classList.add("visible");
+      if (modal) modal.classList.add("visible");
+      else startTopicQuiz();
     });
   };
-  const modal = document.getElementById("understanding-modal");
-  document.getElementById("understood-yes").addEventListener("click", () => {
-    modal.classList.remove("visible");
+  const startTopicQuiz = () => {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
     renderTopicQuiz(activeLesson, () => {
@@ -379,8 +449,21 @@ function setupLearningSpace() {
       if (nextLesson) renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
       else renderTopics();
     });
+  };
+  const modal = document.getElementById("understanding-modal");
+  const understoodYes = document.getElementById("understood-yes");
+  const understoodNo = document.getElementById("understood-no");
+  if (!modal || !understoodYes || !understoodNo) {
+    reportError("Understanding modal is missing from this page", { modal: !!modal, understoodYes: !!understoodYes, understoodNo: !!understoodNo });
+  }
+  understoodYes?.addEventListener("click", () => {
+    modal?.classList.remove("visible");
+    startTopicQuiz();
   });
-  document.getElementById("understood-no").addEventListener("click", () => { modal.classList.remove("visible"); space.querySelector(".lesson-copy").insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>"); });
+  understoodNo?.addEventListener("click", () => {
+    modal?.classList.remove("visible");
+    space.querySelector(".lesson-copy")?.insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>");
+  });
   renderTopics();
 }
 
@@ -388,6 +471,16 @@ function renderTopicQuiz(lesson, afterQuiz) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
+  if (!space) {
+    reportError("Cannot render topic quiz because the learning space is missing", lesson);
+    return;
+  }
+  if (!lesson || !Array.isArray(lesson.questions) || lesson.questions.length === 0) {
+    reportError("Topic quiz has no questions", lesson);
+    space.innerHTML = `<article class="lesson-card"><h2>No questions available</h2><p>This topic has no practice questions yet. Choose another topic to continue learning.</p><button class="btn" id="choose-another-topic">Choose another topic</button></article>`;
+    document.getElementById("choose-another-topic").addEventListener("click", afterQuiz || (() => setupLearningSpace()));
+    return;
+  }
   let index = 0, score = 0;
   const showQuestion = () => {
     const [question, answers, correct] = lesson.questions[index];
@@ -395,7 +488,8 @@ function renderTopicQuiz(lesson, afterQuiz) {
     space.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => {
       const selected = Number(button.dataset.answer);
       space.querySelectorAll("[data-answer]").forEach(item => item.disabled = true);
-      if (selected === correct) { score++; document.getElementById("topic-feedback").textContent = "Correct! Great learning."; } else document.getElementById("topic-feedback").textContent = `Not quite. The correct answer is ${answers[correct]}.`;
+      const topicFeedback = document.getElementById("topic-feedback");
+      if (selected === correct) { score++; if (topicFeedback) topicFeedback.textContent = "Correct! Great learning."; } else if (topicFeedback) topicFeedback.textContent = `Not quite. The correct answer is ${answers[correct]}.`;
       setTimeout(() => { index++; index < lesson.questions.length ? showQuestion() : finishQuiz(); }, 1100);
     }));
   };
@@ -1126,7 +1220,11 @@ function setupDepartmentPage() {
   }
 
   function updateClassOptions() {
-    const selectedDepartment = departmentSelect.value;
+    const selectedDepartment = optionsByDepartment[departmentSelect.value] ? departmentSelect.value : "basic";
+    if (selectedDepartment !== departmentSelect.value) {
+      reportError(`Unknown department "${departmentSelect.value}", falling back to basic`, null);
+      departmentSelect.value = selectedDepartment;
+    }
     classSelect.innerHTML = "";
 
     optionsByDepartment[selectedDepartment].forEach((value) => {
@@ -1149,7 +1247,8 @@ function setupDepartmentPage() {
     updateDepartmentVisual(selectedDepartment);
   }
 
-  const initialDepartment = getDepartmentKey() || "basic";
+  const requestedDepartment = getDepartmentKey();
+  const initialDepartment = optionsByDepartment[requestedDepartment] ? requestedDepartment : "basic";
   const initialClass = getClassKey();
   const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
@@ -1277,6 +1376,14 @@ function setupQuiz() {
 
   const levelKey = classLevels[classKey] || "early";
   const baseQuestions = subjectData[levelKey] || subjectData.early;
+  if (!Array.isArray(baseQuestions) || baseQuestions.length === 0) {
+    reportError(`No questions available for ${subjectKey} at level ${levelKey}`, { classKey });
+    questionEl.textContent = "No questions are available yet.";
+    answersEl.innerHTML = `<p>This subject has no questions for your class yet. Please choose another subject.</p><p><a href="-index.html" class="btn">Choose subject</a></p>`;
+    scoreEl.textContent = "";
+    nextBtn.style.display = "none";
+    return;
+  }
   quizQuestions = shuffleArray(baseQuestions).map(buildShuffledQuestion);
   currentQuestionIndex = 0;
   score = 0;
@@ -1349,17 +1456,22 @@ function handleTimeout() {
   const nextBtn = document.getElementById("nextbtn");
   const current = quizQuestions[currentQuestionIndex];
 
-  if (!current) return;
+  if (!current) {
+    reportError("Quiz timed out on a question that no longer exists", { currentQuestionIndex, total: quizQuestions.length });
+    return;
+  }
 
-  Array.from(answersEl.children).forEach((btn) => {
-    btn.disabled = true;
-  });
+  if (answersEl) {
+    Array.from(answersEl.children).forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
 
   mistakes += 1;
-  feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
-  explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+  if (feedbackEl) feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
+  if (explanationEl) explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   updateScoreDisplay();
-  nextBtn.disabled = false;
+  if (nextBtn) nextBtn.disabled = false;
 }
 
 function loadQuestion() {
@@ -1368,7 +1480,19 @@ function loadQuestion() {
   const progressEl = document.getElementById("progress");
   const nextBtn = document.getElementById("nextbtn");
 
+  if (!questionEl || !answersEl || !nextBtn) {
+    reportError("Quiz markup is incomplete, cannot load the question", { questionEl: !!questionEl, answersEl: !!answersEl, nextBtn: !!nextBtn });
+    return;
+  }
+
   const current = quizQuestions[currentQuestionIndex];
+  if (!current) {
+    reportError("No question to load at the current index", { currentQuestionIndex, total: quizQuestions.length });
+    questionEl.textContent = "This question could not be loaded.";
+    answersEl.innerHTML = `<p><a href="-index.html" class="btn">Choose subject</a></p>`;
+    nextBtn.style.display = "none";
+    return;
+  }
   questionEl.textContent = current.question;
   answersEl.innerHTML = "";
 
@@ -1380,7 +1504,7 @@ function loadQuestion() {
     answersEl.appendChild(btn);
   });
 
-  progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+  if (progressEl) progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
   showDiagramForQuestion(current);
   startTimer();
@@ -1390,35 +1514,40 @@ function selectAnswer(button, selectedIndex) {
   const answersEl = document.getElementById("answers");
   const feedbackEl = document.getElementById("feedback");
   const explanationEl = document.getElementById("explanation");
-  const scoreEl = document.getElementById("score");
   const nextBtn = document.getElementById("nextbtn");
 
   clearInterval(timerId);
 
   const current = quizQuestions[currentQuestionIndex];
+  if (!current) {
+    reportError("An answer was selected for a question that no longer exists", { currentQuestionIndex, total: quizQuestions.length });
+    return;
+  }
   const correctIndex = current.correct;
   const isCorrect = selectedIndex === correctIndex;
 
   if (isCorrect) {
     score++;
     button.style.background = "#4CAF50";
-    feedbackEl.textContent = "😉 Correct!";
-    explanationEl.textContent = "";
+    if (feedbackEl) feedbackEl.textContent = "😉 Correct!";
+    if (explanationEl) explanationEl.textContent = "";
   } else {
     mistakes += 1;
     button.style.background = "#E74C3C";
-    const correctButton = answersEl.children[correctIndex];
+    const correctButton = answersEl?.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
-    feedbackEl.textContent = "😡 Wrong. The correct answer is highlighted in green.";
-    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+    if (feedbackEl) feedbackEl.textContent = "😡 Wrong. The correct answer is highlighted in green.";
+    if (explanationEl) explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   }
 
-  Array.from(answersEl.children).forEach((btn) => {
-    btn.disabled = true;
-  });
+  if (answersEl) {
+    Array.from(answersEl.children).forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
 
   updateScoreDisplay();
-  nextBtn.disabled = false;
+  if (nextBtn) nextBtn.disabled = false;
 }
 
 function nextQuestion() {
@@ -1427,9 +1556,14 @@ function nextQuestion() {
   const questionEl = document.getElementById("questions");
   const answersEl = document.getElementById("answers");
 
+  if (!nextBtn || !questionEl || !answersEl) {
+    reportError("Quiz markup is incomplete, cannot move to the next question", { nextBtn: !!nextBtn, questionEl: !!questionEl, answersEl: !!answersEl });
+    return;
+  }
+
   if (currentQuestionIndex + 1 < quizQuestions.length) {
     currentQuestionIndex++;
-    feedbackEl.textContent = "";
+    if (feedbackEl) feedbackEl.textContent = "";
     if (document.getElementById("explanation")) {
       document.getElementById("explanation").textContent = "Explanations are shown here";
     }
@@ -1438,7 +1572,7 @@ function nextQuestion() {
     const summary = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
     questionEl.textContent = summary;
     answersEl.innerHTML = "";
-    feedbackEl.textContent = "";
+    if (feedbackEl) feedbackEl.textContent = "";
     const explanationEl = document.getElementById("explanation");
     if (explanationEl) {
       explanationEl.textContent = "";
@@ -1508,9 +1642,12 @@ function renderReviewForm(subjectLabel) {
     event.preventDefault();
     const text = reviewSection.querySelector("#review-text").value.trim();
     const studentName = reviewSection.querySelector("#review-name").value.trim() || "A student";
-    if (!text) return;
+    if (!text) {
+      if (feedback) feedback.textContent = "Please write a few words about the quiz before submitting.";
+      return;
+    }
 
-    const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
+    const reviews = readStoredList(REVIEWS_KEY);
     reviews.push({
       rating: selectedRating,
       text,
@@ -1518,7 +1655,13 @@ function renderReviewForm(subjectLabel) {
       studentName,
       createdAt: new Date().toLocaleString()
     });
-    localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
+
+    try {
+      writeStoredJson(REVIEWS_KEY, reviews);
+    } catch {
+      if (feedback) feedback.textContent = "We could not save your review because browser storage is unavailable or full.";
+      return;
+    }
 
     if (feedback) {
       feedback.textContent = "Thanks for your review. Your feedback has been saved.";
@@ -1532,7 +1675,7 @@ function renderPublicReviews() {
   const reviewList = document.getElementById("public-reviews-list");
   if (!reviewList) return;
 
-  const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse();
+  const reviews = readStoredList(REVIEWS_KEY).slice(-6).reverse();
 
   if (!reviews.length) {
     reviewList.innerHTML = '<p class="empty-state">No reviews yet. Complete a quiz and be the first to leave one.</p>';
@@ -1541,12 +1684,23 @@ function renderPublicReviews() {
 
   reviewList.innerHTML = reviews.map((review) => `
     <article class="review-post">
-      <strong>${review.studentName}</strong>
-      <div class="stars">${"★".repeat(review.rating)}</div>
-      <p>${review.text}</p>
-      <small>${review.subject} • ${review.createdAt}</small>
+      <strong>${escapeCommunityText(review.studentName || "A student")}</strong>
+      <div class="stars">${"★".repeat(clampRating(review.rating))}</div>
+      <p>${escapeCommunityText(review.text)}</p>
+      <small>${escapeCommunityText(review.subject || "Quiz")} • ${escapeCommunityText(review.createdAt || "")}</small>
     </article>
   `).join("");
+}
+
+// Ratings come from stored data that may be missing or malformed, and
+// String.repeat throws on negative counts.
+function clampRating(value) {
+  const rating = Math.round(Number(value));
+  if (!Number.isFinite(rating)) {
+    reportError("Review has an invalid rating and was shown with the default", value);
+    return 5;
+  }
+  return Math.min(5, Math.max(0, rating));
 }
 
 function escapeCommunityText(value) {
@@ -1564,10 +1718,10 @@ function setupCommunityPage() {
     { name: "Kwame A.", className: "JHS 2", rating: 5, text: "I like choosing my class and timer before each quiz.", photo: "https://i.pravatar.cc/120?img=12" },
     { name: "Esi B.", className: "SHS 1", rating: 4, text: "The short questions help me check what I have learned.", photo: "https://i.pravatar.cc/120?img=32" }
   ];
-  const savedReviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse().map((review, index) => ({
+  const savedReviews = readStoredList(REVIEWS_KEY).slice(-6).reverse().map((review, index) => ({
     name: review.studentName || "Y_Cohde student",
     className: review.subject || "Learner",
-    rating: Number(review.rating) || 5,
+    rating: clampRating(review.rating),
     text: review.text || "Shared a learning review.",
     photo: `https://i.pravatar.cc/120?img=${20 + index}`
   }));
@@ -1592,10 +1746,17 @@ function setupEngagementFeatures() {
     newsletterForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const emailInput = document.getElementById("newsletter-email");
-      if (emailInput && emailInput.value.trim()) {
-        newsletterStatus.textContent = `Thanks! ${emailInput.value.trim()} has joined the reminder list.`;
-        emailInput.value = "";
+      if (!emailInput) {
+        reportError("Newsletter form has no email input", newsletterForm);
+        newsletterStatus.textContent = "The reminder form is unavailable right now. Please try again later.";
+        return;
       }
+      if (!emailInput.value.trim()) {
+        newsletterStatus.textContent = "Enter your email address to join the reminder list.";
+        return;
+      }
+      newsletterStatus.textContent = `Thanks! ${emailInput.value.trim()} has joined the reminder list.`;
+      emailInput.value = "";
     });
   }
 
@@ -1610,7 +1771,12 @@ function setupEngagementFeatures() {
           });
           shareFeedback.textContent = "Thanks for sharing Y_Cohde with others.";
         } catch (error) {
-          shareFeedback.textContent = "Sharing was cancelled, but the idea is still great.";
+          if (error?.name === "AbortError") {
+            shareFeedback.textContent = "Sharing was cancelled, but the idea is still great.";
+          } else {
+            reportError("Sharing failed", error);
+            shareFeedback.textContent = "Sharing did not work on this device. Copy the page link to share it instead.";
+          }
         }
       } else {
         shareFeedback.textContent = "Copy the page link to share it with a friend.";
@@ -1633,12 +1799,17 @@ function setupEngagementFeatures() {
           body: `Time to continue studying for ${minutes} minutes.`
         });
       } else if ("Notification" in window && Notification.permission !== "denied") {
-        Notification.requestPermission().then(() => {
-          if (Notification.permission === "granted") {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
             new Notification("Y_Cohde reminder", {
               body: `Time to continue studying for ${minutes} minutes.`
             });
+          } else {
+            reminderStatus.textContent = `Reminder set for ${minutes} minutes from now. Allow notifications to get an alert as well.`;
           }
+        }).catch((error) => {
+          reportError("Could not request notification permission", error);
+          reminderStatus.textContent = `Reminder set for ${minutes} minutes from now. Notifications are unavailable on this device.`;
         });
       }
     });
@@ -1649,9 +1820,10 @@ function showDiagramForQuestion(current) {
   const diagramArea = document.getElementById("diagram-area");
   if (!diagramArea) return;
 
-  const text = (current.question || "").toLowerCase();
+  const text = (current?.question || "").toLowerCase();
   if (text.includes("diagram") || text.includes("sketch") || text.includes("shape") || text.includes("draw")) {
-    diagramArea.innerHTML = `<img src="" alt="Study diagram" />`;
+    // No diagram assets exist yet, so show a prompt rather than a broken image.
+    diagramArea.textContent = "Draw or sketch this on paper as you answer.";
   } else {
     diagramArea.innerHTML = "Sketch-style questions will appear here when the topic needs a visual prompt.";
   }
