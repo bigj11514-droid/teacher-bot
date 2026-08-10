@@ -2,6 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; form-action 'self'; base-uri 'none'; object-src 'none'" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,32 +18,13 @@
       <h1>Welcome to Y_Cohde Academy</h1>
       <p>Log in to open your personal learning dashboard.</p>
       <form class="login-form" id="login-form">
-        <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
+        <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required maxlength="80" /></label>
         <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-        <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
+        <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="8" /></label>
         <p id="login-error" class="login-error" role="alert"></p>
         <button class="btn" type="submit">Log in to dashboard</button>
       </form>
     </main>
-    <script>
-      const menuButton = document.querySelector(".simple-menu-toggle");
-      const navigation = document.getElementById("simple-nav");
-      menuButton.addEventListener("click", () => { const open = navigation.classList.toggle("open"); menuButton.setAttribute("aria-expanded", open); });
-      const sessionKey = "ycohdeStudentSession";
-      if (localStorage.getItem(sessionKey)) window.location.replace("index.html");
-      document.getElementById("login-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        const name = document.getElementById("student-name").value.trim();
-        const email = document.getElementById("student-email").value.trim();
-        const password = document.getElementById("student-password").value;
-        const error = document.getElementById("login-error");
-        if (!name || !email || password.length < 4) {
-          error.textContent = "Enter your name, a valid email, and a password of at least 4 characters.";
-          return;
-        }
-        localStorage.setItem(sessionKey, JSON.stringify({ name, email }));
-        window.location.replace("index.html");
-      });
-    </script>
+    <script src="login.js"></script>
   </body>
 </html>
