@@ -1755,3 +1755,53 @@ if (document.getElementById("department-select")) {
     renderPublicReviews();
   });
 }
+
+// Browsers ignore this block; it lets the test runner import the same source.
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    STUDENT_SESSION_KEY,
+    learningCatalog,
+    classLevels,
+    classLabels,
+    subjects,
+    shsCourseCatalog,
+    subjectCatalog,
+    getStudentSession,
+    requireStudentLogin,
+    setupStudentSession,
+    startLessonTimer,
+    setupLearningExplorer,
+    getNextLessonTarget,
+    setupLearningSpace,
+    renderTopicQuiz,
+    getSubjectKey,
+    getClassKey,
+    getDepartmentKey,
+    getCourseKey,
+    getDepartmentFromClass,
+    getSubjectCatalogForClass,
+    shuffleArray,
+    buildShuffledQuestion,
+    renderSubjectLinks,
+    setupSubjectLinks,
+    updateDepartmentVisual,
+    setupDepartmentPage,
+    setupQuizPage,
+    setupQuiz,
+    updateScoreDisplay,
+    startTimer,
+    handleTimeout,
+    loadQuestion,
+    selectAnswer,
+    nextQuestion,
+    getExplanationForCurrentQuestion,
+    renderReviewForm,
+    renderPublicReviews,
+    escapeCommunityText,
+    setupCommunityPage,
+    setupEngagementFeatures,
+    showDiagramForQuestion,
+    setupMobileMenu,
+    setupSimpleHamburgerMenu
+  };
+}
