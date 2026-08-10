@@ -41,7 +41,6 @@ img {
   width: 100%;
   height: auto;
   border-radius: 20px;
-  margin: 10px;
 }
 
 button,
@@ -321,8 +320,6 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.24em;
   color: rgb(21, 145, 145);
-  margin: 10px 0px;
-  
 }
 
 h2,
@@ -994,7 +991,7 @@ body.menu-open::before {
 
 .logout-btn {
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 9px 13px;
   background: transparent;
   color: var(--muted);
