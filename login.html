@@ -19,29 +19,58 @@
         <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
         <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
         <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
-        <p id="login-error" class="login-error" role="alert"></p>
+        <p id="login-error" class="login-error" role="alert">Forgot your password?<a href="" target="_self" rel="noopener noreferrer">Sign In</a></p>
         <button class="btn" type="submit">Log in to dashboard</button>
       </form>
     </main>
     <script>
-      const menuButton = document.querySelector(".simple-menu-toggle");
-      const navigation = document.getElementById("simple-nav");
-      menuButton.addEventListener("click", () => { const open = navigation.classList.toggle("open"); menuButton.setAttribute("aria-expanded", open); });
-      const sessionKey = "ycohdeStudentSession";
-      if (localStorage.getItem(sessionKey)) window.location.replace("index.html");
-      document.getElementById("login-form").addEventListener("submit", (event) => {
+    const menuButton = document.querySelector(".simple-menu-toggle");
+    const navigation = document.getElementById("simple-nav");
+
+    // Only run menu code if the menu button exists
+    if (menuButton && navigation) {
+        menuButton.addEventListener("click", () => {
+            const open = navigation.classList.toggle("open");
+            menuButton.setAttribute("aria-expanded", open);
+        });
+    }
+
+    const sessionKey = "ycohdeStudentSession";
+
+    // If already logged in, go to dashboard
+    if (localStorage.getItem(sessionKey)) {
+        window.location.replace("index.html");
+    }
+
+    // Login form
+    document.getElementById("login-form").addEventListener("submit", (event) => {
+
         event.preventDefault();
+
         const name = document.getElementById("student-name").value.trim();
         const email = document.getElementById("student-email").value.trim();
         const password = document.getElementById("student-password").value;
+
         const error = document.getElementById("login-error");
+
         if (!name || !email || password.length < 4) {
-          error.textContent = "Enter your name, a valid email, and a password of at least 4 characters.";
-          return;
+            error.textContent =
+                "Enter your name, a valid email, and a password of at least 4 characters.";
+            return;
         }
-        localStorage.setItem(sessionKey, JSON.stringify({ name, email }));
+
+        // Save student session
+        localStorage.setItem(
+            sessionKey,
+            JSON.stringify({
+                name: name,
+                email: email
+            })
+        );
+
+        // Go to dashboard
         window.location.replace("index.html");
-      });
-    </script>
+    });
+</script>
   </body>
 </html>

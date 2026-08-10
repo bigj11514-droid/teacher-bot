@@ -3,11 +3,24 @@
 // Student sign-in for this static site. This stores only the display name in
 // the browser; a real password system needs a server-side authentication API.
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
+   
+ * @returns {Object|null} The student session object if found, or null if not.
 
+
+/*******  7867ac85-2016-4445-b21f-e7953db65243  *******//*************  ✨ Windsurf Command ⭐  *************/
 function getStudentSession() {
   try {
     return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
   } catch {
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Checks if the student session is stored in localStorage. If not, redirects
+ * the user to the login page and returns false. If the session is found,
+ * returns true.
+ * @returns {boolean} True if the student session is found, or false
+ * if not.
+ */
+/*******  4696c728-e8fe-4fa8-b07e-a7085e8051a9  *******/
     return null;
   }
 }
@@ -15,11 +28,13 @@ function getStudentSession() {
 function requireStudentLogin() {
   if (!getStudentSession()) {
     window.location.replace("login.html");
+
     return false;
   }
   return true;
 }
 
+odo
 function setupStudentSession() {
   const student = getStudentSession();
   if (!student) return;
