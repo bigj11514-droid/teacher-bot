@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Y_Cohde Subscription</title>
+
+    <link rel="stylesheet" href="teacher.css">
+
+    <!-- Paystack -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
+</head>
+
+<body>
+
+    <main class="payment-page">
+
+        <div class="payment-card">
+
+            <h1>Continue Learning</h1>
+
+            <p>
+                Your Y_Cohde learning subscription has expired.
+            </p>
+
+            <div class="price">
+                GH₵25
+                <span>/ month</span>
+            </div>
+
+            <ul>
+                <li>Access all your courses</li>
+                <li>Access lessons</li>
+                <li>Take quizzes</li>
+                <li>Track your progress</li>
+            </ul>
+
+            <button id="pay-button" class="btn">
+                Pay GH₵25
+            </button>
+
+            <p id="payment-message"></p>
+
+        </div>
+
+    </main>
+
+    <script>
+
+        const payButton = document.getElementById("pay-button");
+
+        const showPaymentMessage = (message) => {
+            const messageElement = document.getElementById("payment-message");
+            if (messageElement) messageElement.textContent = message;
+            else console.error("[Y_Cohde] Missing #payment-message:", message);
+        };
+
+        payButton?.addEventListener("click", () => {
+
+            let student = null;
+
+            try {
+                student =
+                    JSON.parse(localStorage.getItem("ycohdeStudentSession"));
+            } catch (storageError) {
+                console.error(
+                    "[Y_Cohde] Could not read the saved session",
+                    storageError
+                );
+            }
+
+            if (!student || !student.email) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (typeof PaystackPop === "undefined") {
+                console.error("[Y_Cohde] The Paystack script did not load");
+                showPaymentMessage(
+                    "Payments are unavailable right now. Check your connection and reload the page."
+                );
+                return;
+            }
+
+            const paystack = new PaystackPop();
+
+            paystack.newTransaction({
+
+                key: "YOUR_PUBLIC_KEY",
+
+                email: student.email,
+
+                amount: 2500,
+
+                planCode: "YOUR_PLAN_CODE",
+
+                onSuccess: (transaction) => {
+
+                    console.log("Payment successful:", transaction);
+
+                    /*
+                     * IMPORTANT:
+                     * Do NOT activate the student's subscription
+                     * only from this JavaScript callback.
+                     *
+                     * Send the reference to your server.
+                     */
+
+                    fetch("/api/verify-payment", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            reference: transaction.reference,
+                            email: student.email
+                        })
+
+                    })
+                    .then(response => {
+
+                        if (!response.ok) {
+                            throw new Error(
+                                `Verification request failed with status ${response.status}`
+                            );
+                        }
+
+                        return response.json();
+
+                    })
+
+                    .then(data => {
+
+                        if (data.success) {
+
+                            window.location.href = "index.html";
+
+                        } else {
+
+                            showPaymentMessage(
+                                "Payment could not be verified."
+                            );
+
+                        }
+
+                    })
+
+                    .catch(error => {
+
+                        console.error(
+                            "[Y_Cohde] Could not verify the payment",
+                            error
+                        );
+
+                        showPaymentMessage(
+                            "We could not confirm your payment. Keep your receipt and contact support before paying again."
+                        );
+
+                    });
+
+                },
+
+                onCancel: () => {
+
+                    showPaymentMessage("Payment cancelled.");
+
+                },
+
+                onError: (error) => {
+
+                    console.error("[Y_Cohde] Paystack reported an error", error);
+
+                    showPaymentMessage(
+                        "Something went wrong with the payment."
+                    );
+
+                }
+
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>

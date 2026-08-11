@@ -79,6 +79,7 @@ function getStudentSession() {
 function requireStudentLogin() {
   if (!getStudentSession()) {
     window.location.replace("login.html");
+
     return false;
   }
   return true;
