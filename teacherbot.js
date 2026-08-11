@@ -2,39 +2,16 @@
 
 // Student sign-in for this static site. This stores only the display name in
 // the browser; a real password system needs a server-side authentication API.
-const STUDENT_SESSION_KEY = "ycohdeStudentSession";
-   
- * @returns {Object|null} The student session object if found, or null if not.
-
-
-/*******  7867ac85-2016-4445-b21f-e7953db65243  *******//*************  ✨ Windsurf Command ⭐  *************/
-function getStudentSession() {
-  try {
-    return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
-  } catch {
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Checks if the student session is stored in localStorage. If not, redirects
- * the user to the login page and returns false. If the session is found,
- * returns true.
- * @returns {boolean} True if the student session is found, or false
- * if not.
- */
-/*******  4696c728-e8fe-4fa8-b07e-a7085e8051a9  *******/
-    return null;
-  }
-}
+// Session, storage, query string and DOM helpers live in shared.js.
 
 function requireStudentLogin() {
   if (!getStudentSession()) {
     window.location.replace("login.html");
-
     return false;
   }
   return true;
 }
 
-odo
 function setupStudentSession() {
   const student = getStudentSession();
   if (!student) return;
@@ -55,20 +32,24 @@ function setupStudentSession() {
     logoutButton.className = `${className} logout-btn`;
     logoutButton.textContent = "Log out";
     logoutButton.addEventListener("click", () => {
-      localStorage.removeItem(STUDENT_SESSION_KEY);
+      clearStudentSession();
       window.location.replace("login.html");
     });
     navigation.append(logoutButton);
   };
 
+  const addCommunityLink = (navigation, className, withIcon) => {
+    if (!navigation || navigation.querySelector(".community-nav-link")) return;
+    const communityLink = document.createElement("a");
+    communityLink.className = `${className} community-nav-link`.trim();
+    communityLink.href = "community.html";
+    if (withIcon) communityLink.innerHTML = "<span>👥</span><span>Student community</span>";
+    else communityLink.textContent = "Student community";
+    navigation.append(communityLink);
+  };
+
   document.querySelectorAll(".site-nav").forEach((navigation) => {
-    if (!navigation.querySelector(".community-nav-link")) {
-      const communityLink = document.createElement("a");
-      communityLink.className = "nav-item community-nav-link";
-      communityLink.href = "community.html";
-      communityLink.innerHTML = "<span>👥</span><span>Student community</span>";
-      navigation.append(communityLink);
-    }
+    addCommunityLink(navigation, "nav-item", true);
     if (!navigation.querySelector(".department-quiz-nav")) {
       const quizMenu = document.createElement("details");
       quizMenu.className = "department-quiz-nav";
@@ -82,14 +63,8 @@ function setupStudentSession() {
     }
     addLogout(navigation, "nav-item");
   });
-  const simpleNav = document.getElementById("simple-nav");
-  if (simpleNav && !simpleNav.querySelector(".community-nav-link")) {
-    const communityLink = document.createElement("a");
-    communityLink.className = "community-nav-link";
-    communityLink.href = "community.html";
-    communityLink.textContent = "Student community";
-    simpleNav.append(communityLink);
-  }
+  const simpleNav = byId("simple-nav");
+  addCommunityLink(simpleNav, "", false);
   addLogout(simpleNav, "simple-nav-logout");
 }
 
@@ -277,32 +252,27 @@ const learningCatalog = {
   }
 };
 
-let lessonTimerId = null;
+let lessonCountdown = null;
+
+function stopLessonTimer() {
+  if (lessonCountdown) lessonCountdown.stop();
+  lessonCountdown = null;
+}
 
 function startLessonTimer(seconds = 600) {
-  clearInterval(lessonTimerId);
-  let timeLeft = seconds;
-  const timerElement = document.getElementById("lesson-timer");
-  const updateTimer = () => {
-    if (!timerElement) return;
-    const minutes = Math.floor(timeLeft / 60);
-    const remainingSeconds = String(timeLeft % 60).padStart(2, "0");
-    timerElement.textContent = `Lesson time: ${minutes}:${remainingSeconds}`;
-  };
-  updateTimer();
-  lessonTimerId = setInterval(() => {
-    timeLeft -= 1;
-    updateTimer();
-    if (timeLeft <= 0) {
-      clearInterval(lessonTimerId);
-      lessonTimerId = null;
-      if (timerElement) timerElement.textContent = "Lesson time is complete — finish when you are ready.";
+  stopLessonTimer();
+  lessonCountdown = createCountdown({
+    seconds,
+    onTick: (timeLeft) => setText("lesson-timer", `Lesson time: ${formatClock(timeLeft)}`),
+    onComplete: () => {
+      lessonCountdown = null;
+      setText("lesson-timer", "Lesson time is complete — finish when you are ready.");
     }
-  }, 1000);
+  });
 }
 
 function setupLearningExplorer() {
-  const explorer = document.getElementById("learning-explorer");
+  const explorer = byId("learning-explorer");
   if (!explorer) return;
   explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(learningCatalog).map(([key, syllabus]) => `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map(year => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`).join("")}</tbody></table></div>`;
 }
@@ -358,16 +328,15 @@ function getNextLessonTarget(syllabus, subject, topic, subtopic) {
 }
 
 function setupLearningSpace() {
-  const space = document.getElementById("learning-space");
+  const space = byId("learning-space");
   if (!space) return;
-  const syllabusKey = new URLSearchParams(window.location.search).get("syllabus") || "ges";
+  const syllabusKey = getQueryParam("syllabus") || "ges";
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
-  const selectedYear = new URLSearchParams(window.location.search).get("year");
+  const selectedYear = getQueryParam("year", null);
   let activeLesson;
   let activeLessonMeta = { subject: null, topic: null, subtopic: null };
   const renderTopics = () => {
-    clearInterval(lessonTimerId);
-    lessonTimerId = null;
+    stopLessonTimer();
     space.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(syllabus.topics).map(([subject, topics]) => `<article class="topic-card"><h3>${subject}</h3>${Object.entries(topics).map(([topic, subtopics]) => `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(subtopics).map(subtopic => `<button class="subtopic-btn" data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${subtopic}</button>`).join("")}</div></details>`).join("")}</article>`).join("")}</div>`;
     space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
   };
@@ -377,40 +346,38 @@ function setupLearningSpace() {
     const lessonImage = activeLesson.image ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />` : "";
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><button class="btn" id="finish-lesson">I have finished learning</button></article>`;
     startLessonTimer();
-    document.getElementById("back-to-topics").addEventListener("click", renderTopics);
-    document.getElementById("finish-lesson").addEventListener("click", () => {
-      clearInterval(lessonTimerId);
-      lessonTimerId = null;
-      document.getElementById("understanding-modal").classList.add("visible");
+    byId("back-to-topics").addEventListener("click", renderTopics);
+    byId("finish-lesson").addEventListener("click", () => {
+      stopLessonTimer();
+      byId("understanding-modal").classList.add("visible");
     });
   };
-  const modal = document.getElementById("understanding-modal");
-  document.getElementById("understood-yes").addEventListener("click", () => {
+  const modal = byId("understanding-modal");
+  byId("understood-yes").addEventListener("click", () => {
     modal.classList.remove("visible");
-    clearInterval(lessonTimerId);
-    lessonTimerId = null;
+    stopLessonTimer();
     renderTopicQuiz(activeLesson, () => {
       const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
       if (nextLesson) renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
       else renderTopics();
     });
   });
-  document.getElementById("understood-no").addEventListener("click", () => { modal.classList.remove("visible"); space.querySelector(".lesson-copy").insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>"); });
+  byId("understood-no").addEventListener("click", () => { modal.classList.remove("visible"); space.querySelector(".lesson-copy").insertAdjacentHTML("beforeend", "<p class=\"review-note\">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>"); });
   renderTopics();
 }
 
 function renderTopicQuiz(lesson, afterQuiz) {
-  clearInterval(lessonTimerId);
-  lessonTimerId = null;
-  const space = document.getElementById("learning-space");
+  stopLessonTimer();
+  const space = byId("learning-space");
   let index = 0, score = 0;
   const showQuestion = () => {
     const [question, answers, correct] = lesson.questions[index];
     space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${lesson.questions.length}</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><p id="topic-feedback" class="feedback-text"></p></article>`;
     space.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => {
       const selected = Number(button.dataset.answer);
-      space.querySelectorAll("[data-answer]").forEach(item => item.disabled = true);
-      if (selected === correct) { score++; document.getElementById("topic-feedback").textContent = "Correct! Great learning."; } else document.getElementById("topic-feedback").textContent = `Not quite. The correct answer is ${answers[correct]}.`;
+      disableAll(space.querySelectorAll("[data-answer]"));
+      if (selected === correct) score++;
+      setText("topic-feedback", selected === correct ? "Correct! Great learning." : `Not quite. The correct answer is ${answers[correct]}.`);
       setTimeout(() => { index++; index < lesson.questions.length ? showQuestion() : finishQuiz(); }, 1100);
     }));
   };
@@ -418,7 +385,7 @@ function renderTopicQuiz(lesson, afterQuiz) {
     const nextLabel = lesson.next ? "Continue to the next lesson" : "Choose another topic";
     const nextMessage = lesson.next ? "Great work. Your next learning step is ready." : "You have completed this learning path. Choose a new topic when you are ready.";
     space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${lesson.questions.length}</h2><p>${score === lesson.questions.length ? "Excellent work—you understood this topic well." : "Keep practising. You can review the lesson and try again."}</p><p class="path-message">${nextMessage}</p><button class="btn" id="choose-another-topic">${nextLabel}</button></article>`;
-    document.getElementById("choose-another-topic").addEventListener("click", afterQuiz || (() => setupLearningSpace()));
+    byId("choose-another-topic").addEventListener("click", afterQuiz || (() => setupLearningSpace()));
   };
   showQuestion();
 }
@@ -899,99 +866,82 @@ let mistakes = 0;
 let quizQuestions = [];
 let mode = "practice";
 let answeredQuestions = [];
-let timerId = null;
-let timeLeft = 15;
+let quizCountdown = null;
 let quizTimerSeconds = 15;
 let quizStarted = false;
 
+const classesByDepartment = {
+  basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
+  jhs: ["jhs1", "jhs2", "jhs3"],
+  shs: ["shs1", "shs2", "shs3"]
+};
+
+const subjectLabels = {
+  maths: "Mathematics",
+  science: "Science",
+  owop: "Our World Our People",
+  history: "History",
+  english: "English",
+  rme: "Religious & Moral Education",
+  creative: "Creative Arts",
+  "core-maths": "Core Mathematics",
+  "elective-maths": "Elective Mathematics",
+  "english-language": "English Language",
+  "integrated-science": "Integrated Science",
+  "social-studies": "Social Studies",
+  economics: "Economics",
+  government: "Government",
+  ict: "ICT"
+};
+
+function subjectOptions(...keys) {
+  return keys.map((key) => ({ key, label: subjectLabels[key] || key }));
+}
+
+const basicSubjects = subjectOptions("maths", "science", "owop", "history", "english", "rme", "creative");
+
 const shsCourseCatalog = {
-  "general-arts": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "economics", label: "Economics" },
-    { key: "government", label: "Government" },
-    { key: "ict", label: "ICT" }
-  ],
-  "general-science": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "integrated-science", label: "Integrated Science" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "ict", label: "ICT" }
-  ],
-  business: [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "economics", label: "Economics" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "ict", label: "ICT" }
-  ],
-  "home-economics": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "economics", label: "Economics" },
-    { key: "ict", label: "ICT" }
-  ],
-  "visual-arts": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "ict", label: "ICT" },
-    { key: "government", label: "Government" }
-  ]
+  "general-arts": subjectOptions("core-maths", "english-language", "social-studies", "economics", "government", "ict"),
+  "general-science": subjectOptions("core-maths", "english-language", "integrated-science", "social-studies", "ict"),
+  business: subjectOptions("core-maths", "english-language", "economics", "social-studies", "ict"),
+  "home-economics": subjectOptions("core-maths", "english-language", "social-studies", "economics", "ict"),
+  "visual-arts": subjectOptions("core-maths", "english-language", "social-studies", "ict", "government")
 };
 
 const subjectCatalog = {
-  basic: [
-    { key: "maths", label: "Mathematics" },
-    { key: "science", label: "Science" },
-    { key: "owop", label: "Our World Our People" },
-    { key: "history", label: "History" },
-    { key: "english", label: "English" },
-    { key: "rme", label: "Religious & Moral Education" },
-    { key: "creative", label: "Creative Arts" }
-  ],
-  jhs: [
-    { key: "maths", label: "Mathematics" },
-    { key: "science", label: "Science" },
-    { key: "owop", label: "Our World Our People" },
-    { key: "history", label: "History" },
-    { key: "english", label: "English" },
-    { key: "rme", label: "Religious & Moral Education" },
-    { key: "creative", label: "Creative Arts" }
-  ],
-  shs: [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "elective-maths", label: "Elective Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "integrated-science", label: "Integrated Science" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "economics", label: "Economics" },
-    { key: "government", label: "Government" },
-    { key: "ict", label: "ICT" }
-  ]
+  basic: basicSubjects,
+  jhs: basicSubjects,
+  shs: subjectOptions(
+    "core-maths",
+    "elective-maths",
+    "english-language",
+    "integrated-science",
+    "social-studies",
+    "economics",
+    "government",
+    "ict"
+  )
 };
 
 function getSubjectKey() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("subject")?.toLowerCase();
+  return getQueryKey("subject");
 }
 
 function getClassKey() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("class")?.toLowerCase() || "basic1";
+  return getQueryKey("class") || "basic1";
 }
 
 function getDepartmentKey() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("department")?.toLowerCase() || "";
+  return getQueryKey("department");
 }
 
 function getCourseKey() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("course")?.toLowerCase() || "general-arts";
+  return getQueryKey("course") || "general-arts";
+}
+
+function getDepartmentMessage(department) {
+  if (department === "shs") return "Senior High students can choose from SHS subjects such as Core Mathematics and Economics.";
+  return "Choose a subject for your class and start a fresh quiz session.";
 }
 
 function getDepartmentFromClass(classKey) {
@@ -1055,41 +1005,26 @@ function renderSubjectLinks(selectedClass, container) {
 }
 
 function setupSubjectLinks() {
-  const classSelect = document.getElementById("class-select");
-  const subjectLinksContainer = document.getElementById("subject-links");
-  const departmentMessage = document.getElementById("department-message");
+  const classSelect = byId("class-select");
+  const subjectLinksContainer = byId("subject-links");
+  const departmentMessage = byId("department-message");
 
   if (!classSelect || !subjectLinksContainer) {
     return;
   }
 
-  const selectedClass = getClassKey();
-  classSelect.value = selectedClass;
+  const showClass = (selectedClass) => {
+    renderSubjectLinks(selectedClass, subjectLinksContainer);
+    setText(departmentMessage, getDepartmentMessage(getDepartmentFromClass(selectedClass)));
+  };
 
-  if (departmentMessage) {
-    const department = getDepartmentFromClass(classSelect.value);
-    departmentMessage.textContent = department === "shs"
-      ? "Senior High students can choose from SHS subjects such as Core Mathematics and Economics."
-      : "Choose a subject for your class and start a fresh quiz session.";
-  }
-
-  renderSubjectLinks(selectedClass, subjectLinksContainer);
-
-  classSelect.addEventListener("change", () => {
-    const activeClass = classSelect.value;
-    renderSubjectLinks(activeClass, subjectLinksContainer);
-
-    if (departmentMessage) {
-      const department = getDepartmentFromClass(activeClass);
-      departmentMessage.textContent = department === "shs"
-        ? "Senior High students can choose from SHS subjects such as Core Mathematics and Economics."
-        : "Choose a subject for your class and start a fresh quiz session.";
-    }
-  });
+  classSelect.value = getClassKey();
+  showClass(classSelect.value);
+  classSelect.addEventListener("change", () => showClass(classSelect.value));
 }
 
 function updateDepartmentVisual(selectedDepartment) {
-  const visualContainer = document.getElementById("department-visual");
+  const visualContainer = byId("department-visual");
   if (!visualContainer) return;
 
   const visuals = {
@@ -1115,22 +1050,16 @@ function updateDepartmentVisual(selectedDepartment) {
 }
 
 function setupDepartmentPage() {
-  const departmentSelect = document.getElementById("department-select");
-  const classSelect = document.getElementById("class-select");
-  const courseSelect = document.getElementById("course-select");
-  const courseLabel = document.getElementById("course-label");
-  const continueBtn = document.getElementById("continue-btn");
-  const departmentMessage = document.getElementById("department-message");
+  const departmentSelect = byId("department-select");
+  const classSelect = byId("class-select");
+  const courseSelect = byId("course-select");
+  const courseLabel = byId("course-label");
+  const continueBtn = byId("continue-btn");
+  const departmentMessage = byId("department-message");
 
   if (!departmentSelect || !classSelect || !continueBtn) {
     return;
   }
-
-  const optionsByDepartment = {
-    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
-    jhs: ["jhs1", "jhs2", "jhs3"],
-    shs: ["shs1", "shs2", "shs3"]
-  };
 
   function updateCourseVisibility() {
     if (courseSelect && courseLabel) {
@@ -1142,24 +1071,16 @@ function setupDepartmentPage() {
 
   function updateClassOptions() {
     const selectedDepartment = departmentSelect.value;
-    classSelect.innerHTML = "";
-
-    optionsByDepartment[selectedDepartment].forEach((value) => {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = classLabels[value] || value;
-      classSelect.appendChild(option);
-    });
+    const classKeys = classesByDepartment[selectedDepartment];
+    setHtml(classSelect, renderOptions(classKeys.map((key) => ({ key, label: classLabels[key] || key })), { value: "key" }));
 
     updateCourseVisibility();
 
-    if (departmentMessage) {
-      departmentMessage.textContent = selectedDepartment === "shs"
-        ? "Senior High students can pick their course first, then choose the subjects they study."
-        : selectedDepartment === "jhs"
-          ? "Junior High students can move to the subject page for JHS questions."
-          : "Basic students can move to the subject page for basic-level questions.";
-    }
+    setText(departmentMessage, selectedDepartment === "shs"
+      ? "Senior High students can pick their course first, then choose the subjects they study."
+      : selectedDepartment === "jhs"
+        ? "Junior High students can move to the subject page for JHS questions."
+        : "Basic students can move to the subject page for basic-level questions.");
 
     updateDepartmentVisual(selectedDepartment);
   }
@@ -1169,7 +1090,8 @@ function setupDepartmentPage() {
   const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
   updateClassOptions();
-  classSelect.value = optionsByDepartment[initialDepartment].includes(initialClass) ? initialClass : optionsByDepartment[initialDepartment][0];
+  const initialClassKeys = classesByDepartment[initialDepartment];
+  classSelect.value = initialClassKeys.includes(initialClass) ? initialClass : initialClassKeys[0];
   updateDepartmentVisual(initialDepartment);
   if (courseSelect) {
     courseSelect.value = initialCourse;
@@ -1188,30 +1110,24 @@ function setupDepartmentPage() {
 }
 
 function setupQuizPage() {
-  const quizSetup = document.getElementById("quiz-setup");
-  const startBtn = document.getElementById("start-quiz-btn");
-  const timerSelect = document.getElementById("timer-select");
-  const setupClassLabel = document.getElementById("setup-class-label");
-  const setupSubjectLabel = document.getElementById("setup-subject-label");
-  const activeArea = document.getElementById("quiz-active-area");
-  const departmentSelect = document.getElementById("quiz-department-select");
-  const classSelect = document.getElementById("quiz-class-select");
-  const subjectSelect = document.getElementById("quiz-subject-select");
+  const quizSetup = byId("quiz-setup");
+  const startBtn = byId("start-quiz-btn");
+  const timerSelect = byId("timer-select");
+  const setupClassLabel = byId("setup-class-label");
+  const setupSubjectLabel = byId("setup-subject-label");
+  const activeArea = byId("quiz-active-area");
+  const departmentSelect = byId("quiz-department-select");
+  const classSelect = byId("quiz-class-select");
+  const subjectSelect = byId("quiz-subject-select");
 
   if (!quizSetup || !startBtn || !timerSelect) {
     return;
   }
 
-  const classesByDepartment = {
-    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
-    jhs: ["jhs1", "jhs2", "jhs3"],
-    shs: ["shs1", "shs2", "shs3"]
-  };
-
   const updateSubjects = (useRequestedSubject = false) => {
     const options = getSubjectCatalogForClass(classSelect.value);
     const currentSubject = subjectSelect.value;
-    subjectSelect.innerHTML = options.map((subject) => `<option value="${subject.key}">${subject.label}</option>`).join("");
+    setHtml(subjectSelect, renderOptions(options, { value: "key" }));
     const requestedSubject = getSubjectKey();
     if (options.some((subject) => subject.key === currentSubject)) {
       subjectSelect.value = currentSubject;
@@ -1219,13 +1135,13 @@ function setupQuizPage() {
       subjectSelect.value = requestedSubject;
     }
     const selected = subjects[subjectSelect.value];
-    if (setupClassLabel) setupClassLabel.textContent = classLabels[classSelect.value] || "Your class";
-    if (setupSubjectLabel) setupSubjectLabel.textContent = selected ? `${selected.displayName} is ready. Now choose a timer.` : "Choose a subject first.";
+    setText(setupClassLabel, classLabels[classSelect.value] || "Your class");
+    setText(setupSubjectLabel, selected ? `${selected.displayName} is ready. Now choose a timer.` : "Choose a subject first.");
   };
 
   const updateClasses = () => {
     const options = classesByDepartment[departmentSelect.value] || classesByDepartment.basic;
-    classSelect.innerHTML = options.map((classKey) => `<option value="${classKey}">${classLabels[classKey]}</option>`).join("");
+    setHtml(classSelect, renderOptions(options.map((key) => ({ key, label: classLabels[key] })), { value: "key" }));
     const requestedClass = getClassKey();
     if (options.includes(requestedClass)) classSelect.value = requestedClass;
     updateSubjects(true);
@@ -1264,19 +1180,18 @@ function setupQuiz() {
   const subjectKey = getSubjectKey();
   const classKey = getClassKey();
   const subjectData = subjects[subjectKey];
-  const params = new URLSearchParams(window.location.search);
-  mode = params.get("mode") || "practice";
+  mode = getQueryParam("mode") || "practice";
 
-  const questionEl = document.getElementById("questions");
-  const answersEl = document.getElementById("answers");
-  const scoreEl = document.getElementById("score");
-  const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
-  const nextBtn = document.getElementById("nextbtn");
-  const subjectTitle = document.getElementById("subject-title");
-  const modeBadge = document.getElementById("mode-badge");
-  const timerEl = document.getElementById("timer");
-  const timerSelect = document.getElementById("timer-select");
+  const questionEl = byId("questions");
+  const answersEl = byId("answers");
+  const scoreEl = byId("score");
+  const feedbackEl = byId("feedback");
+  const explanationEl = byId("explanation");
+  const nextBtn = byId("nextbtn");
+  const subjectTitle = byId("subject-title");
+  const modeBadge = byId("mode-badge");
+  const timerEl = byId("timer");
+  const timerSelect = byId("timer-select");
 
   if (!questionEl || !answersEl || !scoreEl || !feedbackEl || !nextBtn || !subjectTitle) {
     return;
@@ -1300,32 +1215,27 @@ function setupQuiz() {
   subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
-  if (explanationEl) {
-    explanationEl.textContent = "Explanations are shown here";
-  }
+  setText(explanationEl, "Explanations are shown here");
   showDiagramForQuestion(quizQuestions[0]);
-  if (timerEl) {
-    timerEl.textContent = `Time left: ${quizTimerSeconds}s`;
-  }
+  setText(timerEl, `Time left: ${quizTimerSeconds}s`);
   if (timerSelect) {
     timerSelect.value = String(quizTimerSeconds);
   }
-  if (modeBadge) {
-    modeBadge.textContent = mode === "exam" ? "Exam Mode • no hints after wrong answers" : "Practice Mode • explanations are shown";
-  }
+  setText(modeBadge, mode === "exam" ? "Exam Mode • no hints after wrong answers" : "Practice Mode • explanations are shown");
   nextBtn.textContent = "Next Question";
   nextBtn.disabled = true;
   nextBtn.style.display = "inline-block";
 
-  clearInterval(timerId);
+  stopQuizTimer();
   loadQuestion();
 }
 
 function updateScoreDisplay() {
-  const scoreEl = document.getElementById("score");
-  if (scoreEl) {
-    scoreEl.textContent = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
-  }
+  setText("score", `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`);
+}
+
+function showExplanation(current) {
+  setText("explanation", `Explanation: ${getExplanationForCurrentQuestion(current)}`);
 }
 
 function getExplanationForCurrentQuestion(current) {
@@ -1336,52 +1246,44 @@ function getExplanationForCurrentQuestion(current) {
   return `The correct answer is "${correctAnswer}". ${current.question} is answered correctly when you choose ${correctAnswer} because it matches the idea being tested. Review the lesson note again and remember the reason behind it.`;
 }
 
+function stopQuizTimer() {
+  if (quizCountdown) quizCountdown.stop();
+  quizCountdown = null;
+}
+
 function startTimer() {
-  const timerEl = document.getElementById("timer");
-  timeLeft = quizTimerSeconds;
-  if (timerEl) {
-    timerEl.textContent = `Time left: ${timeLeft}s`;
-  }
-
-  clearInterval(timerId);
-  timerId = setInterval(() => {
-    timeLeft -= 1;
-    if (timerEl) {
-      timerEl.textContent = `Time left: ${timeLeft}s`;
-    }
-
-    if (timeLeft <= 0) {
-      clearInterval(timerId);
+  stopQuizTimer();
+  quizCountdown = createCountdown({
+    seconds: quizTimerSeconds,
+    onTick: (timeLeft) => setText("timer", `Time left: ${timeLeft}s`),
+    onComplete: () => {
+      quizCountdown = null;
       handleTimeout();
     }
-  }, 1000);
+  });
 }
 
 function handleTimeout() {
-  const answersEl = document.getElementById("answers");
-  const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
-  const nextBtn = document.getElementById("nextbtn");
+  const answersEl = byId("answers");
+  const nextBtn = byId("nextbtn");
   const current = quizQuestions[currentQuestionIndex];
 
   if (!current) return;
 
-  Array.from(answersEl.children).forEach((btn) => {
-    btn.disabled = true;
-  });
+  disableAll(answersEl.children);
 
   mistakes += 1;
-  feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
-  explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+  setText("feedback", "⏰ Time is up! You did not answer in time.");
+  showExplanation(current);
   updateScoreDisplay();
   nextBtn.disabled = false;
 }
 
 function loadQuestion() {
-  const questionEl = document.getElementById("questions");
-  const answersEl = document.getElementById("answers");
-  const progressEl = document.getElementById("progress");
-  const nextBtn = document.getElementById("nextbtn");
+  const questionEl = byId("questions");
+  const answersEl = byId("answers");
+  const progressEl = byId("progress");
+  const nextBtn = byId("nextbtn");
 
   const current = quizQuestions[currentQuestionIndex];
   questionEl.textContent = current.question;
@@ -1402,13 +1304,10 @@ function loadQuestion() {
 }
 
 function selectAnswer(button, selectedIndex) {
-  const answersEl = document.getElementById("answers");
-  const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
-  const scoreEl = document.getElementById("score");
-  const nextBtn = document.getElementById("nextbtn");
+  const answersEl = byId("answers");
+  const nextBtn = byId("nextbtn");
 
-  clearInterval(timerId);
+  stopQuizTimer();
 
   const current = quizQuestions[currentQuestionIndex];
   const correctIndex = current.correct;
@@ -1417,65 +1316,42 @@ function selectAnswer(button, selectedIndex) {
   if (isCorrect) {
     score++;
     button.style.background = "#4CAF50";
-    feedbackEl.textContent = "😉 Correct!";
-    explanationEl.textContent = "";
+    setText("feedback", "😉 Correct!");
+    setText("explanation", "");
   } else {
     mistakes += 1;
     button.style.background = "#E74C3C";
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
-    feedbackEl.textContent = "😡 Wrong. The correct answer is highlighted in green.";
-    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+    setText("feedback", "😡 Wrong. The correct answer is highlighted in green.");
+    showExplanation(current);
   }
 
-  Array.from(answersEl.children).forEach((btn) => {
-    btn.disabled = true;
-  });
+  disableAll(answersEl.children);
 
   updateScoreDisplay();
   nextBtn.disabled = false;
 }
 
 function nextQuestion() {
-  const nextBtn = document.getElementById("nextbtn");
-  const feedbackEl = document.getElementById("feedback");
-  const questionEl = document.getElementById("questions");
-  const answersEl = document.getElementById("answers");
+  const nextBtn = byId("nextbtn");
 
   if (currentQuestionIndex + 1 < quizQuestions.length) {
     currentQuestionIndex++;
-    feedbackEl.textContent = "";
-    if (document.getElementById("explanation")) {
-      document.getElementById("explanation").textContent = "Explanations are shown here";
-    }
+    setText("feedback", "");
+    setText("explanation", "Explanations are shown here");
     loadQuestion();
   } else {
-    const summary = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
-    questionEl.textContent = summary;
-    answersEl.innerHTML = "";
-    feedbackEl.textContent = "";
-    const explanationEl = document.getElementById("explanation");
-    if (explanationEl) {
-      explanationEl.textContent = "";
-    }
+    setText("questions", `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`);
+    setHtml("answers", "");
+    setText("feedback", "");
+    setText("explanation", "");
     const completedSubject = subjects[getSubjectKey()]?.displayName || "this quiz";
     renderReviewForm(completedSubject);
-    const progressEl = document.getElementById("progress");
-    if (progressEl) {
-      progressEl.textContent = "Quiz complete";
-    }
-    const timerEl = document.getElementById("timer");
-    if (timerEl) {
-      timerEl.textContent = "";
-    }
-    const modeBadge = document.getElementById("mode-badge");
-    if (modeBadge) {
-      modeBadge.textContent = "";
-    }
-    const diagramArea = document.getElementById("diagram-area");
-    if (diagramArea) {
-      diagramArea.innerHTML = "";
-    }
+    setText("progress", "Quiz complete");
+    setText("timer", "");
+    setText("mode-badge", "");
+    setHtml("diagram-area", "");
     nextBtn.textContent = "Choose another subject";
     nextBtn.disabled = false;
     nextBtn.removeEventListener("click", nextQuestion);
@@ -1484,7 +1360,7 @@ function nextQuestion() {
 }
 
 function renderReviewForm(subjectLabel) {
-  const reviewSection = document.getElementById("review-section");
+  const reviewSection = byId("review-section");
   if (!reviewSection) return;
 
   const label = (subjectLabel || "this subject").toString();
@@ -1525,29 +1401,25 @@ function renderReviewForm(subjectLabel) {
     const studentName = reviewSection.querySelector("#review-name").value.trim() || "A student";
     if (!text) return;
 
-    const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
-    reviews.push({
+    addStoredReview({
       rating: selectedRating,
       text,
       subject: label,
       studentName,
       createdAt: new Date().toLocaleString()
     });
-    localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
 
-    if (feedback) {
-      feedback.textContent = "Thanks for your review. Your feedback has been saved.";
-    }
+    setText(feedback, "Thanks for your review. Your feedback has been saved.");
     form.reset();
     renderPublicReviews();
   });
 }
 
 function renderPublicReviews() {
-  const reviewList = document.getElementById("public-reviews-list");
+  const reviewList = byId("public-reviews-list");
   if (!reviewList) return;
 
-  const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse();
+  const reviews = getRecentReviews();
 
   if (!reviews.length) {
     reviewList.innerHTML = '<p class="empty-state">No reviews yet. Complete a quiz and be the first to leave one.</p>';
@@ -1556,22 +1428,16 @@ function renderPublicReviews() {
 
   reviewList.innerHTML = reviews.map((review) => `
     <article class="review-post">
-      <strong>${review.studentName}</strong>
-      <div class="stars">${"★".repeat(review.rating)}</div>
-      <p>${review.text}</p>
-      <small>${review.subject} • ${review.createdAt}</small>
+      <strong>${escapeHtml(review.studentName)}</strong>
+      <div class="stars">${renderStars(review.rating)}</div>
+      <p>${escapeHtml(review.text)}</p>
+      <small>${escapeHtml(review.subject)} • ${escapeHtml(review.createdAt)}</small>
     </article>
   `).join("");
 }
 
-function escapeCommunityText(value) {
-  const element = document.createElement("div");
-  element.textContent = value || "";
-  return element.innerHTML;
-}
-
 function setupCommunityPage() {
-  const communityList = document.getElementById("community-list");
+  const communityList = byId("community-list");
   if (!communityList) return;
 
   const communityHighlights = [
@@ -1579,7 +1445,7 @@ function setupCommunityPage() {
     { name: "Kwame A.", className: "JHS 2", rating: 5, text: "I like choosing my class and timer before each quiz.", photo: "https://i.pravatar.cc/120?img=12" },
     { name: "Esi B.", className: "SHS 1", rating: 4, text: "The short questions help me check what I have learned.", photo: "https://i.pravatar.cc/120?img=32" }
   ];
-  const savedReviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse().map((review, index) => ({
+  const savedReviews = getRecentReviews().map((review, index) => ({
     name: review.studentName || "Y_Cohde student",
     className: review.subject || "Learner",
     rating: Number(review.rating) || 5,
@@ -1588,27 +1454,27 @@ function setupCommunityPage() {
   }));
   const students = [...savedReviews, ...communityHighlights];
   communityList.innerHTML = students.map((student) => `<article class="community-card">
-    <img class="community-avatar" src="${student.photo}" alt="Profile picture of ${escapeCommunityText(student.name)}" />
-    <div class="community-card-content"><div class="community-name-row"><div><h3>${escapeCommunityText(student.name)}</h3><p>${escapeCommunityText(student.className)}</p></div><span class="community-rating" aria-label="${student.rating} out of 5 stars">${"★".repeat(student.rating)}${"☆".repeat(5 - student.rating)}</span></div><p class="community-review">“${escapeCommunityText(student.text)}”</p></div>
+    <img class="community-avatar" src="${student.photo}" alt="Profile picture of ${escapeHtml(student.name)}" />
+    <div class="community-card-content"><div class="community-name-row"><div><h3>${escapeHtml(student.name)}</h3><p>${escapeHtml(student.className)}</p></div><span class="community-rating" aria-label="${student.rating} out of 5 stars">${renderStars(student.rating, { showEmpty: true })}</span></div><p class="community-review">“${escapeHtml(student.text)}”</p></div>
   </article>`).join("");
 }
 
 function setupEngagementFeatures() {
-  const newsletterForm = document.getElementById("newsletter-form");
-  const newsletterStatus = document.getElementById("newsletter-status");
-  const shareBtn = document.getElementById("share-btn");
-  const recommendBtn = document.getElementById("recommend-btn");
-  const shareFeedback = document.getElementById("share-feedback");
-  const reminderBtn = document.getElementById("reminder-btn");
-  const reminderStatus = document.getElementById("reminder-status");
-  const reminderSelect = document.getElementById("reminder-select");
+  const newsletterForm = byId("newsletter-form");
+  const newsletterStatus = byId("newsletter-status");
+  const shareBtn = byId("share-btn");
+  const recommendBtn = byId("recommend-btn");
+  const shareFeedback = byId("share-feedback");
+  const reminderBtn = byId("reminder-btn");
+  const reminderStatus = byId("reminder-status");
+  const reminderSelect = byId("reminder-select");
 
   if (newsletterForm && newsletterStatus) {
     newsletterForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      const emailInput = document.getElementById("newsletter-email");
+      const emailInput = byId("newsletter-email");
       if (emailInput && emailInput.value.trim()) {
-        newsletterStatus.textContent = `Thanks! ${emailInput.value.trim()} has joined the reminder list.`;
+        setText(newsletterStatus, `Thanks! ${emailInput.value.trim()} has joined the reminder list.`);
         emailInput.value = "";
       }
     });
@@ -1623,82 +1489,79 @@ function setupEngagementFeatures() {
             text: "Check out this learning platform for students.",
             url: window.location.href
           });
-          shareFeedback.textContent = "Thanks for sharing Y_Cohde with others.";
+          setText(shareFeedback, "Thanks for sharing Y_Cohde with others.");
         } catch (error) {
-          shareFeedback.textContent = "Sharing was cancelled, but the idea is still great.";
+          setText(shareFeedback, "Sharing was cancelled, but the idea is still great.");
         }
       } else {
-        shareFeedback.textContent = "Copy the page link to share it with a friend.";
+        setText(shareFeedback, "Copy the page link to share it with a friend.");
       }
     });
   }
 
   if (recommendBtn && shareFeedback) {
     recommendBtn.addEventListener("click", () => {
-      shareFeedback.textContent = "Recommended! Keep learning and invite a friend to join the next quiz.";
+      setText(shareFeedback, "Recommended! Keep learning and invite a friend to join the next quiz.");
     });
   }
 
   if (reminderBtn && reminderStatus && reminderSelect) {
     reminderBtn.addEventListener("click", () => {
       const minutes = reminderSelect.value;
-      reminderStatus.textContent = `Reminder set for ${minutes} minutes from now. Return to your study plan soon.`;
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Y_Cohde reminder", {
-          body: `Time to continue studying for ${minutes} minutes.`
-        });
-      } else if ("Notification" in window && Notification.permission !== "denied") {
-        Notification.requestPermission().then(() => {
-          if (Notification.permission === "granted") {
-            new Notification("Y_Cohde reminder", {
-              body: `Time to continue studying for ${minutes} minutes.`
-            });
-          }
-        });
-      }
+      setText(reminderStatus, `Reminder set for ${minutes} minutes from now. Return to your study plan soon.`);
+      showStudyReminder(minutes);
+    });
+  }
+}
+
+function showStudyReminder(minutes) {
+  if (!("Notification" in window)) return;
+
+  const notify = () => new Notification("Y_Cohde reminder", {
+    body: `Time to continue studying for ${minutes} minutes.`
+  });
+
+  if (Notification.permission === "granted") {
+    notify();
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then(() => {
+      if (Notification.permission === "granted") notify();
     });
   }
 }
 
 function showDiagramForQuestion(current) {
-  const diagramArea = document.getElementById("diagram-area");
-  if (!diagramArea) return;
-
   const text = (current.question || "").toLowerCase();
-  if (text.includes("diagram") || text.includes("sketch") || text.includes("shape") || text.includes("draw")) {
-    diagramArea.innerHTML = `<img src="" alt="Study diagram" />`;
-  } else {
-    diagramArea.innerHTML = "Sketch-style questions will appear here when the topic needs a visual prompt.";
-  }
+  const needsDiagram = ["diagram", "sketch", "shape", "draw"].some((keyword) => text.includes(keyword));
+  setHtml("diagram-area", needsDiagram
+    ? `<img src="" alt="Study diagram" />`
+    : "Sketch-style questions will appear here when the topic needs a visual prompt.");
 }
 
 function setupMobileMenu() {
   const menuToggles = Array.from(document.querySelectorAll(".menu-toggle"));
-  const siteNav = document.getElementById("site-nav");
+  const siteNav = byId("site-nav");
   const sidebar = document.querySelector(".sidebar");
 
   if (!siteNav || !sidebar || menuToggles.length === 0) {
     return;
   }
 
-  const closeMenu = () => {
-    sidebar.classList.remove("open");
-    document.body.classList.remove("menu-open");
+  const setMenuOpen = (isOpen) => {
+    sidebar.classList.toggle("open", isOpen);
+    document.body.classList.toggle("menu-open", isOpen);
     menuToggles.forEach((toggle) => {
-      toggle.classList.remove("active");
-      toggle.setAttribute("aria-expanded", "false");
+      toggle.classList.toggle("active", isOpen);
+      setExpanded(toggle, isOpen);
     });
   };
+
+  const closeMenu = () => setMenuOpen(false);
 
   menuToggles.forEach((menuToggle) => {
     menuToggle.addEventListener("click", (event) => {
       event.stopPropagation();
-      const isOpen = sidebar.classList.toggle("open");
-      document.body.classList.toggle("menu-open", isOpen);
-      menuToggles.forEach((toggle) => {
-        toggle.classList.toggle("active", isOpen);
-        toggle.setAttribute("aria-expanded", String(isOpen));
-      });
+      setMenuOpen(!sidebar.classList.contains("open"));
     });
   });
 
@@ -1723,45 +1586,29 @@ function setupMobileMenu() {
   });
 }
 
-function setupSimpleHamburgerMenu() {
-  const button = document.querySelector(".simple-menu-toggle");
-  const navigation = document.getElementById("simple-nav");
-  if (!button || !navigation) return;
-  button.addEventListener("click", () => {
-    const open = navigation.classList.toggle("open");
-    button.setAttribute("aria-expanded", String(open));
+// Every page shares the same shell setup and only differs in the page
+// specific features that run afterwards.
+function startPage(setupPageFeatures) {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!requireStudentLogin()) return;
+    setupStudentSession();
+    setupMobileMenu();
+    setupSimpleHamburgerMenu();
+    setupPageFeatures();
   });
-  navigation.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
-    navigation.classList.remove("open");
-    button.setAttribute("aria-expanded", "false");
-  }));
 }
 
-if (document.getElementById("department-select")) {
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!requireStudentLogin()) return;
-    setupStudentSession();
-    setupMobileMenu();
-    setupSimpleHamburgerMenu();
-    setupDepartmentPage();
-  });
-} else if (document.getElementById("quiz-setup") && document.getElementById("quiz-active-area")) {
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!requireStudentLogin()) return;
-    setupStudentSession();
-    setupMobileMenu();
-    setupSimpleHamburgerMenu();
+if (byId("department-select")) {
+  startPage(setupDepartmentPage);
+} else if (byId("quiz-setup") && byId("quiz-active-area")) {
+  startPage(() => {
     setupQuizPage();
     setupEngagementFeatures();
     renderPublicReviews();
-    document.getElementById("nextbtn")?.addEventListener("click", nextQuestion);
+    byId("nextbtn")?.addEventListener("click", nextQuestion);
   });
 } else {
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!requireStudentLogin()) return;
-    setupStudentSession();
-    setupMobileMenu();
-    setupSimpleHamburgerMenu();
+  startPage(() => {
     setupLearningExplorer();
     setupLearningSpace();
     setupCommunityPage();

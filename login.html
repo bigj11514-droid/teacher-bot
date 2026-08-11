@@ -23,54 +23,22 @@
         <button class="btn" type="submit">Log in to dashboard</button>
       </form>
     </main>
+    <script src="shared.js"></script>
     <script>
-    const menuButton = document.querySelector(".simple-menu-toggle");
-    const navigation = document.getElementById("simple-nav");
-
-    // Only run menu code if the menu button exists
-    if (menuButton && navigation) {
-        menuButton.addEventListener("click", () => {
-            const open = navigation.classList.toggle("open");
-            menuButton.setAttribute("aria-expanded", open);
-        });
-    }
-
-    const sessionKey = "ycohdeStudentSession";
-
-    // If already logged in, go to dashboard
-    if (localStorage.getItem(sessionKey)) {
-        window.location.replace("index.html");
-    }
-
-    // Login form
-    document.getElementById("login-form").addEventListener("submit", (event) => {
-
+      setupSimpleHamburgerMenu();
+      if (getStudentSession()) window.location.replace("index.html");
+      byId("login-form").addEventListener("submit", (event) => {
         event.preventDefault();
-
-        const name = document.getElementById("student-name").value.trim();
-        const email = document.getElementById("student-email").value.trim();
-        const password = document.getElementById("student-password").value;
-
-        const error = document.getElementById("login-error");
-
+        const name = byId("student-name").value.trim();
+        const email = byId("student-email").value.trim();
+        const password = byId("student-password").value;
         if (!name || !email || password.length < 4) {
-            error.textContent =
-                "Enter your name, a valid email, and a password of at least 4 characters.";
-            return;
+          setText("login-error", "Enter your name, a valid email, and a password of at least 4 characters.");
+          return;
         }
-
-        // Save student session
-        localStorage.setItem(
-            sessionKey,
-            JSON.stringify({
-                name: name,
-                email: email
-            })
-        );
-
-        // Go to dashboard
+        saveStudentSession({ name, email });
         window.location.replace("index.html");
-    });
-</script>
+      });
+    </script>
   </body>
 </html>
