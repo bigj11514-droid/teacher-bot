@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://js.paystack.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.paystack.co; frame-src https://checkout.paystack.com https://*.paystack.co; form-action 'self'; base-uri 'none'; object-src 'none'" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Y_Cohde Subscription</title>
+
+    <link rel="stylesheet" href="teacher.css">
+
+    <!-- Paystack -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
+</head>
+
+<body>
+
+    <main class="payment-page">
+
+        <div class="payment-card">
+
+            <h1>Continue Learning</h1>
+
+            <p>
+                Your Y_Cohde learning subscription has expired.
+            </p>
+
+            <div class="price">
+                GH₵25
+                <span>/ month</span>
+            </div>
+
+            <ul>
+                <li>Access all your courses</li>
+                <li>Access lessons</li>
+                <li>Take quizzes</li>
+                <li>Track your progress</li>
+            </ul>
+
+            <button id="pay-button" class="btn">
+                Pay GH₵25
+            </button>
+
+            <p id="payment-message"></p>
+
+        </div>
+
+    </main>
+
+    <script src="payment.js"></script>
+
+</body>
+</html>
