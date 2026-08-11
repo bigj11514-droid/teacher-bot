@@ -3,26 +3,45 @@
 // Student sign-in for this static site. This stores only the display name in
 // the browser; a real password system needs a server-side authentication API.
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
-   
- * @returns {Object|null} The student session object if found, or null if not.
+const REVIEWS_KEY = "ycohde-reviews";
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
-/*******  7867ac85-2016-4445-b21f-e7953db65243  *******//*************  ✨ Windsurf Command ⭐  *************/
-function getStudentSession() {
+function readStoredJson(key, fallback) {
   try {
-    return JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY));
+    const parsed = JSON.parse(localStorage.getItem(key));
+    return parsed ?? fallback;
   } catch {
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Checks if the student session is stored in localStorage. If not, redirects
- * the user to the login page and returns false. If the session is found,
- * returns true.
- * @returns {boolean} True if the student session is found, or false
- * if not.
- */
-/*******  4696c728-e8fe-4fa8-b07e-a7085e8051a9  *******/
-    return null;
+    return fallback;
   }
+}
+
+function readStoredReviews() {
+  const stored = readStoredJson(REVIEWS_KEY, []);
+  if (!Array.isArray(stored)) return [];
+  return stored
+    .filter((review) => review && typeof review === "object")
+    .map((review) => ({
+      rating: Math.min(5, Math.max(1, Math.round(Number(review.rating) || 5))),
+      text: String(review.text ?? "").slice(0, 600),
+      subject: String(review.subject ?? "").slice(0, 120),
+      studentName: String(review.studentName ?? "").slice(0, 80) || "A student",
+      createdAt: String(review.createdAt ?? "").slice(0, 60)
+    }));
+}
+
+function getStudentSession() {
+  const stored = readStoredJson(STUDENT_SESSION_KEY, null);
+  if (!stored || typeof stored !== "object") return null;
+  if (typeof stored.name !== "string" || !stored.name.trim()) return null;
+  return { name: stored.name, email: typeof stored.email === "string" ? stored.email : "" };
 }
 
 function requireStudentLogin() {
@@ -34,7 +53,6 @@ function requireStudentLogin() {
   return true;
 }
 
-odo
 function setupStudentSession() {
   const student = getStudentSession();
   if (!student) return;
@@ -368,7 +386,7 @@ function setupLearningSpace() {
   const renderTopics = () => {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
-    space.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(syllabus.topics).map(([subject, topics]) => `<article class="topic-card"><h3>${subject}</h3>${Object.entries(topics).map(([topic, subtopics]) => `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(subtopics).map(subtopic => `<button class="subtopic-btn" data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${subtopic}</button>`).join("")}</div></details>`).join("")}</article>`).join("")}</div>`;
+    space.innerHTML = `<div class="panel-header"><p class="eyebrow">${escapeHtml(syllabus.name)}${selectedYear ? ` · ${escapeHtml(selectedYear)}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(syllabus.topics).map(([subject, topics]) => `<article class="topic-card"><h3>${subject}</h3>${Object.entries(topics).map(([topic, subtopics]) => `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(subtopics).map(subtopic => `<button class="subtopic-btn" data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${subtopic}</button>`).join("")}</div></details>`).join("")}</article>`).join("")}</div>`;
     space.querySelectorAll(".subtopic-btn").forEach(button => button.addEventListener("click", () => renderLesson(button.dataset.subject, button.dataset.topic, button.dataset.subtopic)));
   };
   const renderLesson = (subject, topic, subtopic) => {
@@ -1487,7 +1505,7 @@ function renderReviewForm(subjectLabel) {
   const reviewSection = document.getElementById("review-section");
   if (!reviewSection) return;
 
-  const label = (subjectLabel || "this subject").toString();
+  const label = escapeHtml(subjectLabel || "this subject");
   reviewSection.innerHTML = `
     <div class="review-card">
       <h3>Leave a review</h3>
@@ -1525,15 +1543,15 @@ function renderReviewForm(subjectLabel) {
     const studentName = reviewSection.querySelector("#review-name").value.trim() || "A student";
     if (!text) return;
 
-    const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]");
+    const reviews = readStoredReviews();
     reviews.push({
       rating: selectedRating,
       text,
-      subject: label,
+      subject: subjectLabel || "this subject",
       studentName,
       createdAt: new Date().toLocaleString()
     });
-    localStorage.setItem("ycohde-reviews", JSON.stringify(reviews));
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
 
     if (feedback) {
       feedback.textContent = "Thanks for your review. Your feedback has been saved.";
@@ -1547,7 +1565,7 @@ function renderPublicReviews() {
   const reviewList = document.getElementById("public-reviews-list");
   if (!reviewList) return;
 
-  const reviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse();
+  const reviews = readStoredReviews().slice(-6).reverse();
 
   if (!reviews.length) {
     reviewList.innerHTML = '<p class="empty-state">No reviews yet. Complete a quiz and be the first to leave one.</p>';
@@ -1556,18 +1574,12 @@ function renderPublicReviews() {
 
   reviewList.innerHTML = reviews.map((review) => `
     <article class="review-post">
-      <strong>${review.studentName}</strong>
+      <strong>${escapeHtml(review.studentName)}</strong>
       <div class="stars">${"★".repeat(review.rating)}</div>
-      <p>${review.text}</p>
-      <small>${review.subject} • ${review.createdAt}</small>
+      <p>${escapeHtml(review.text)}</p>
+      <small>${escapeHtml(review.subject)} • ${escapeHtml(review.createdAt)}</small>
     </article>
   `).join("");
-}
-
-function escapeCommunityText(value) {
-  const element = document.createElement("div");
-  element.textContent = value || "";
-  return element.innerHTML;
 }
 
 function setupCommunityPage() {
@@ -1579,17 +1591,17 @@ function setupCommunityPage() {
     { name: "Kwame A.", className: "JHS 2", rating: 5, text: "I like choosing my class and timer before each quiz.", photo: "https://i.pravatar.cc/120?img=12" },
     { name: "Esi B.", className: "SHS 1", rating: 4, text: "The short questions help me check what I have learned.", photo: "https://i.pravatar.cc/120?img=32" }
   ];
-  const savedReviews = JSON.parse(localStorage.getItem("ycohde-reviews") || "[]").slice(-6).reverse().map((review, index) => ({
+  const savedReviews = readStoredReviews().slice(-6).reverse().map((review, index) => ({
     name: review.studentName || "Y_Cohde student",
     className: review.subject || "Learner",
-    rating: Number(review.rating) || 5,
+    rating: review.rating,
     text: review.text || "Shared a learning review.",
     photo: `https://i.pravatar.cc/120?img=${20 + index}`
   }));
   const students = [...savedReviews, ...communityHighlights];
   communityList.innerHTML = students.map((student) => `<article class="community-card">
-    <img class="community-avatar" src="${student.photo}" alt="Profile picture of ${escapeCommunityText(student.name)}" />
-    <div class="community-card-content"><div class="community-name-row"><div><h3>${escapeCommunityText(student.name)}</h3><p>${escapeCommunityText(student.className)}</p></div><span class="community-rating" aria-label="${student.rating} out of 5 stars">${"★".repeat(student.rating)}${"☆".repeat(5 - student.rating)}</span></div><p class="community-review">“${escapeCommunityText(student.text)}”</p></div>
+    <img class="community-avatar" src="${escapeHtml(student.photo)}" alt="Profile picture of ${escapeHtml(student.name)}" />
+    <div class="community-card-content"><div class="community-name-row"><div><h3>${escapeHtml(student.name)}</h3><p>${escapeHtml(student.className)}</p></div><span class="community-rating" aria-label="${student.rating} out of 5 stars">${"★".repeat(student.rating)}${"☆".repeat(5 - student.rating)}</span></div><p class="community-review">“${escapeHtml(student.text)}”</p></div>
   </article>`).join("");
 }
 
