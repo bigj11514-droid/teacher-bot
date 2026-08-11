@@ -37,8 +37,17 @@
 
     const sessionKey = "ycohdeStudentSession";
 
-    // If already logged in, go to dashboard
-    if (localStorage.getItem(sessionKey)) {
+    // If already logged in, go to dashboard. Reading storage throws when it is
+    // blocked (private mode, disabled cookies), so the failure is reported
+    // instead of stopping the rest of this script.
+    let storedSession = null;
+    try {
+        storedSession = localStorage.getItem(sessionKey);
+    } catch (storageError) {
+        console.error("[Y_Cohde] Could not read the saved session", storageError);
+    }
+
+    if (storedSession) {
         window.location.replace("index.html");
     }
 
@@ -60,13 +69,20 @@
         }
 
         // Save student session
-        localStorage.setItem(
-            sessionKey,
-            JSON.stringify({
-                name: name,
-                email: email
-            })
-        );
+        try {
+            localStorage.setItem(
+                sessionKey,
+                JSON.stringify({
+                    name: name,
+                    email: email
+                })
+            );
+        } catch (storageError) {
+            console.error("[Y_Cohde] Could not save the session", storageError);
+            error.textContent =
+                "We could not sign you in because browser storage is unavailable. Enable cookies or leave private browsing, then try again.";
+            return;
+        }
 
         // Go to dashboard
         window.location.replace("index.html");

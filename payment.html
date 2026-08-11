@@ -50,13 +50,36 @@
 
         const payButton = document.getElementById("pay-button");
 
-        payButton.addEventListener("click", () => {
+        const showPaymentMessage = (message) => {
+            const messageElement = document.getElementById("payment-message");
+            if (messageElement) messageElement.textContent = message;
+            else console.error("[Y_Cohde] Missing #payment-message:", message);
+        };
 
-            const student =
-                JSON.parse(localStorage.getItem("ycohdeStudentSession"));
+        payButton?.addEventListener("click", () => {
+
+            let student = null;
+
+            try {
+                student =
+                    JSON.parse(localStorage.getItem("ycohdeStudentSession"));
+            } catch (storageError) {
+                console.error(
+                    "[Y_Cohde] Could not read the saved session",
+                    storageError
+                );
+            }
 
             if (!student || !student.email) {
                 window.location.href = "login.html";
+                return;
+            }
+
+            if (typeof PaystackPop === "undefined") {
+                console.error("[Y_Cohde] The Paystack script did not load");
+                showPaymentMessage(
+                    "Payments are unavailable right now. Check your connection and reload the page."
+                );
                 return;
             }
 
@@ -98,7 +121,17 @@
                         })
 
                     })
-                    .then(response => response.json())
+                    .then(response => {
+
+                        if (!response.ok) {
+                            throw new Error(
+                                `Verification request failed with status ${response.status}`
+                            );
+                        }
+
+                        return response.json();
+
+                    })
 
                     .then(data => {
 
@@ -108,12 +141,24 @@
 
                         } else {
 
-                            document.getElementById(
-                                "payment-message"
-                            ).textContent =
-                                "Payment could not be verified.";
+                            showPaymentMessage(
+                                "Payment could not be verified."
+                            );
 
                         }
+
+                    })
+
+                    .catch(error => {
+
+                        console.error(
+                            "[Y_Cohde] Could not verify the payment",
+                            error
+                        );
+
+                        showPaymentMessage(
+                            "We could not confirm your payment. Keep your receipt and contact support before paying again."
+                        );
 
                     });
 
@@ -121,21 +166,17 @@
 
                 onCancel: () => {
 
-                    document.getElementById(
-                        "payment-message"
-                    ).textContent =
-                        "Payment cancelled.";
+                    showPaymentMessage("Payment cancelled.");
 
                 },
 
                 onError: (error) => {
 
-                    console.error(error);
+                    console.error("[Y_Cohde] Paystack reported an error", error);
 
-                    document.getElementById(
-                        "payment-message"
-                    ).textContent =
-                        "Something went wrong with the payment.";
+                    showPaymentMessage(
+                        "Something went wrong with the payment."
+                    );
 
                 }
 
