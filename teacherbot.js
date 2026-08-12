@@ -1,6 +1,8 @@
 ﻿﻿console.log("Teacher Bot loaded");
 
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
+const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
+const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 
 /**
  * @returns {Object|null} The student session object if found, or null if not.
@@ -17,6 +19,15 @@ function requireStudentLogin() {
   if (!getStudentSession()) {
     window.location.replace("login.html");
 
+    return false;
+  }
+  return true;
+}
+
+function requireRole(...roles) {
+  const user = getStudentSession();
+  if (!user || !roles.includes(user.role)) {
+    window.location.replace("login.html");
     return false;
   }
   return true;
@@ -54,6 +65,12 @@ function setupStudentSession() {
   };
 
   document.querySelectorAll(".site-nav").forEach((navigation) => {
+    if (student.role === "administrator" && !navigation.querySelector(".admin-nav-link")) {
+      navigation.insertAdjacentHTML("beforeend", '<a class="nav-item admin-nav-link" href="admin.html"><span>⚙</span><span>Administrator panel</span></a>');
+    }
+    if ((student.role === "teacher" || student.role === "administrator") && !navigation.querySelector(".teacher-nav-link")) {
+      navigation.insertAdjacentHTML("beforeend", '<a class="nav-item teacher-nav-link" href="teacher.html"><span>🎥</span><span>Teacher studio</span></a>');
+    }
     if (!navigation.querySelector(".community-nav-link")) {
       const communityLink = document.createElement("a");
       communityLink.className = "nav-item community-nav-link";
@@ -1603,6 +1620,15 @@ function getLessonKey(subject, topic, subtopic) {
   return `${subject}|${topic}|${subtopic}`;
 }
 
+function getContentOverrides() {
+  try { return JSON.parse(localStorage.getItem(CONTENT_OVERRIDES_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function getLessonOverride(subject, topic, subtopic) {
+  return getContentOverrides()[getLessonKey(subject, topic, subtopic)] || {};
+}
+
 function getLearningProgress() {
   try { return JSON.parse(localStorage.getItem(LEARNING_PROGRESS_KEY)) || {}; }
   catch { return {}; }
@@ -1693,6 +1719,7 @@ function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
 }
 
 function getLessonExtras(subject, topic, subtopic, lesson) {
+  const override = getLessonOverride(subject, topic, subtopic);
   const subjectExamples = {
     Science: ["Observe a real object", "Name what happens", "Explain why it happens", "Compare two examples", "Use it in daily life"],
     "English Language": ["Read the sentence", "Find the key word", "Choose the correct meaning", "Write your own sentence", "Check punctuation"],
@@ -1721,7 +1748,7 @@ function getLessonExtras(subject, topic, subtopic, lesson) {
   return {
     examples,
     exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
-    videoUrl: lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
+    videoUrl: override.videoUrl || lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
   };
 }
 
@@ -1966,6 +1993,7 @@ function setupLearningSpace() {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
+    const contentOverride = getLessonOverride(subject, topic, subtopic);
     const lessonImage = activeLesson.image
       ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
       : "";
@@ -1975,7 +2003,7 @@ function setupLearningSpace() {
     const video = videoUrl
       ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
       : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<button class="btn" id="finish-lesson">I have finished reading</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<button class="btn" id="finish-lesson">I have finished reading</button></article>`;
     startLessonTimer();
     document
       .getElementById("back-to-topics")
@@ -4984,7 +5012,80 @@ function setupSimpleHamburgerMenu() {
   );
 }
 
-if (document.getElementById("department-select")) {
+function populateContentPicker(subjectSelect, topicSelect, subtopicSelect) {
+  const topics = learningCatalog.ges.topics;
+  const refreshTopics = () => {
+    const subject = subjectSelect.value;
+    topicSelect.innerHTML = Object.keys(topics[subject]).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
+    refreshSubtopics();
+  };
+  const refreshSubtopics = () => {
+    const subject = subjectSelect.value;
+    const topic = topicSelect.value;
+    subtopicSelect.innerHTML = Object.keys(topics[subject][topic]).map((subtopic) => `<option value="${subtopic}">${subtopic}</option>`).join("");
+  };
+  subjectSelect.innerHTML = Object.keys(topics).map((subject) => `<option value="${subject}">${subject}</option>`).join("");
+  subjectSelect.addEventListener("change", refreshTopics);
+  topicSelect.addEventListener("change", refreshSubtopics);
+  refreshTopics();
+}
+
+function setupContentStudio({ administrator = false } = {}) {
+  const form = document.getElementById("content-studio-form");
+  if (!form) return;
+  const subject = document.getElementById("content-subject");
+  const topic = document.getElementById("content-topic");
+  const subtopic = document.getElementById("content-subtopic");
+  const lesson = document.getElementById("content-lesson");
+  const video = document.getElementById("content-video");
+  const status = document.getElementById("content-status");
+  populateContentPicker(subject, topic, subtopic);
+  const load = () => {
+    const existing = getLessonOverride(subject.value, topic.value, subtopic.value);
+    lesson.value = existing.lesson || learningCatalog.ges.topics[subject.value][topic.value][subtopic.value].lesson;
+    video.value = existing.videoUrl || "";
+  };
+  [subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
+  load();
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const all = getContentOverrides();
+    all[getLessonKey(subject.value, topic.value, subtopic.value)] = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
+    status.textContent = "Saved. Students will see this lesson text and video in this browser.";
+  });
+  if (!administrator) {
+    const user = getStudentSession();
+    try {
+      const teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || [];
+      if (!teachers.some((teacher) => teacher.email === user.email)) {
+        teachers.push({ name: user.name, email: user.email, joinedAt: new Date().toISOString() });
+        localStorage.setItem(CONTRIBUTING_TEACHERS_KEY, JSON.stringify(teachers));
+      }
+    } catch { /* content studio still works */ }
+  }
+}
+
+function setupAdministratorPanel() {
+  const teacherList = document.getElementById("contributing-teachers");
+  if (!teacherList) return;
+  setupContentStudio({ administrator: true });
+  let teachers = [];
+  try { teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || []; } catch { /* empty */ }
+  teacherList.innerHTML = teachers.length ? teachers.map((teacher) => `<article class="contributor-card"><strong>${teacher.name}</strong><span>${teacher.email}</span><small>Joined ${new Date(teacher.joinedAt).toLocaleDateString()}</small></article>`).join("") : '<p class="empty-state">No teachers have contributed yet.</p>';
+}
+
+if (document.getElementById("administrator-panel")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!requireRole("administrator")) return;
+    setupStudentSession(); setupMobileMenu(); setupAdministratorPanel();
+  });
+} else if (document.getElementById("teacher-studio")) {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!requireRole("teacher", "administrator")) return;
+    setupStudentSession(); setupMobileMenu(); setupContentStudio();
+  });
+} else if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireStudentLogin()) return;
     setupStudentSession();

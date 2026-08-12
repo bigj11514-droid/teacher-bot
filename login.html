@@ -7,17 +7,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="teacher.css" />
-    <title>Student Login | Y_Cohde</title>
+    <title>Log in | Y_Cohde</title>
   </head>
   <body class="login-page">
     <header class="simple-site-header"><a href="login.html" class="simple-brand">Y_Cohde</a><nav class="simple-nav" id="simple-nav"><a href="login.html">Log in</a><a href="-index.html">Courses</a><a href="index.html">Dashboard</a></nav></header>
     <main class="login-card">
       <div class="brand-mark">Y</div>
       <h1>Welcome to Y_Cohde Academy</h1>
-      <p>Log in to open your personal learning dashboard.</p>
+      <p>Log in to open your learning, teacher, or administrator space.</p>
       <form class="login-form" id="login-form">
         <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
         <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+        <label>Account type<select id="account-role"><option value="student">Student</option><option value="teacher">Teacher</option><option value="administrator">Administrator</option></select></label>
         <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
         <p id="login-error" class="login-error" role="alert">Forgot your password?<a href="" target="_self" rel="noopener noreferrer">Sign In</a></p>
         <button class="btn" type="submit">Log in to dashboard</button>
@@ -59,17 +60,20 @@
             return;
         }
 
-        // Save student session
+        const role = document.getElementById("account-role").value;
+        // This local demo login stores the account role in this browser.
+        // Use a secure server-side account system before publishing the site.
         localStorage.setItem(
             sessionKey,
             JSON.stringify({
                 name: name,
-                email: email
+                email: email,
+                role: role
             })
         );
 
         // Go to dashboard
-        window.location.replace("index.html");
+        window.location.replace(role === "administrator" ? "admin.html" : role === "teacher" ? "teacher.html" : "index.html");
     });
 </script>
   </body>
