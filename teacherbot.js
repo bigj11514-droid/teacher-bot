@@ -4,6 +4,8 @@ const STUDENT_SESSION_KEY = "ycohdeStudentSession";
 const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
 const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
+const PENDING_CONTENT_KEY = "ycohdePendingContent";
+const SITE_NOTIFICATIONS_KEY = "ycohdeSiteNotifications";
 
 /**
  * @returns {Object|null} The student session object if found, or null if not.
@@ -1788,6 +1790,37 @@ function getFiveQuizQuestions(lesson, subtopic) {
   return questions.slice(0, 5);
 }
 
+function getTenExerciseQuestions(lesson, subtopic) {
+  const base = getFiveQuizQuestions(lesson, subtopic);
+  return Array.from({ length: 10 }, (_, index) => {
+    const [question, answers, correct] = base[index % base.length];
+    return { question, answer: answers[correct] };
+  });
+}
+
+function showAnswerPopup(correct, answer, onClose) {
+  let popup = document.getElementById("answer-mark-modal");
+  if (!popup) {
+    document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="answer-mark-modal"><div class="modal-card"><h2 id="answer-mark-title"></h2><p id="answer-mark-copy"></p><button class="btn" id="answer-mark-close">Continue</button></div></div>');
+    document.getElementById("answer-mark-close").addEventListener("click", () => {
+      popup.classList.remove("visible");
+      popup._onClose?.();
+    });
+  }
+  popup._onClose = onClose;
+  document.getElementById("answer-mark-title").textContent = correct ? "Correct!" : "Not quite";
+  document.getElementById("answer-mark-copy").textContent = correct ? "Great work. Your answer has been marked correct." : `The correct answer is: ${answer}. Try again.`;
+  popup.classList.add("visible");
+}
+
+function addSiteNotification(message, audience = "students") {
+  try {
+    const notifications = JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
+    notifications.unshift({ message, audience, createdAt: new Date().toISOString() });
+    localStorage.setItem(SITE_NOTIFICATIONS_KEY, JSON.stringify(notifications.slice(0, 50)));
+  } catch { /* local notifications are optional */ }
+}
+
 addThirtyExtraSubtopics();
 applySavedCatalogNames();
 
@@ -1985,26 +2018,26 @@ function setupLearningSpace() {
       );
   };
   const renderExercise = () => {
-    const extras = getLessonExtras(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic, activeLesson);
-    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Exercise · ${activeLessonMeta.subject} · ${activeLessonMeta.topic}</p><h2>Apply what you learned</h2><section class="exercise-box"><h3>✎ Your exercise</h3><p class="exercise-question">${extras.exercise.question}</p><div class="exercise-input-group"><input class="exercise-input" id="exercise-answer" type="text" autocomplete="off" placeholder="Type your answer here" /><button class="small-btn" id="check-exercise">Submit answer</button></div><p class="hint-text">Hint: ${extras.exercise.hint || "Think about the lesson, then type your answer."}</p><p id="exercise-feedback" class="exercise-feedback"></p></section></article>`;
+    const exerciseQuestions = getTenExerciseQuestions(activeLesson, activeLessonMeta.subtopic);
+    let questionIndex = 0;
+    const showExerciseQuestion = () => {
+      const current = exerciseQuestions[questionIndex];
+      space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Exercise · Question ${questionIndex + 1} of 10</p><h2>Apply what you learned</h2><section class="exercise-box"><h3>✎ ${current.question}</h3><div class="exercise-input-group"><input class="exercise-input" id="exercise-answer" type="text" autocomplete="off" placeholder="Type your answer here" /><button class="small-btn" id="check-exercise">Check answer</button></div><p class="hint-text">Type the exact answer from the lesson or quiz.</p></section></article>`;
     const input = document.getElementById("exercise-answer");
-    const feedback = document.getElementById("exercise-feedback");
     const checkExercise = () => {
       const answer = input.value.trim();
-      const accepted = extras.exercise.answers
-        ? extras.exercise.answers.some((item) => item.toLowerCase() === answer.toLowerCase())
-        : answer.length >= (extras.exercise.minLength || 3);
-      if (!accepted) {
-        feedback.textContent = extras.exercise.answers ? "Not quite. Read the examples and try again." : "Please type a short answer before continuing.";
-        feedback.className = "exercise-feedback incorrect";
-        return;
-      }
-      feedback.textContent = "Well done! Your exercise has been completed.";
-      feedback.className = "exercise-feedback correct";
-      setTimeout(() => document.getElementById("enjoyment-modal").classList.add("visible"), 500);
+      const correct = answer.toLowerCase() === current.answer.toLowerCase();
+      showAnswerPopup(correct, current.answer, () => {
+        if (!correct) { input.focus(); return; }
+        questionIndex++;
+        if (questionIndex < exerciseQuestions.length) showExerciseQuestion();
+        else document.getElementById("enjoyment-modal").classList.add("visible");
+      });
     };
     document.getElementById("check-exercise").addEventListener("click", checkExercise);
     input.addEventListener("keydown", (event) => { if (event.key === "Enter") checkExercise(); });
+    };
+    showExerciseQuestion();
   };
 
   const renderLesson = (subject, topic, subtopic) => {
@@ -5108,11 +5141,21 @@ function setupContentStudio({ administrator = false } = {}) {
       names.subtopics[`${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
       localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
     }
+    const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    if (!administrator) {
+      const pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
+      pending.push({ key: getLessonKey(subject.value, newTopic, newSubtopic), change, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
+      localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
+      addSiteNotification(`Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`, "administrator");
+      status.textContent = "Sent to the administrator for review. It will not appear to students until approved.";
+      return;
+    }
     const all = getContentOverrides();
     delete all[getLessonKey(subject.value, originalTopic, originalSubtopic)];
-    all[getLessonKey(subject.value, newTopic, newSubtopic)] = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    all[getLessonKey(subject.value, newTopic, newSubtopic)] = change;
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
-    status.textContent = "Saved. Students will see this lesson text and video in this browser.";
+    addSiteNotification(`A ${subject.value} lesson has been updated.`, "students");
+    status.textContent = "Saved and published for students in this browser.";
   });
   if (!administrator) {
     const user = getStudentSession();
@@ -5133,6 +5176,25 @@ function setupAdministratorPanel() {
   let teachers = [];
   try { teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || []; } catch { /* empty */ }
   teacherList.innerHTML = teachers.length ? teachers.map((teacher) => `<article class="contributor-card"><strong>${teacher.name}</strong><span>${teacher.email}</span><small>Joined ${new Date(teacher.joinedAt).toLocaleDateString()}</small></article>`).join("") : '<p class="empty-state">No teachers have contributed yet.</p>';
+  const pendingList = document.getElementById("pending-content");
+  if (!pendingList) return;
+  let pending = [];
+  try { pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || []; } catch { /* empty */ }
+  const renderPending = () => {
+    pendingList.innerHTML = pending.length ? pending.map((item, index) => `<article class="contributor-card"><strong>${item.teacher}: ${item.key}</strong><span>Submitted ${new Date(item.createdAt).toLocaleString()}</span><button class="small-btn" data-approve="${index}">Approve and publish</button></article>`).join("") : '<p class="empty-state">No teacher edits are waiting for approval.</p>';
+    pendingList.querySelectorAll("[data-approve]").forEach((button) => button.addEventListener("click", () => {
+      const index = Number(button.dataset.approve);
+      const item = pending[index];
+      const overrides = getContentOverrides();
+      overrides[item.key] = item.change;
+      localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(overrides));
+      addSiteNotification(`A new lesson update is available: ${item.key}.`, "students");
+      pending.splice(index, 1);
+      localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
+      renderPending();
+    }));
+  };
+  renderPending();
 }
 
 if (document.getElementById("administrator-panel")) {

@@ -1389,3 +1389,10 @@ body.menu-open::before {
 .contributor-list { display: grid; gap: 12px; margin-top: 16px; }
 .contributor-card { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(127, 231, 255, .06); }
 .contributor-card span, .contributor-card small, .empty-state { color: var(--muted); }
+.payment-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+.payment-card { width: min(100%, 480px); padding: 34px; border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
+.payment-card h1 { margin-bottom: 10px; }
+.payment-card > p, .payment-card li, #payment-message { color: var(--muted); line-height: 1.7; }
+.payment-card ul { display: grid; gap: 8px; margin: 22px 0; padding-left: 20px; }
+.price { margin: 24px 0 8px; color: var(--accent); font-size: 2rem; font-weight: 800; }
+.price span { color: var(--muted); font-size: .95rem; font-weight: 400; }
