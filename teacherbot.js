@@ -1549,6 +1549,8 @@ const LESSON_VIDEO_URLS = {
 };
 const LEARNING_PROGRESS_KEY = "ycohdeLearningProgress";
 const SUBSCRIPTION_KEY = "ycohdeMonthlySubscription";
+const QUIZ_HISTORY_KEY = "ycohdeQuizHistory";
+const STUDY_ACTIVITY_KEY = "ycohdeStudyActivity";
 const FREE_LESSON_LIMIT = 6;
 const EXTRA_SUBTOPIC_STEPS = [
   "Key vocabulary", "Important ideas", "Everyday connection", "Worked example",
@@ -1607,6 +1609,27 @@ function saveCompletedSubtopic(subject, topic, subtopic) {
   const progress = getLearningProgress();
   progress[getLessonKey(subject, topic, subtopic)] = true;
   localStorage.setItem(LEARNING_PROGRESS_KEY, JSON.stringify(progress));
+  recordStudyActivity();
+}
+
+function recordStudyActivity() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const days = JSON.parse(localStorage.getItem(STUDY_ACTIVITY_KEY)) || [];
+    if (!days.includes(today)) {
+      days.push(today);
+      localStorage.setItem(STUDY_ACTIVITY_KEY, JSON.stringify(days));
+    }
+  } catch { localStorage.setItem(STUDY_ACTIVITY_KEY, JSON.stringify([today])); }
+}
+
+function saveQuizResult(scoreValue, total, subject) {
+  try {
+    const history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || [];
+    history.push({ score: scoreValue, total, subject, date: new Date().toISOString() });
+    localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(history));
+    recordStudyActivity();
+  } catch { /* The quiz remains usable if storage is unavailable. */ }
 }
 
 function hasActiveSubscription() {
@@ -1700,6 +1723,40 @@ function setupLearningExplorer() {
         `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map((year) => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`,
     )
     .join("")}</tbody></table></div>`;
+}
+
+function getStudyStreak() {
+  try {
+    const days = new Set(JSON.parse(localStorage.getItem(STUDY_ACTIVITY_KEY)) || []);
+    let streak = 0;
+    const date = new Date();
+    while (days.has(date.toISOString().slice(0, 10))) {
+      streak++;
+      date.setDate(date.getDate() - 1);
+    }
+    return streak;
+  } catch { return 0; }
+}
+
+function setupStudentDashboard() {
+  const dashboard = document.getElementById("student-dashboard");
+  if (!dashboard) return;
+  const completed = Object.keys(getLearningProgress()).length;
+  const allLessons = getAllLessons(learningCatalog.ges).length;
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || []; } catch { /* empty */ }
+  const average = history.length
+    ? Math.round(history.reduce((sum, item) => sum + (item.score / item.total) * 100, 0) / history.length)
+    : 0;
+  const streak = getStudyStreak();
+  const progress = Math.min(100, Math.round((completed / allLessons) * 100));
+  const achievements = [
+    completed >= 1 ? "🎓 First lesson completed" : "🔒 Complete your first lesson",
+    history.length >= 1 ? "🧠 First quiz completed" : "🔒 Complete your first quiz",
+    streak >= 3 ? "🔥 3-day study streak" : "🔒 Build a 3-day streak",
+    average >= 80 && history.length ? "⭐ Quiz star: 80% average" : "🔒 Reach an 80% quiz average",
+  ];
+  dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><a class="btn" href="learning.html?syllabus=ges">Continue learning</a></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="achievement-list"><h3>Achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section></section>`;
 }
 
 function getNextLessonTarget(syllabus, subject, topic, subtopic) {
@@ -4502,6 +4559,7 @@ function nextQuestion() {
     }
     const completedSubject =
       subjects[getSubjectKey()]?.displayName || "this quiz";
+    saveQuizResult(score, quizQuestions.length, completedSubject);
     renderReviewForm(completedSubject);
     const progressEl = document.getElementById("progress");
     if (progressEl) {
@@ -4869,6 +4927,7 @@ if (document.getElementById("department-select")) {
     setupSimpleHamburgerMenu();
     setupLearningExplorer();
     setupLearningSpace();
+    setupStudentDashboard();
     setupCommunityPage();
     setupSubjectLinks();
     setupEngagementFeatures();
