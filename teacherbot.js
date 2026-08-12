@@ -3,6 +3,7 @@
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
 const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
 const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
+const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
 
 /**
  * @returns {Object|null} The student session object if found, or null if not.
@@ -1616,6 +1617,22 @@ function addThirtyExtraSubtopics() {
   });
 }
 
+function applySavedCatalogNames() {
+  try {
+    const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
+    Object.entries(names.topics || {}).forEach(([key, nextName]) => {
+      const [subject, topic] = key.split("|");
+      const topics = learningCatalog.ges.topics[subject];
+      if (topics?.[topic] && nextName && !topics[nextName]) { topics[nextName] = topics[topic]; delete topics[topic]; }
+    });
+    Object.entries(names.subtopics || {}).forEach(([key, nextName]) => {
+      const [subject, topic, subtopic] = key.split("|");
+      const subtopics = learningCatalog.ges.topics[subject]?.[topic];
+      if (subtopics?.[subtopic] && nextName && !subtopics[nextName]) { subtopics[nextName] = subtopics[subtopic]; delete subtopics[subtopic]; }
+    });
+  } catch { /* use the original catalogue if saved names are unavailable */ }
+}
+
 function getLessonKey(subject, topic, subtopic) {
   return `${subject}|${topic}|${subtopic}`;
 }
@@ -1746,7 +1763,7 @@ function getLessonExtras(subject, topic, subtopic, lesson) {
     examples.push({ title: `Example ${number}`, problem: `Practise ${subtopic} with another simple situation.`, steps: ["Use the lesson idea.", "Work carefully.", "Check your answer."], result: `You are building your ${subtopic} skill.` });
   }
   return {
-    examples,
+    examples: override.examples || examples,
     exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
     videoUrl: override.videoUrl || lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
   };
@@ -1772,6 +1789,7 @@ function getFiveQuizQuestions(lesson, subtopic) {
 }
 
 addThirtyExtraSubtopics();
+applySavedCatalogNames();
 
 let lessonTimerId = null;
 
@@ -5038,19 +5056,61 @@ function setupContentStudio({ administrator = false } = {}) {
   const subtopic = document.getElementById("content-subtopic");
   const lesson = document.getElementById("content-lesson");
   const video = document.getElementById("content-video");
+  const examples = document.getElementById("content-examples");
+  const topicName = document.getElementById("content-topic-name");
+  const subtopicName = document.getElementById("content-subtopic-name");
   const status = document.getElementById("content-status");
   populateContentPicker(subject, topic, subtopic);
   const load = () => {
     const existing = getLessonOverride(subject.value, topic.value, subtopic.value);
     lesson.value = existing.lesson || learningCatalog.ges.topics[subject.value][topic.value][subtopic.value].lesson;
     video.value = existing.videoUrl || "";
+    examples.value = JSON.stringify(existing.examples || getLessonExtras(subject.value, topic.value, subtopic.value, learningCatalog.ges.topics[subject.value][topic.value][subtopic.value]).examples, null, 2);
+    if (administrator) {
+      topicName.value = topic.value;
+      subtopicName.value = subtopic.value;
+    }
   };
   [subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
   load();
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+    let parsedExamples;
+    try {
+      parsedExamples = JSON.parse(examples.value);
+      if (!Array.isArray(parsedExamples)) throw new Error();
+    } catch {
+      status.textContent = "Examples must be a valid JSON list. Keep the same format shown in the field.";
+      return;
+    }
+    const originalTopic = topic.value;
+    const originalSubtopic = subtopic.value;
+    const newTopic = administrator ? topicName.value.trim() : originalTopic;
+    const newSubtopic = administrator ? subtopicName.value.trim() : originalSubtopic;
+    if (!newTopic || !newSubtopic) { status.textContent = "Topic and subtopic names cannot be empty."; return; }
+    const subjectTopics = learningCatalog.ges.topics[subject.value];
+    if (administrator && newTopic !== originalTopic) {
+      if (subjectTopics[newTopic]) { status.textContent = "That main topic name already exists."; return; }
+      subjectTopics[newTopic] = subjectTopics[originalTopic];
+      delete subjectTopics[originalTopic];
+      const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
+      names.topics = names.topics || {};
+      names.topics[`${subject.value}|${originalTopic}`] = newTopic;
+      localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
+    }
+    const activeTopic = subjectTopics[newTopic];
+    if (administrator && newSubtopic !== originalSubtopic) {
+      if (activeTopic[newSubtopic]) { status.textContent = "That subtopic name already exists."; return; }
+      activeTopic[newSubtopic] = activeTopic[originalSubtopic];
+      delete activeTopic[originalSubtopic];
+      const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
+      names.subtopics = names.subtopics || {};
+      names.subtopics[`${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
+      localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
+    }
     const all = getContentOverrides();
-    all[getLessonKey(subject.value, topic.value, subtopic.value)] = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    delete all[getLessonKey(subject.value, originalTopic, originalSubtopic)];
+    all[getLessonKey(subject.value, newTopic, newSubtopic)] = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
     status.textContent = "Saved. Students will see this lesson text and video in this browser.";
   });

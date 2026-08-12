@@ -19,6 +19,7 @@
         <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
         <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
         <label>Account type<select id="account-role"><option value="student">Student</option><option value="teacher">Teacher</option><option value="administrator">Administrator</option></select></label>
+        <label>Department<select id="student-department"><option value="basic">Basic Department</option><option value="jhs">Junior High Department</option><option value="shs">Senior High Department</option></select></label>
         <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
         <p id="login-error" class="login-error" role="alert">Forgot your password?<a href="" target="_self" rel="noopener noreferrer">Sign In</a></p>
         <button class="btn" type="submit">Log in to dashboard</button>
@@ -61,6 +62,7 @@
         }
 
         const role = document.getElementById("account-role").value;
+        const department = document.getElementById("student-department").value;
         // This local demo login stores the account role in this browser.
         // Use a secure server-side account system before publishing the site.
         localStorage.setItem(
@@ -68,7 +70,8 @@
             JSON.stringify({
                 name: name,
                 email: email,
-                role: role
+                role: role,
+                department: department
             })
         );
 
