@@ -105,6 +105,14 @@ const learningCatalog = {
           "Place value": {
             lesson:
               "Place value tells us what each digit is worth because of its position. In 4,582, the 4 means 4 thousands, the 5 means 5 hundreds, the 8 means 8 tens, and the 2 means 2 ones.",
+            examples: [
+              { title: "Ones", problem: "In 3,471, what is the value of 1?", steps: ["The 1 is in the ones place."], result: "1 one = 1" },
+              { title: "Tens", problem: "In 6,284, what is the value of 8?", steps: ["The 8 is in the tens place.", "Eight tens means 8 × 10."], result: "80" },
+              { title: "Hundreds", problem: "In 5,639, what is the value of 6?", steps: ["The 6 is in the hundreds place.", "Six hundreds means 6 × 100."], result: "600" },
+              { title: "Thousands", problem: "In 7,245, what is the value of 7?", steps: ["The 7 is in the thousands place.", "Seven thousands means 7 × 1,000."], result: "7,000" },
+              { title: "All places together", problem: "Break down 4,582.", steps: ["4 is thousands.", "5 is hundreds, 8 is tens, and 2 is ones."], result: "4,000 + 500 + 80 + 2 = 4,582" },
+            ],
+            exercise: { question: "What is the value of 3 in 3,426?", answers: ["3000", "3,000"], hint: "Look at the position of 3: thousands, hundreds, tens or ones?" },
             questions: [
               [
                 "What is the value of 5 in 4,582?",
@@ -116,6 +124,9 @@ const learningCatalog = {
                 ["4", "5", "8", "2"],
                 2,
               ],
+              ["What is the value of 6 in 5,639?", ["6", "60", "600", "6,000"], 2],
+              ["Which digit is in the thousands place in 7,245?", ["7", "2", "4", "5"], 0],
+              ["Which expanded form equals 4,582?", ["4,000 + 500 + 80 + 2", "400 + 50 + 8 + 2", "4,000 + 50 + 8 + 2", "4,000 + 500 + 8 + 2"], 0],
             ],
           },
           Addition: {
@@ -1532,9 +1543,13 @@ const learningCatalog = {
 // Lesson enhancements.  Keep videos in one place: add a YouTube embed URL (or
 // an .mp4 file URL) for any lesson key below when a video is ready.
 const LESSON_VIDEO_URLS = {
-  "Mathematics|Numbers and operations|Addition": "",
+  // Paste a YouTube *embed* URL, for example:
+  // "Mathematics|Numbers and operations|Place value": "https://www.youtube.com/embed/VIDEO_ID",
+  "Mathematics|Numbers and operations|Place value": "",
 };
 const LEARNING_PROGRESS_KEY = "ycohdeLearningProgress";
+const SUBSCRIPTION_KEY = "ycohdeMonthlySubscription";
+const FREE_LESSON_LIMIT = 6;
 const EXTRA_SUBTOPIC_STEPS = [
   "Key vocabulary", "Important ideas", "Everyday connection", "Worked example",
   "Guided practice", "Think carefully", "Use the right method", "Check your work",
@@ -1594,7 +1609,29 @@ function saveCompletedSubtopic(subject, topic, subtopic) {
   localStorage.setItem(LEARNING_PROGRESS_KEY, JSON.stringify(progress));
 }
 
+function hasActiveSubscription() {
+  try {
+    const subscription = JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY));
+    return Boolean(subscription && new Date(subscription.expiresAt) > new Date());
+  } catch { return false; }
+}
+
+function getAllLessons(syllabus) {
+  return Object.entries(syllabus.topics).flatMap(([subject, topics]) =>
+    Object.entries(topics).flatMap(([topic, subtopics]) =>
+      Object.keys(subtopics).map((subtopic) => ({ subject, topic, subtopic })),
+    ),
+  );
+}
+
+function isFreeLesson(syllabus, subject, topic, subtopic) {
+  return getAllLessons(syllabus).findIndex((item) =>
+    item.subject === subject && item.topic === topic && item.subtopic === subtopic,
+  ) < FREE_LESSON_LIMIT;
+}
+
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
+  if (!hasActiveSubscription() && !isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
   return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
@@ -1609,6 +1646,19 @@ function getLessonExtras(subject, topic, subtopic, lesson) {
     exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
     videoUrl: lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
   };
+}
+
+function getFiveQuizQuestions(lesson, subtopic) {
+  const questions = [...(lesson.questions || [])];
+  const fillers = [
+    [`What should you do first when learning ${subtopic}?`, ["Read and understand the lesson", "Skip straight to answers", "Guess", "Stop learning"], 0],
+    [`Which action helps you remember ${subtopic}?`, ["Practise with examples", "Ignore the lesson", "Copy without reading", "Never check work"], 0],
+    [`When an answer about ${subtopic} is difficult, what should you do?`, ["Read the example again", "Give up immediately", "Choose any answer", "Skip the question"], 0],
+    [`Why do examples help with ${subtopic}?`, ["They show the idea in use", "They replace learning", "They make the topic disappear", "They are not useful"], 0],
+    [`What is a good final step after answering a ${subtopic} question?`, ["Check your answer", "Delete your work", "Never think again", "Skip to another topic"], 0],
+  ];
+  while (questions.length < 5) questions.push(fillers[questions.length % fillers.length]);
+  return questions.slice(0, 5);
 }
 
 addThirtyExtraSubtopics();
@@ -1750,6 +1800,29 @@ function setupLearningSpace() {
         ),
       );
   };
+  const renderExercise = () => {
+    const extras = getLessonExtras(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic, activeLesson);
+    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Exercise · ${activeLessonMeta.subject} · ${activeLessonMeta.topic}</p><h2>Apply what you learned</h2><section class="exercise-box"><h3>✎ Your exercise</h3><p class="exercise-question">${extras.exercise.question}</p><div class="exercise-input-group"><input class="exercise-input" id="exercise-answer" type="text" autocomplete="off" placeholder="Type your answer here" /><button class="small-btn" id="check-exercise">Submit answer</button></div><p class="hint-text">Hint: ${extras.exercise.hint || "Think about the lesson, then type your answer."}</p><p id="exercise-feedback" class="exercise-feedback"></p></section></article>`;
+    const input = document.getElementById("exercise-answer");
+    const feedback = document.getElementById("exercise-feedback");
+    const checkExercise = () => {
+      const answer = input.value.trim();
+      const accepted = extras.exercise.answers
+        ? extras.exercise.answers.some((item) => item.toLowerCase() === answer.toLowerCase())
+        : answer.length >= (extras.exercise.minLength || 3);
+      if (!accepted) {
+        feedback.textContent = extras.exercise.answers ? "Not quite. Read the examples and try again." : "Please type a short answer before continuing.";
+        feedback.className = "exercise-feedback incorrect";
+        return;
+      }
+      feedback.textContent = "Well done! Your exercise has been completed.";
+      feedback.className = "exercise-feedback correct";
+      setTimeout(() => document.getElementById("enjoyment-modal").classList.add("visible"), 500);
+    };
+    document.getElementById("check-exercise").addEventListener("click", checkExercise);
+    input.addEventListener("keydown", (event) => { if (event.key === "Enter") checkExercise(); });
+  };
+
   const renderLesson = (subject, topic, subtopic) => {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
@@ -1761,27 +1834,11 @@ function setupLearningSpace() {
     const video = extras.videoUrl
       ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(extras.videoUrl) ? `<video controls src="${extras.videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${extras.videoUrl}" title="${subtopic} video" allowfullscreen></iframe>`}</div></div>`
       : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<section class="exercise-box"><h3>✎ Your exercise</h3><p class="exercise-question">${extras.exercise.question}</p><div class="exercise-input-group"><input class="exercise-input" id="exercise-answer" type="text" autocomplete="off" placeholder="Type your answer here" /><button class="small-btn" id="check-exercise">Submit answer</button></div><p class="hint-text">Hint: ${extras.exercise.hint || "Think about the lesson, then type your answer."}</p><p id="exercise-feedback" class="exercise-feedback"></p></section><button class="btn" id="finish-lesson" disabled>Submit the exercise to continue</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<button class="btn" id="finish-lesson">I have finished reading</button></article>`;
     startLessonTimer();
     document
       .getElementById("back-to-topics")
       .addEventListener("click", renderTopics);
-    const input = document.getElementById("exercise-answer");
-    const feedback = document.getElementById("exercise-feedback");
-    const checkExercise = () => {
-      const answer = input.value.trim();
-      if (answer.length < (extras.exercise.minLength || 1)) {
-        feedback.textContent = "Please type a short answer before continuing.";
-        feedback.className = "exercise-feedback incorrect";
-        return;
-      }
-      feedback.textContent = "Answer saved. You can now continue to the topic check.";
-      feedback.className = "exercise-feedback correct";
-      document.getElementById("finish-lesson").disabled = false;
-      document.getElementById("finish-lesson").textContent = "Continue to topic check";
-    };
-    document.getElementById("check-exercise").addEventListener("click", checkExercise);
-    input.addEventListener("keydown", (event) => { if (event.key === "Enter") checkExercise(); });
     document.getElementById("finish-lesson").addEventListener("click", () => {
       clearInterval(lessonTimerId);
       lessonTimerId = null;
@@ -1789,26 +1846,30 @@ function setupLearningSpace() {
     });
   };
   const modal = document.getElementById("understanding-modal");
+  if (!document.getElementById("enjoyment-modal")) {
+    document.body.insertAdjacentHTML("beforeend", `<div class="understanding-modal" id="enjoyment-modal" aria-hidden="true"><div class="modal-card"><h2>Did you enjoy the lesson?</h2><p>Your feedback helps us make Y_Cohde better for students.</p><div class="modal-actions"><button class="btn" id="enjoyed-yes">Yes, I enjoyed it</button><button class="soft-btn" id="enjoyed-no">Not yet</button></div></div></div>`);
+  }
+  const continueAfterExercise = () => {
+    const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
+    saveCompletedSubtopic(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
+    if (!nextLesson) { renderTopics(); return; }
+    if (!hasActiveSubscription() && !isFreeLesson(syllabus, nextLesson.subject, nextLesson.topic, nextLesson.subtopic)) {
+      window.location.href = "payment.html";
+      return;
+    }
+    renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
+  };
+  ["enjoyed-yes", "enjoyed-no"].forEach((id) => {
+    document.getElementById(id).addEventListener("click", () => {
+      document.getElementById("enjoyment-modal").classList.remove("visible");
+      continueAfterExercise();
+    });
+  });
   document.getElementById("understood-yes").addEventListener("click", () => {
     modal.classList.remove("visible");
     clearInterval(lessonTimerId);
     lessonTimerId = null;
-      renderTopicQuiz(activeLesson, () => {
-      saveCompletedSubtopic(
-        activeLessonMeta.subject,
-        activeLessonMeta.topic,
-        activeLessonMeta.subtopic,
-      );
-      const nextLesson = getNextLessonTarget(
-        syllabus,
-        activeLessonMeta.subject,
-        activeLessonMeta.topic,
-        activeLessonMeta.subtopic,
-      );
-      if (nextLesson)
-        renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
-      else renderTopics();
-    });
+    renderTopicQuiz(activeLesson, activeLessonMeta.subtopic, renderExercise);
   });
   document.getElementById("understood-no").addEventListener("click", () => {
     modal.classList.remove("visible");
@@ -1822,15 +1883,16 @@ function setupLearningSpace() {
   renderTopics();
 }
 
-function renderTopicQuiz(lesson, afterQuiz) {
+function renderTopicQuiz(lesson, subtopic, afterQuiz) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
+  const quizQuestions = getFiveQuizQuestions(lesson, subtopic);
   let index = 0,
     score = 0;
   const showQuestion = () => {
-    const [question, answers, correct] = lesson.questions[index];
-    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${lesson.questions.length}</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><p id="topic-feedback" class="feedback-text"></p></article>`;
+    const [question, answers, correct] = quizQuestions[index];
+    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of 5</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><p id="topic-feedback" class="feedback-text"></p></article>`;
     space.querySelectorAll("[data-answer]").forEach((button) =>
       button.addEventListener("click", () => {
         const selected = Number(button.dataset.answer);
@@ -1846,13 +1908,13 @@ function renderTopicQuiz(lesson, afterQuiz) {
             `Not quite. The correct answer is ${answers[correct]}.`;
         setTimeout(() => {
           index++;
-          index < lesson.questions.length ? showQuestion() : finishQuiz();
+          index < quizQuestions.length ? showQuestion() : finishQuiz();
         }, 1100);
       }),
     );
   };
   const finishQuiz = () => {
-    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${lesson.questions.length}</h2><p>${score === lesson.questions.length ? "Excellent work—you understood this topic well." : "Keep practising. You can review the lesson and try again."}</p><p class="path-message">Your next subtopic will open now. You can also use the button if you prefer.</p><button class="btn" id="choose-another-topic">Continue to the next subtopic</button></article>`;
+    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>${score === 5 ? "Excellent work—you understood this topic well." : "Good effort. Now complete the exercise to show what you know."}</p><button class="btn" id="choose-another-topic">Go to exercise</button></article>`;
     document
       .getElementById("choose-another-topic")
       .addEventListener("click", afterQuiz || (() => setupLearningSpace()));

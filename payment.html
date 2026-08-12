@@ -25,7 +25,7 @@
             </p>
 
             <div class="price">
-                GH₵25
+                GH₵25.54
                 <span>/ month</span>
             </div>
 
@@ -37,7 +37,7 @@
             </ul>
 
             <button id="pay-button" class="btn">
-                Pay GH₵25
+                Pay GH₵25.54 per month
             </button>
 
             <p id="payment-message"></p>
@@ -68,7 +68,7 @@
 
                 email: student.email,
 
-                amount: 2500,
+                amount: 2554,
 
                 planCode: "YOUR_PLAN_CODE",
 
@@ -103,8 +103,13 @@
                     .then(data => {
 
                         if (data.success) {
-
-                            window.location.href = "index.html";
+                            const expiresAt = new Date();
+                            expiresAt.setMonth(expiresAt.getMonth() + 1);
+                            localStorage.setItem("ycohdeMonthlySubscription", JSON.stringify({
+                                expiresAt: expiresAt.toISOString(),
+                                reference: transaction.reference
+                            }));
+                            window.location.href = "learning.html?syllabus=ges";
 
                         } else {
 
