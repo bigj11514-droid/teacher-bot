@@ -428,6 +428,16 @@ h3 {
 .achievement-list { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .achievement-list h3 { width: 100%; margin: 0 0 2px; }
 .achievement-list span { padding: 8px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: .88rem; }
+.gamification-card { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 18px; padding: 14px 16px; border: 1px solid rgba(255, 218, 89, .45); border-radius: 14px; background: rgba(255, 218, 89, .08); }
+.gamification-card strong { color: #ffe46b; }
+.gamification-card span { color: var(--muted); font-size: .88rem; }
+.dashboard-continue { align-self: flex-start; margin-top: 10px; }
+.sidebar-progress-card { display: grid; gap: 9px; margin-top: auto; }
+.sidebar-progress-card .subtopic-progress-bar { height: 7px; }
+.sidebar-progress-card small { color: var(--muted); }
+.sidebar-progress-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sidebar-progress-name span { display: inline-grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; color: #031a2b; background: var(--accent); font-size: .76rem; font-weight: 800; }
+.sidebar-progress-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .content-grid {
   display: grid;

@@ -83,6 +83,7 @@ function setupStudentSession() {
     simpleNav.append(communityLink);
   }
   addLogout(simpleNav, "simple-nav-logout");
+  setupSidebarProgressCard();
 }
 
 const learningCatalog = {
@@ -1551,6 +1552,8 @@ const LEARNING_PROGRESS_KEY = "ycohdeLearningProgress";
 const SUBSCRIPTION_KEY = "ycohdeMonthlySubscription";
 const QUIZ_HISTORY_KEY = "ycohdeQuizHistory";
 const STUDY_ACTIVITY_KEY = "ycohdeStudyActivity";
+const GAMIFICATION_KEY = "ycohdeGamification";
+const LESSON_RESUME_KEY = "ycohdeLessonResume";
 const FREE_LESSON_LIMIT = 6;
 const EXTRA_SUBTOPIC_STEPS = [
   "Key vocabulary", "Important ideas", "Everyday connection", "Worked example",
@@ -1607,9 +1610,12 @@ function getLearningProgress() {
 
 function saveCompletedSubtopic(subject, topic, subtopic) {
   const progress = getLearningProgress();
+  const isNewCompletion = !progress[getLessonKey(subject, topic, subtopic)];
   progress[getLessonKey(subject, topic, subtopic)] = true;
   localStorage.setItem(LEARNING_PROGRESS_KEY, JSON.stringify(progress));
   recordStudyActivity();
+  if (isNewCompletion) awardXp(50);
+  localStorage.removeItem(LESSON_RESUME_KEY);
 }
 
 function recordStudyActivity() {
@@ -1629,7 +1635,30 @@ function saveQuizResult(scoreValue, total, subject) {
     history.push({ score: scoreValue, total, subject, date: new Date().toISOString() });
     localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(history));
     recordStudyActivity();
+    awardXp(10 + Math.round((scoreValue / total) * 40));
   } catch { /* The quiz remains usable if storage is unavailable. */ }
+}
+
+function getGamification() {
+  try { return JSON.parse(localStorage.getItem(GAMIFICATION_KEY)) || { xp: 0 }; }
+  catch { return { xp: 0 }; }
+}
+
+function awardXp(points) {
+  const game = getGamification();
+  game.xp = (game.xp || 0) + points;
+  localStorage.setItem(GAMIFICATION_KEY, JSON.stringify(game));
+}
+
+function getLevel(xp) { return Math.floor(xp / 200) + 1; }
+
+function saveLessonResume(subject, topic, subtopic) {
+  localStorage.setItem(LESSON_RESUME_KEY, JSON.stringify({ subject, topic, subtopic }));
+}
+
+function getLessonResume() {
+  try { return JSON.parse(localStorage.getItem(LESSON_RESUME_KEY)); }
+  catch { return null; }
 }
 
 function hasActiveSubscription() {
@@ -1654,21 +1683,52 @@ function isFreeLesson(syllabus, subject, topic, subtopic) {
 }
 
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
-  if (!hasActiveSubscription() && !isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
+  // Every main topic gives students a free starting lesson, even in a
+  // different subject. The remaining lessons follow the subscription gate.
+  if (index === 0) return true;
+  if (!hasActiveSubscription() && !isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
 }
 
 function getLessonExtras(subject, topic, subtopic, lesson) {
+  const subjectExamples = {
+    Science: ["Observe a real object", "Name what happens", "Explain why it happens", "Compare two examples", "Use it in daily life"],
+    "English Language": ["Read the sentence", "Find the key word", "Choose the correct meaning", "Write your own sentence", "Check punctuation"],
+    Computing: ["Identify the computer part", "Say what it does", "Use it safely", "Follow the correct step", "Check your work"],
+    ICT: ["Choose the digital tool", "Follow the instructions", "Create a simple example", "Save your work safely", "Share responsibly"],
+    History: ["Read the event", "Identify who was involved", "Put events in order", "Explain what changed", "Connect it to Ghana today"],
+    French: ["Read the French phrase", "Say it aloud", "Match it to its meaning", "Use it in a short dialogue", "Practise with a friend"],
+    "Creative Arts": ["Look at the art idea", "Choose materials", "Make a simple design", "Add your own detail", "Talk about your work"],
+    "Physical Education": ["Prepare safely", "Practise the movement", "Keep good balance", "Follow the game rule", "Cool down afterwards"],
+    "Religious and Moral Education": ["Read the value", "Identify a kind action", "Think about a school example", "Choose the responsible response", "Explain why it matters"],
+    "Our World Our People": ["Look at the community example", "Name the people involved", "Explain the responsibility", "Choose a helpful action", "Connect it to Ghana"],
+  };
   const additionExamples = subject === "Mathematics" && subtopic === "Addition"
     ? [{ title: "Adding without regrouping", problem: "23 + 14", steps: ["Add ones: 3 + 4 = 7.", "Add tens: 2 + 1 = 3."], result: "23 + 14 = 37" }, { title: "Adding with regrouping", problem: "27 + 15", steps: ["Add ones: 7 + 5 = 12. Write 2 and carry 1 ten.", "Add tens: 2 + 1 + 1 carried ten = 4."], result: "27 + 15 = 42" }]
-    : [{ title: "Try the idea", problem: `Think of one real-life example of ${subtopic}.`, steps: ["Read the lesson again.", "Find the most important idea.", "Connect it to something you know."], result: "You can explain the idea in your own words." }];
+    : (subjectExamples[subject] || ["Read the example", "Identify the main idea", "Use the idea", "Practise carefully", "Explain your answer"]).map((title, index) => ({
+      title: `${subtopic}: ${title}`,
+      problem: `Example ${index + 1}: Apply ${subtopic} while learning ${topic}.`,
+      steps: [`Use the lesson definition of ${subtopic}.`, title, "Check that your answer matches the topic."],
+      result: `This shows ${subtopic} in a ${subject} lesson.`,
+    }));
+  const examples = lesson.examples || additionExamples;
+  while (examples.length < 5) {
+    const number = examples.length + 1;
+    examples.push({ title: `Example ${number}`, problem: `Practise ${subtopic} with another simple situation.`, steps: ["Use the lesson idea.", "Work carefully.", "Check your answer."], result: `You are building your ${subtopic} skill.` });
+  }
   return {
-    examples: lesson.examples || additionExamples,
+    examples,
     exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
     videoUrl: lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
   };
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url) return "";
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
 function getFiveQuizQuestions(lesson, subtopic) {
@@ -1741,6 +1801,8 @@ function getStudyStreak() {
 function setupStudentDashboard() {
   const dashboard = document.getElementById("student-dashboard");
   if (!dashboard) return;
+  const student = getStudentSession() || { name: "Student" };
+  const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "ST";
   const completed = Object.keys(getLearningProgress()).length;
   const allLessons = getAllLessons(learningCatalog.ges).length;
   let history = [];
@@ -1749,14 +1811,34 @@ function setupStudentDashboard() {
     ? Math.round(history.reduce((sum, item) => sum + (item.score / item.total) * 100, 0) / history.length)
     : 0;
   const streak = getStudyStreak();
+  const game = getGamification();
+  const level = getLevel(game.xp || 0);
   const progress = Math.min(100, Math.round((completed / allLessons) * 100));
   const achievements = [
     completed >= 1 ? "🎓 First lesson completed" : "🔒 Complete your first lesson",
     history.length >= 1 ? "🧠 First quiz completed" : "🔒 Complete your first quiz",
     streak >= 3 ? "🔥 3-day study streak" : "🔒 Build a 3-day streak",
     average >= 80 && history.length ? "⭐ Quiz star: 80% average" : "🔒 Reach an 80% quiz average",
+    (game.xp || 0) >= 200 ? "🏅 Rising learner: Level 2" : "🔒 Earn 200 XP for Level 2",
   ];
-  dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><a class="btn" href="learning.html?syllabus=ges">Continue learning</a></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="achievement-list"><h3>Achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section></section>`;
+  dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><div class="profile-pill dashboard-profile"><span>${initials}</span><div><strong>${student.name}</strong><small>Student progress</small></div></div></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="gamification-card"><strong>Level ${level} · ${game.xp || 0} XP</strong><span>${200 - ((game.xp || 0) % 200)} XP to Level ${level + 1}</span></section><section class="achievement-list"><h3>Badges & achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section><a class="btn dashboard-continue" href="learning.html?syllabus=ges">Continue learning</a></section>`;
+  setupSidebarProgressCard();
+}
+
+function setupSidebarProgressCard() {
+  const sidebar = document.querySelector(".sidebar");
+  const student = getStudentSession();
+  if (!sidebar || !student) return;
+  const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "ST";
+  const completed = Object.keys(getLearningProgress()).length;
+  const progress = Math.min(100, Math.round((completed / getAllLessons(learningCatalog.ges).length) * 100));
+  const streak = getStudyStreak();
+  const game = getGamification();
+  sidebar.querySelector(".sidebar-progress-card")?.remove();
+  const sideCard = document.createElement("section");
+  sideCard.className = "sidebar-card sidebar-progress-card";
+  sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${student.name}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="learning.html?syllabus=ges" class="small-btn">Continue learning</a>`;
+  sidebar.append(sideCard);
 }
 
 function getNextLessonTarget(syllabus, subject, topic, subtopic) {
@@ -1883,13 +1965,15 @@ function setupLearningSpace() {
   const renderLesson = (subject, topic, subtopic) => {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
+    saveLessonResume(subject, topic, subtopic);
     const lessonImage = activeLesson.image
       ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
       : "";
     const extras = getLessonExtras(subject, topic, subtopic, activeLesson);
     const examples = extras.examples.map((example) => `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`).join("");
-    const video = extras.videoUrl
-      ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(extras.videoUrl) ? `<video controls src="${extras.videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${extras.videoUrl}" title="${subtopic} video" allowfullscreen></iframe>`}</div></div>`
+    const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
+    const video = videoUrl
+      ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
       : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<button class="btn" id="finish-lesson">I have finished reading</button></article>`;
     startLessonTimer();
@@ -1910,7 +1994,7 @@ function setupLearningSpace() {
     const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
     saveCompletedSubtopic(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
     if (!nextLesson) { renderTopics(); return; }
-    if (!hasActiveSubscription() && !isFreeLesson(syllabus, nextLesson.subject, nextLesson.topic, nextLesson.subtopic)) {
+    if (!isSubtopicUnlocked(syllabus, nextLesson.subject, nextLesson.topic, nextLesson.subtopic)) {
       window.location.href = "payment.html";
       return;
     }
@@ -1937,7 +2021,10 @@ function setupLearningSpace() {
         '<p class="review-note">That is okay. Read the lesson once more, then try the questions when you feel ready.</p>',
       );
   });
-  renderTopics();
+  const savedLesson = getLessonResume();
+  if (savedLesson && syllabus.topics[savedLesson.subject]?.[savedLesson.topic]?.[savedLesson.subtopic]) {
+    renderLesson(savedLesson.subject, savedLesson.topic, savedLesson.subtopic);
+  } else renderTopics();
 }
 
 function renderTopicQuiz(lesson, subtopic, afterQuiz) {
