@@ -1396,3 +1396,8 @@ body.menu-open::before {
 .payment-card ul { display: grid; gap: 8px; margin: 22px 0; padding-left: 20px; }
 .price { margin: 24px 0 8px; color: var(--accent); font-size: 2rem; font-weight: 800; }
 .price span { color: var(--muted); font-size: .95rem; font-weight: 400; }
+
+.payment-container{
+  width: 100%;
+  padding: 10px;
+}
