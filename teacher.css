@@ -1397,7 +1397,3 @@ body.menu-open::before {
 .price { margin: 24px 0 8px; color: var(--accent); font-size: 2rem; font-weight: 800; }
 .price span { color: var(--muted); font-size: .95rem; font-weight: 400; }
 
-.payment-page, .payment-container{
-  width: 100%;
-  padding: 10px;
-}
