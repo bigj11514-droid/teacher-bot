@@ -104,6 +104,7 @@ function setupStudentSession() {
   }
   addLogout(simpleNav, "simple-nav-logout");
   setupSidebarProgressCard();
+  showSiteNotifications(student);
 }
 
 const learningCatalog = {
@@ -1852,6 +1853,24 @@ function addSiteNotification(message, audience = "students") {
     notifications.unshift({ message, audience, createdAt: new Date().toISOString() });
     localStorage.setItem(SITE_NOTIFICATIONS_KEY, JSON.stringify(notifications.slice(0, 50)));
   } catch { /* local notifications are optional */ }
+}
+
+function showSiteNotifications(user) {
+  try {
+    const notifications = JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
+    const audience = user.role === "administrator" ? "administrator" : "students";
+    const latest = notifications.find((item) => item.audience === audience || item.audience === "all");
+    if (!latest) return;
+    const seenKey = `ycohdeSeenNotification:${user.email || user.name}`;
+    if (localStorage.getItem(seenKey) === latest.createdAt) return;
+    localStorage.setItem(seenKey, latest.createdAt);
+    const toast = document.createElement("div");
+    toast.className = "site-notification";
+    toast.innerHTML = `<strong>Y_Cohde update</strong><span>${latest.message}</span><button type="button" aria-label="Close notification">×</button>`;
+    toast.querySelector("button").addEventListener("click", () => toast.remove());
+    document.body.append(toast);
+    if ("Notification" in window && Notification.permission === "granted") new Notification("Y_Cohde update", { body: latest.message });
+  } catch { /* browser notifications are optional */ }
 }
 
 addThirtyExtraSubtopics();

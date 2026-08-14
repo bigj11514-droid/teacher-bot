@@ -1389,6 +1389,19 @@ body.menu-open::before {
 .contributor-list { display: grid; gap: 12px; margin-top: 16px; }
 .contributor-card { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(127, 231, 255, .06); }
 .contributor-card span, .contributor-card small, .empty-state { color: var(--muted); }
+
+.site-notification { position: fixed; right: 20px; bottom: 20px; z-index: 100; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; width: min(360px, calc(100vw - 40px)); padding: 16px; border: 1px solid var(--accent); border-radius: 16px; background: var(--panel-strong); box-shadow: var(--shadow); }
+.site-notification strong { color: var(--accent); }
+.site-notification span { grid-column: 1; color: var(--muted); line-height: 1.45; }
+.site-notification button { grid-row: 1 / span 2; grid-column: 2; align-self: start; border: 0; background: transparent; color: var(--text); font-size: 1.3rem; cursor: pointer; }
+.payment-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+.payment-container { width: min(100%, 520px); }
+.payment-card { padding: 34px; border: 1px solid var(--border); border-radius: 24px; background: linear-gradient(145deg, rgba(10, 37, 58, .98), rgba(7, 28, 44, .94)); box-shadow: var(--shadow); }
+.payment-card h1 { margin-bottom: 10px; }
+.payment-card > p, .payment-card li, #payment-message { color: var(--muted); line-height: 1.6; }
+.payment-card ul { display: grid; gap: 10px; margin: 22px 0; padding-left: 20px; }
+.price { margin: 24px 0 8px; color: var(--accent); font-size: 2rem; font-weight: 800; }
+.price span { color: var(--muted); font-size: .95rem; font-weight: 500; }
 .payment-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
 .payment-card { width: min(100%, 480px); padding: 34px; border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
 .payment-card h1 { margin-bottom: 10px; }
