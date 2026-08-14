@@ -1619,6 +1619,42 @@ function addThirtyExtraSubtopics() {
   });
 }
 
+function createDepartmentLesson(subject, topic, subtopic) {
+  return { lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`, questions: [[`What should you do after learning ${subtopic}?`, ["Practise the idea", "Skip the lesson", "Guess", "Stop reading"], 0]], examples: Array.from({ length: 5 }, (_, index) => ({ title: `${subtopic} example ${index + 1}`, problem: `Apply ${subtopic} to a ${subject} situation.`, steps: ["Read the task.", "Use the lesson idea.", "Check the result."], result: `A correct ${subtopic} response.` })) };
+}
+
+function createJhsCatalog() {
+  const topics = {};
+  ["Mathematics", "Science", "English Language", "Our World Our People", "History", "Religious and Moral Education", "Creative Arts"].forEach((subject) => {
+    topics[subject] = {};
+    for (let topicNumber = 1; topicNumber <= 71; topicNumber++) {
+      const topic = `JHS ${subject} Topic ${String(topicNumber).padStart(2, "0")}`;
+      topics[subject][topic] = {};
+      for (let subtopicNumber = 1; subtopicNumber <= 30; subtopicNumber++) {
+        const subtopic = `Subtopic ${String(subtopicNumber).padStart(2, "0")}`;
+        topics[subject][topic][subtopic] = createDepartmentLesson(subject, topic, subtopic);
+      }
+    }
+  });
+  learningCatalog.jhs = { name: "JHS Learning Programme", years: ["JHS 1", "JHS 2", "JHS 3"], topics };
+}
+
+function createShsCourseCatalog(course, subjects) {
+  const topics = {};
+  subjects.forEach((subject) => {
+    topics[subject] = {};
+    for (let topicNumber = 1; topicNumber <= 12; topicNumber++) {
+      const topic = `${subject} Study Topic ${String(topicNumber).padStart(2, "0")}`;
+      topics[subject][topic] = {};
+      for (let subtopicNumber = 1; subtopicNumber <= 30; subtopicNumber++) {
+        const subtopic = `Subtopic ${String(subtopicNumber).padStart(2, "0")}`;
+        topics[subject][topic][subtopic] = createDepartmentLesson(subject, topic, subtopic);
+      }
+    }
+  });
+  learningCatalog[`shs-${course}`] = { name: `SHS ${course.replace(/-/g, " ")}`, years: ["SHS 1", "SHS 2", "SHS 3"], topics };
+}
+
 function applySavedCatalogNames() {
   try {
     const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
@@ -1730,9 +1766,6 @@ function isFreeLesson(syllabus, subject, topic, subtopic) {
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
-  // Every main topic gives students a free starting lesson, even in a
-  // different subject. The remaining lessons follow the subscription gate.
-  if (index === 0) return true;
   if (!hasActiveSubscription() && !isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
 }
@@ -1822,6 +1855,12 @@ function addSiteNotification(message, audience = "students") {
 }
 
 addThirtyExtraSubtopics();
+createJhsCatalog();
+createShsCourseCatalog("general-arts", ["Core Mathematics", "English Language", "Social Studies", "Economics", "Government", "ICT"]);
+createShsCourseCatalog("general-science", ["Core Mathematics", "English Language", "Integrated Science", "Social Studies", "ICT"]);
+createShsCourseCatalog("business", ["Core Mathematics", "English Language", "Economics", "Business Management", "Accounting", "ICT"]);
+createShsCourseCatalog("home-economics", ["Core Mathematics", "English Language", "Food and Nutrition", "Management in Living", "ICT"]);
+createShsCourseCatalog("visual-arts", ["Core Mathematics", "English Language", "General Knowledge in Art", "Graphic Design", "ICT"]);
 applySavedCatalogNames();
 
 let lessonTimerId = null;
@@ -4412,10 +4451,14 @@ function setupDepartmentPage() {
     const params = new URLSearchParams();
     params.set("class", classSelect.value);
     params.set("department", departmentSelect.value);
+    let syllabus = "ges";
+    if (departmentSelect.value === "jhs") syllabus = "jhs";
     if (departmentSelect.value === "shs" && courseSelect) {
       params.set("course", courseSelect.value);
+      syllabus = `shs-${courseSelect.value}`;
     }
-    window.location.href = `-index.html?${params.toString()}`;
+    params.set("syllabus", syllabus);
+    window.location.href = `learning.html?${params.toString()}`;
   });
 }
 
