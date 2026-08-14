@@ -1574,7 +1574,7 @@ const QUIZ_HISTORY_KEY = "ycohdeQuizHistory";
 const STUDY_ACTIVITY_KEY = "ycohdeStudyActivity";
 const GAMIFICATION_KEY = "ycohdeGamification";
 const LESSON_RESUME_KEY = "ycohdeLessonResume";
-const FREE_LESSON_LIMIT = 6;
+const FREE_LESSON_LIMIT = 3;
 const EXTRA_SUBTOPIC_STEPS = [
   "Key vocabulary", "Important ideas", "Everyday connection", "Worked example",
   "Guided practice", "Think carefully", "Use the right method", "Check your work",
