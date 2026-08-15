@@ -5377,10 +5377,34 @@ function setupContentStudio({ administrator = false } = {}) {
   }
 }
 
+function renderPerformanceReport() {
+  const container = document.getElementById("performance-report");
+  if (!container) return;
+  let quizHistory = [], lessonChecks = [];
+  try { quizHistory = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || []; } catch { /* empty */ }
+  try { lessonChecks = JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || []; } catch { /* empty */ }
+  const results = [...quizHistory, ...lessonChecks].filter((item) => item.total && item.studentName);
+  const grouped = results.reduce((all, item) => {
+    const key = `${item.studentEmail || item.studentName}|${item.subject}`;
+    const record = all[key] || { name: item.studentName, subject: item.subject, scores: [], department: item.department || "" };
+    record.scores.push((item.score / item.total) * 100);
+    all[key] = record;
+    return all;
+  }, {});
+  const needingSupport = Object.values(grouped)
+    .map((item) => ({ ...item, average: Math.round(item.scores.reduce((sum, score) => sum + score, 0) / item.scores.length) }))
+    .filter((item) => item.average < 60)
+    .sort((a, b) => a.average - b.average);
+  container.innerHTML = needingSupport.length
+    ? needingSupport.map((item) => `<article class="contributor-card"><strong>${item.name} · ${item.subject}</strong><span>${item.department || "Department not recorded"}</span><small>Average: ${item.average}% across ${item.scores.length} assessment${item.scores.length === 1 ? "" : "s"}. Consider a follow-up lesson.</small></article>`).join("")
+    : '<p class="empty-state">No students are currently below 60%. Results appear here after students complete a lesson check or quiz in this browser.</p>';
+}
+
 function setupAdministratorPanel() {
   const teacherList = document.getElementById("contributing-teachers");
   if (!teacherList) return;
   setupContentStudio({ administrator: true });
+  renderPerformanceReport();
   let teachers = [];
   try { teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || []; } catch { /* empty */ }
   teacherList.innerHTML = teachers.length ? teachers.map((teacher) => `<article class="contributor-card"><strong>${teacher.name}</strong><span>${teacher.email}</span><small>Joined ${new Date(teacher.joinedAt).toLocaleDateString()}</small></article>`).join("") : '<p class="empty-state">No teachers have contributed yet.</p>';
@@ -5413,7 +5437,7 @@ if (document.getElementById("administrator-panel")) {
 } else if (document.getElementById("teacher-studio")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireRole("teacher", "administrator")) return;
-    setupStudentSession(); setupMobileMenu(); setupContentStudio();
+    setupStudentSession(); setupMobileMenu(); setupContentStudio(); renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {

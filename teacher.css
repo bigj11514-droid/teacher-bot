@@ -1104,6 +1104,8 @@ body.menu-open::before {
 .understanding-modal.visible { display: grid; }
 .modal-card { width: min(100%, 420px); padding: 28px; border-radius: 20px; background: var(--panel-strong); border: 1px solid var(--border); box-shadow: var(--shadow); }
 .modal-card p { margin: 10px 0 20px; color: var(--muted); }
+.lesson-video-modal-card { width: min(100%, 760px); }
+.lesson-video-modal-card .lesson-video-box { margin: 0 0 18px; }
 .modal-actions { display: grid; gap: 10px; }
 
 .simple-site-header { position: fixed; inset: 0 0 auto; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: rgba(4, 15, 28, .96); border-bottom: 1px solid var(--border); }
