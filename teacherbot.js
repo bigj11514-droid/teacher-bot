@@ -6,6 +6,7 @@ const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
 const PENDING_CONTENT_KEY = "ycohdePendingContent";
 const SITE_NOTIFICATIONS_KEY = "ycohdeSiteNotifications";
+const PUSH_SUBSCRIBERS_KEY = "ycohdePushSubscribers";
 
 /**
  * @returns {Object|null} The student session object if found, or null if not.
@@ -19,18 +20,20 @@ function getStudentSession() {
 }
 
 function requireStudentLogin() {
-  if (!getStudentSession()) {
+  const user = getStudentSession();
+  if (!user) {
     window.location.replace("login.html");
-
     return false;
   }
+  if (user.role === "administrator") { window.location.replace("admin.html"); return false; }
+  if (user.role === "teacher") { window.location.replace("teacher.html"); return false; }
   return true;
 }
 
 function requireRole(...roles) {
   const user = getStudentSession();
   if (!user || !roles.includes(user.role)) {
-    window.location.replace("login.html");
+    window.location.replace(user?.role === "administrator" ? "admin.html" : user?.role === "teacher" ? "teacher.html" : "login.html");
     return false;
   }
   return true;
@@ -71,7 +74,7 @@ function setupStudentSession() {
     if (student.role === "administrator" && !navigation.querySelector(".admin-nav-link")) {
       navigation.insertAdjacentHTML("beforeend", '<a class="nav-item admin-nav-link" href="admin.html"><span>⚙</span><span>Administrator panel</span></a>');
     }
-    if ((student.role === "teacher" || student.role === "administrator") && !navigation.querySelector(".teacher-nav-link")) {
+    if (student.role === "teacher" && !navigation.querySelector(".teacher-nav-link")) {
       navigation.insertAdjacentHTML("beforeend", '<a class="nav-item teacher-nav-link" href="teacher.html"><span>🎥</span><span>Teacher studio</span></a>');
     }
     if (!navigation.querySelector(".community-nav-link")) {
@@ -91,6 +94,13 @@ function setupStudentSession() {
         <a href="quiz.html?department=shs">SHS quiz</a>
       `;
       navigation.append(quizMenu);
+    }
+    if (student.role === "student" && !navigation.querySelector(".payment-nav-link")) {
+      const paymentLink = document.createElement("a");
+      paymentLink.className = "nav-item payment-nav-link";
+      paymentLink.href = "payment.html";
+      paymentLink.innerHTML = "<span>💳</span><span>Monthly payment</span>";
+      navigation.append(paymentLink);
     }
     addLogout(navigation, "nav-item");
   });
@@ -1728,8 +1738,28 @@ function getGamification() {
 
 function awardXp(points) {
   const game = getGamification();
+  const oldLevel = getLevel(game.xp || 0);
   game.xp = (game.xp || 0) + points;
   localStorage.setItem(GAMIFICATION_KEY, JSON.stringify(game));
+  playFeedbackSound("xp");
+  if (getLevel(game.xp) > oldLevel) playFeedbackSound("achievement");
+}
+
+function playFeedbackSound(type) {
+  // Small synthesized sounds avoid extra audio files and work after a user action.
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const tones = { correct: 740, wrong: 180, xp: 880, achievement: 1047, notification: 660 };
+    oscillator.frequency.value = tones[type] || 440;
+    oscillator.type = type === "wrong" ? "sawtooth" : "sine";
+    gain.gain.setValueAtTime(0.08, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(); oscillator.stop(context.currentTime + 0.2);
+  } catch { /* Audio is optional and may be blocked until the first interaction. */ }
 }
 
 function getLevel(xp) { return Math.floor(xp / 200) + 1; }
@@ -1844,6 +1874,7 @@ function showAnswerPopup(correct, answer, onClose) {
   popup._onClose = onClose;
   document.getElementById("answer-mark-title").textContent = correct ? "Correct!" : "Not quite";
   document.getElementById("answer-mark-copy").textContent = correct ? "Great work. Your answer has been marked correct." : `The correct answer is: ${answer}. Try again.`;
+  playFeedbackSound(correct ? "correct" : "wrong");
   popup.classList.add("visible");
 }
 
@@ -1858,6 +1889,9 @@ function addSiteNotification(message, audience = "students") {
 function showSiteNotifications(user) {
   try {
     const notifications = JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
+    const subscribed = JSON.parse(localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]");
+    const canReceiveStudentPosts = user.role !== "student" || subscribed.includes((user.email || "").toLowerCase());
+    if (!canReceiveStudentPosts) return;
     const audience = user.role === "administrator" ? "administrator" : "students";
     const latest = notifications.find((item) => item.audience === audience || item.audience === "all");
     if (!latest) return;
@@ -1869,6 +1903,7 @@ function showSiteNotifications(user) {
     toast.innerHTML = `<strong>Y_Cohde update</strong><span>${latest.message}</span><button type="button" aria-label="Close notification">×</button>`;
     toast.querySelector("button").addEventListener("click", () => toast.remove());
     document.body.append(toast);
+    playFeedbackSound("notification");
     if ("Notification" in window && Notification.permission === "granted") new Notification("Y_Cohde update", { body: latest.message });
   } catch { /* browser notifications are optional */ }
 }
@@ -1911,8 +1946,12 @@ function startLessonTimer(seconds = 600) {
 function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
+  const studentDepartment = getStudentSession()?.department;
+  const visibleCatalog = Object.entries(learningCatalog).filter(([key]) =>
+    !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
+  );
   explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(
-    learningCatalog,
+    Object.fromEntries(visibleCatalog),
   )
     .map(
       ([key, syllabus]) =>
@@ -2031,6 +2070,11 @@ function setupLearningSpace() {
   if (!space) return;
   const syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
+  const studentDepartment = getStudentSession()?.department;
+  if (studentDepartment && getSyllabusDepartment(syllabusKey) !== studentDepartment) {
+    window.location.replace("department.html");
+    return;
+  }
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
   const selectedYear = new URLSearchParams(window.location.search).get("year");
   let activeLesson;
@@ -2147,7 +2191,8 @@ function setupLearningSpace() {
     modal.classList.remove("visible");
     clearInterval(lessonTimerId);
     lessonTimerId = null;
-    renderTopicQuiz(activeLesson, activeLessonMeta.subtopic, renderExercise);
+    // Finishing the modal completes this subtopic and opens the next one.
+    continueAfterExercise();
   });
   document.getElementById("understood-no").addEventListener("click", () => {
     modal.classList.remove("visible");
@@ -4267,6 +4312,12 @@ function getCourseKey() {
   return params.get("course")?.toLowerCase() || "general-arts";
 }
 
+function getSyllabusDepartment(syllabusKey) {
+  if (syllabusKey === "jhs") return "jhs";
+  if (syllabusKey.startsWith("shs-")) return "shs";
+  return "basic";
+}
+
 function getDepartmentFromClass(classKey) {
   if (classKey.startsWith("shs")) return "shs";
   if (classKey.startsWith("jhs")) return "jhs";
@@ -4450,10 +4501,12 @@ function setupDepartmentPage() {
     updateDepartmentVisual(selectedDepartment);
   }
 
-  const initialDepartment = getDepartmentKey() || "basic";
+  const accountDepartment = getStudentSession()?.department;
+  const initialDepartment = accountDepartment || getDepartmentKey() || "basic";
   const initialClass = getClassKey();
   const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
+  if (accountDepartment) departmentSelect.disabled = true;
   updateClassOptions();
   classSelect.value = optionsByDepartment[initialDepartment].includes(
     initialClass,
@@ -4491,6 +4544,9 @@ function setupQuizPage() {
   const departmentSelect = document.getElementById("quiz-department-select");
   const classSelect = document.getElementById("quiz-class-select");
   const subjectSelect = document.getElementById("quiz-subject-select");
+  const courseSelect = document.getElementById("quiz-course-select");
+  const courseLabel = document.getElementById("quiz-course-label");
+  const accountDepartment = getStudentSession()?.department;
 
   if (!quizSetup || !startBtn || !timerSelect) {
     return;
@@ -4529,6 +4585,13 @@ function setupQuizPage() {
         : "Choose a subject first.";
   };
 
+  const updateCourseVisibility = () => {
+    const isShs = departmentSelect.value === "shs";
+    if (courseSelect) courseSelect.hidden = !isShs;
+    if (courseLabel) courseLabel.hidden = !isShs;
+    if (courseSelect && isShs) courseSelect.value = getCourseKey();
+  };
+
   const updateClasses = () => {
     const options =
       classesByDepartment[departmentSelect.value] || classesByDepartment.basic;
@@ -4540,17 +4603,25 @@ function setupQuizPage() {
       .join("");
     const requestedClass = getClassKey();
     if (options.includes(requestedClass)) classSelect.value = requestedClass;
+    updateCourseVisibility();
     updateSubjects(true);
   };
 
   if (departmentSelect && classSelect && subjectSelect) {
-    const requestedDepartment = getDepartmentKey();
+    const requestedDepartment = accountDepartment || getDepartmentKey();
     departmentSelect.value = classesByDepartment[requestedDepartment]
       ? requestedDepartment
       : getDepartmentFromClass(getClassKey());
     updateClasses();
+    if (accountDepartment) departmentSelect.disabled = true;
     departmentSelect.addEventListener("change", updateClasses);
     classSelect.addEventListener("change", () => updateSubjects(false));
+    courseSelect?.addEventListener("change", () => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("course", courseSelect.value);
+      window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
+      updateSubjects(false);
+    });
     subjectSelect.addEventListener("change", () => updateSubjects(false));
   }
 
@@ -4562,7 +4633,7 @@ function setupQuizPage() {
         subject: subjectSelect.value,
       });
       if (departmentSelect.value === "shs")
-        params.set("course", "general-arts");
+        params.set("course", courseSelect?.value || "general-arts");
       window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
     }
     quizTimerSeconds = Number(timerSelect.value) || 15;
@@ -4979,7 +5050,12 @@ function setupEngagementFeatures() {
       event.preventDefault();
       const emailInput = document.getElementById("newsletter-email");
       if (emailInput && emailInput.value.trim()) {
-        newsletterStatus.textContent = `Thanks! ${emailInput.value.trim()} has joined the reminder list.`;
+        const email = emailInput.value.trim().toLowerCase();
+        const subscribers = JSON.parse(localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]");
+        if (!subscribers.includes(email)) subscribers.push(email);
+        localStorage.setItem(PUSH_SUBSCRIBERS_KEY, JSON.stringify(subscribers));
+        newsletterStatus.textContent = `Thanks! ${email} will receive website updates on this device.`;
+        if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
         emailInput.value = "";
       }
     });
