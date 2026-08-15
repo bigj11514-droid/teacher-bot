@@ -1795,9 +1795,12 @@ function isFreeLesson(syllabus, subject, topic, subtopic) {
 }
 
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
+  // A paid learning pass opens every subtopic; free learners progress through
+  // the introductory lessons in order.
+  if (hasActiveSubscription()) return true;
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
-  if (!hasActiveSubscription() && !isFreeLesson(syllabus, subject, topic, subtopic)) return false;
+  if (!isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
 }
 
@@ -5287,6 +5290,7 @@ function setupContentStudio({ administrator = false } = {}) {
       pending.push({ key: getLessonKey(subject.value, newTopic, newSubtopic), change, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
       localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
       addSiteNotification(`Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`, "administrator");
+      addSiteNotification(`A teacher has posted a new ${subject.value} lesson update.`, "students");
       status.textContent = "Sent to the administrator for review. It will not appear to students until approved.";
       return;
     }
