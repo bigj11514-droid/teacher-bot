@@ -1671,13 +1671,15 @@ function applySavedCatalogNames() {
   try {
     const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
     Object.entries(names.topics || {}).forEach(([key, nextName]) => {
-      const [subject, topic] = key.split("|");
-      const topics = learningCatalog.ges.topics[subject];
+      const parts = key.split("|");
+      const [syllabusKey, subject, topic] = parts.length === 3 ? parts : ["ges", ...parts];
+      const topics = learningCatalog[syllabusKey]?.topics[subject];
       if (topics?.[topic] && nextName && !topics[nextName]) { topics[nextName] = topics[topic]; delete topics[topic]; }
     });
     Object.entries(names.subtopics || {}).forEach(([key, nextName]) => {
-      const [subject, topic, subtopic] = key.split("|");
-      const subtopics = learningCatalog.ges.topics[subject]?.[topic];
+      const parts = key.split("|");
+      const [syllabusKey, subject, topic, subtopic] = parts.length === 4 ? parts : ["ges", ...parts];
+      const subtopics = learningCatalog[syllabusKey]?.topics[subject]?.[topic];
       if (subtopics?.[subtopic] && nextName && !subtopics[nextName]) { subtopics[nextName] = subtopics[subtopic]; delete subtopics[subtopic]; }
     });
   } catch { /* use the original catalogue if saved names are unavailable */ }
@@ -5335,7 +5337,7 @@ function setupContentStudio({ administrator = false } = {}) {
       delete subjectTopics[originalTopic];
       const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
       names.topics = names.topics || {};
-      names.topics[`${subject.value}|${originalTopic}`] = newTopic;
+      names.topics[`${syllabusKey}|${subject.value}|${originalTopic}`] = newTopic;
       localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
     }
     const activeTopic = subjectTopics[newTopic];
@@ -5345,7 +5347,7 @@ function setupContentStudio({ administrator = false } = {}) {
       delete activeTopic[originalSubtopic];
       const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
       names.subtopics = names.subtopics || {};
-      names.subtopics[`${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
+      names.subtopics[`${syllabusKey}|${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
       localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
     }
     const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, questions: parsedQuestions, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
