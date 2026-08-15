@@ -4812,11 +4812,13 @@ function selectAnswer(button, selectedIndex) {
 
   if (isCorrect) {
     score++;
+    playFeedbackSound("correct");
     button.style.background = "#4CAF50";
     feedbackEl.textContent = "😉 Correct!";
     explanationEl.textContent = "";
   } else {
     mistakes += 1;
+    playFeedbackSound("wrong");
     button.style.background = "#E74C3C";
     const correctButton = answersEl.children[correctIndex];
     if (correctButton) correctButton.style.background = "#4CAF50";
