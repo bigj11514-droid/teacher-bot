@@ -1582,6 +1582,7 @@ const LESSON_VIDEO_URLS = {
 const LEARNING_PROGRESS_KEY = "ycohdeLearningProgress";
 const SUBSCRIPTION_KEY = "ycohdeMonthlySubscription";
 const QUIZ_HISTORY_KEY = "ycohdeQuizHistory";
+const LESSON_CHECK_HISTORY_KEY = "ycohdeLessonCheckHistory";
 const STUDY_ACTIVITY_KEY = "ycohdeStudyActivity";
 const GAMIFICATION_KEY = "ycohdeGamification";
 const LESSON_RESUME_KEY = "ycohdeLessonResume";
@@ -1691,8 +1692,13 @@ function getContentOverrides() {
   catch { return {}; }
 }
 
-function getLessonOverride(subject, topic, subtopic) {
-  return getContentOverrides()[getLessonKey(subject, topic, subtopic)] || {};
+function getCatalogLessonKey(syllabusKey, subject, topic, subtopic) {
+  return `${syllabusKey}|${getLessonKey(subject, topic, subtopic)}`;
+}
+
+function getLessonOverride(syllabusKey, subject, topic, subtopic) {
+  const all = getContentOverrides();
+  return all[getCatalogLessonKey(syllabusKey, subject, topic, subtopic)] || all[getLessonKey(subject, topic, subtopic)] || {};
 }
 
 function getLearningProgress() {
@@ -1724,11 +1730,21 @@ function recordStudyActivity() {
 function saveQuizResult(scoreValue, total, subject) {
   try {
     const history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || [];
-    history.push({ score: scoreValue, total, subject, date: new Date().toISOString() });
+    const student = getStudentSession() || {};
+    history.push({ score: scoreValue, total, subject, studentName: student.name || "Student", studentEmail: student.email || "", department: student.department || getDepartmentKey() || "", className: student.className || getClassKey() || "", date: new Date().toISOString() });
     localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(history));
     recordStudyActivity();
     awardXp(10 + Math.round((scoreValue / total) * 40));
   } catch { /* The quiz remains usable if storage is unavailable. */ }
+}
+
+function saveLessonCheckResult(scoreValue, total, metadata) {
+  try {
+    const history = JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || [];
+    const student = getStudentSession() || {};
+    history.push({ score: scoreValue, total, subject: metadata.subject, topic: metadata.topic, subtopic: metadata.subtopic, syllabus: metadata.syllabus, studentName: student.name || "Student", studentEmail: student.email || "", department: student.department || getSyllabusDepartment(metadata.syllabus) || "", className: student.className || "", date: new Date().toISOString() });
+    localStorage.setItem(LESSON_CHECK_HISTORY_KEY, JSON.stringify(history.slice(-500)));
+  } catch { /* learning can continue without local analytics */ }
 }
 
 function getGamification() {
@@ -1804,8 +1820,8 @@ function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
 }
 
-function getLessonExtras(subject, topic, subtopic, lesson) {
-  const override = getLessonOverride(subject, topic, subtopic);
+function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
+  const override = getLessonOverride(syllabusKey, subject, topic, subtopic);
   const subjectExamples = {
     Science: ["Observe a real object", "Name what happens", "Explain why it happens", "Compare two examples", "Use it in daily life"],
     "English Language": ["Read the sentence", "Find the key word", "Choose the correct meaning", "Write your own sentence", "Check punctuation"],
@@ -1833,6 +1849,7 @@ function getLessonExtras(subject, topic, subtopic, lesson) {
   }
   return {
     examples: override.examples || examples,
+    questions: override.questions || lesson.questions || [],
     exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
     videoUrl: override.videoUrl || lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
   };
@@ -1844,8 +1861,8 @@ function getYouTubeEmbedUrl(url) {
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
-function getFiveQuizQuestions(lesson, subtopic) {
-  const questions = [...(lesson.questions || [])];
+function getFiveQuizQuestions(lesson, subtopic, configuredQuestions) {
+  const questions = [...(configuredQuestions || lesson._guidedQuestions || lesson.questions || [])];
   const fillers = [
     [`What should you do first when learning ${subtopic}?`, ["Read and understand the lesson", "Skip straight to answers", "Guess", "Stop learning"], 0],
     [`Which action helps you remember ${subtopic}?`, ["Practise with examples", "Ignore the lesson", "Copy without reading", "Never check work"], 0],
@@ -2149,17 +2166,19 @@ function setupLearningSpace() {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
-    const contentOverride = getLessonOverride(subject, topic, subtopic);
+    const contentOverride = getLessonOverride(syllabusKey, subject, topic, subtopic);
     const lessonImage = activeLesson.image
       ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
       : "";
-    const extras = getLessonExtras(subject, topic, subtopic, activeLesson);
+    const extras = getLessonExtras(syllabusKey, subject, topic, subtopic, activeLesson);
     const examples = extras.examples.map((example) => `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`).join("");
     const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
     const video = videoUrl
       ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
       : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section>${video}<button class="btn" id="finish-lesson">I have finished reading</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section><button class="btn" id="finish-lesson">I understand this lesson</button></article>`;
+    activeLesson._guidedVideo = video;
+    activeLesson._guidedQuestions = extras.questions;
     startLessonTimer();
     document
       .getElementById("back-to-topics")
@@ -2171,6 +2190,9 @@ function setupLearningSpace() {
     });
   };
   const modal = document.getElementById("understanding-modal");
+  if (!document.getElementById("lesson-video-modal")) {
+    document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="lesson-video-modal" aria-hidden="true"><div class="modal-card lesson-video-modal-card"><h2>Watch the lesson video</h2><div id="guided-video-content"></div><div class="modal-actions"><button class="btn" id="start-topic-check">Continue to 5 questions</button></div></div></div>');
+  }
   if (!document.getElementById("enjoyment-modal")) {
     document.body.insertAdjacentHTML("beforeend", `<div class="understanding-modal" id="enjoyment-modal" aria-hidden="true"><div class="modal-card"><h2>Did you enjoy the lesson?</h2><p>Your feedback helps us make Y_Cohde better for students.</p><div class="modal-actions"><button class="btn" id="enjoyed-yes">Yes, I enjoyed it</button><button class="soft-btn" id="enjoyed-no">Not yet</button></div></div></div>`);
   }
@@ -2194,8 +2216,13 @@ function setupLearningSpace() {
     modal.classList.remove("visible");
     clearInterval(lessonTimerId);
     lessonTimerId = null;
-    // Finishing the modal completes this subtopic and opens the next one.
-    continueAfterExercise();
+    const videoModal = document.getElementById("lesson-video-modal");
+    document.getElementById("guided-video-content").innerHTML = activeLesson?._guidedVideo || '<p class="review-note">No video has been added yet. You can continue to the learning check.</p>';
+    videoModal.classList.add("visible");
+    document.getElementById("start-topic-check").onclick = () => {
+      videoModal.classList.remove("visible");
+      renderTopicQuiz(activeLesson, activeLessonMeta.subtopic, renderExercise, activeLessonMeta);
+    };
   });
   document.getElementById("understood-no").addEventListener("click", () => {
     modal.classList.remove("visible");
@@ -2212,7 +2239,7 @@ function setupLearningSpace() {
   } else renderTopics();
 }
 
-function renderTopicQuiz(lesson, subtopic, afterQuiz) {
+function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
@@ -2243,6 +2270,7 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz) {
     );
   };
   const finishQuiz = () => {
+    if (metadata.subject) saveLessonCheckResult(score, quizQuestions.length, { ...metadata, syllabus: new URLSearchParams(window.location.search).get("syllabus") || "ges" });
     space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>${score === 5 ? "Excellent work—you understood this topic well." : "Good effort. Now complete the exercise to show what you know."}</p><button class="btn" id="choose-another-topic">Go to exercise</button></article>`;
     document
       .getElementById("choose-another-topic")
