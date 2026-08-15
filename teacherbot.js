@@ -5234,52 +5234,80 @@ function setupSimpleHamburgerMenu() {
   );
 }
 
-function populateContentPicker(subjectSelect, topicSelect, subtopicSelect) {
-  const topics = learningCatalog.ges.topics;
+function getContentSyllabusKey(department, className) {
+  if (department === "basic") return "ges";
+  if (department === "jhs") return "jhs";
+  return `shs-${className || "general-arts"}`;
+}
+
+function populateContentPicker(departmentSelect, classSelect, subjectSelect, topicSelect, subtopicSelect) {
+  const departmentOptions = [{ key: "basic", label: "Basic" }, { key: "jhs", label: "JHS" }, { key: "shs", label: "SHS" }];
+  const shsCourses = [{ key: "general-arts", label: "General Arts" }, { key: "general-science", label: "General Science" }, { key: "business", label: "Business" }, { key: "home-economics", label: "Home Economics" }, { key: "visual-arts", label: "Visual Arts" }];
+  const classOptions = { basic: ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6"], jhs: ["JHS 1", "JHS 2", "JHS 3"] };
+  departmentSelect.innerHTML = departmentOptions.map(({ key, label }) => `<option value="${key}">${label}</option>`).join("");
+  const refreshClasses = () => {
+    const department = departmentSelect.value;
+    const choices = department === "shs" ? shsCourses.map((item) => item.label) : classOptions[department];
+    classSelect.innerHTML = choices.map((item) => `<option value="${department === "shs" ? shsCourses.find((course) => course.label === item).key : item}">${item}</option>`).join("");
+    refreshSubjects();
+  };
+  const getTopics = () => learningCatalog[getContentSyllabusKey(departmentSelect.value, classSelect.value)]?.topics || learningCatalog.ges.topics;
   const refreshTopics = () => {
+    const topics = getTopics();
+    subjectSelect.innerHTML = Object.keys(topics).map((subject) => `<option value="${subject}">${subject}</option>`).join("");
     const subject = subjectSelect.value;
     topicSelect.innerHTML = Object.keys(topics[subject]).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
     refreshSubtopics();
   };
   const refreshSubtopics = () => {
+    const topics = getTopics();
     const subject = subjectSelect.value;
     const topic = topicSelect.value;
     subtopicSelect.innerHTML = Object.keys(topics[subject][topic]).map((subtopic) => `<option value="${subtopic}">${subtopic}</option>`).join("");
   };
-  subjectSelect.innerHTML = Object.keys(topics).map((subject) => `<option value="${subject}">${subject}</option>`).join("");
+  const refreshSubjects = () => refreshTopics();
+  departmentSelect.addEventListener("change", refreshClasses);
+  classSelect.addEventListener("change", refreshSubjects);
   subjectSelect.addEventListener("change", refreshTopics);
   topicSelect.addEventListener("change", refreshSubtopics);
-  refreshTopics();
+  refreshClasses();
 }
 
 function setupContentStudio({ administrator = false } = {}) {
   const form = document.getElementById("content-studio-form");
   if (!form) return;
+  const department = document.getElementById("content-department");
+  const classSelect = document.getElementById("content-class");
   const subject = document.getElementById("content-subject");
   const topic = document.getElementById("content-topic");
   const subtopic = document.getElementById("content-subtopic");
   const lesson = document.getElementById("content-lesson");
   const video = document.getElementById("content-video");
   const examples = document.getElementById("content-examples");
+  const questions = document.getElementById("content-questions");
   const topicName = document.getElementById("content-topic-name");
   const subtopicName = document.getElementById("content-subtopic-name");
   const status = document.getElementById("content-status");
-  populateContentPicker(subject, topic, subtopic);
+  populateContentPicker(department, classSelect, subject, topic, subtopic);
   const load = () => {
-    const existing = getLessonOverride(subject.value, topic.value, subtopic.value);
-    lesson.value = existing.lesson || learningCatalog.ges.topics[subject.value][topic.value][subtopic.value].lesson;
+    const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
+    const activeLesson = learningCatalog[syllabusKey].topics[subject.value][topic.value][subtopic.value];
+    const existing = getLessonOverride(syllabusKey, subject.value, topic.value, subtopic.value);
+    lesson.value = existing.lesson || activeLesson.lesson;
     video.value = existing.videoUrl || "";
-    examples.value = JSON.stringify(existing.examples || getLessonExtras(subject.value, topic.value, subtopic.value, learningCatalog.ges.topics[subject.value][topic.value][subtopic.value]).examples, null, 2);
+    examples.value = JSON.stringify(existing.examples || getLessonExtras(syllabusKey, subject.value, topic.value, subtopic.value, activeLesson).examples, null, 2);
+    questions.value = JSON.stringify(existing.questions || getFiveQuizQuestions(activeLesson, subtopic.value), null, 2);
     if (administrator) {
       topicName.value = topic.value;
       subtopicName.value = subtopic.value;
     }
   };
-  [subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
+  [department, classSelect, subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
   load();
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     let parsedExamples;
+    let parsedQuestions;
     try {
       parsedExamples = JSON.parse(examples.value);
       if (!Array.isArray(parsedExamples)) throw new Error();
@@ -5287,12 +5315,20 @@ function setupContentStudio({ administrator = false } = {}) {
       status.textContent = "Examples must be a valid JSON list. Keep the same format shown in the field.";
       return;
     }
+    try {
+      parsedQuestions = JSON.parse(questions.value);
+      if (!Array.isArray(parsedQuestions) || parsedQuestions.length !== 5 || !parsedQuestions.every((item) => Array.isArray(item) && item.length === 3 && Array.isArray(item[1]))) throw new Error();
+    } catch {
+      status.textContent = "Questions must be exactly five JSON entries: [question, [answers], correctAnswerIndex].";
+      return;
+    }
     const originalTopic = topic.value;
     const originalSubtopic = subtopic.value;
     const newTopic = administrator ? topicName.value.trim() : originalTopic;
     const newSubtopic = administrator ? subtopicName.value.trim() : originalSubtopic;
     if (!newTopic || !newSubtopic) { status.textContent = "Topic and subtopic names cannot be empty."; return; }
-    const subjectTopics = learningCatalog.ges.topics[subject.value];
+    const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
+    const subjectTopics = learningCatalog[syllabusKey].topics[subject.value];
     if (administrator && newTopic !== originalTopic) {
       if (subjectTopics[newTopic]) { status.textContent = "That main topic name already exists."; return; }
       subjectTopics[newTopic] = subjectTopics[originalTopic];
@@ -5312,10 +5348,10 @@ function setupContentStudio({ administrator = false } = {}) {
       names.subtopics[`${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
       localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
     }
-    const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, questions: parsedQuestions, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
     if (!administrator) {
       const pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
-      pending.push({ key: getLessonKey(subject.value, newTopic, newSubtopic), change, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
+      pending.push({ key: getCatalogLessonKey(syllabusKey, subject.value, newTopic, newSubtopic), change, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
       localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
       addSiteNotification(`Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`, "administrator");
       addSiteNotification(`A teacher has posted a new ${subject.value} lesson update.`, "students");
@@ -5323,8 +5359,8 @@ function setupContentStudio({ administrator = false } = {}) {
       return;
     }
     const all = getContentOverrides();
-    delete all[getLessonKey(subject.value, originalTopic, originalSubtopic)];
-    all[getLessonKey(subject.value, newTopic, newSubtopic)] = change;
+    delete all[getCatalogLessonKey(syllabusKey, subject.value, originalTopic, originalSubtopic)];
+    all[getCatalogLessonKey(syllabusKey, subject.value, newTopic, newSubtopic)] = change;
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
     addSiteNotification(`A ${subject.value} lesson has been updated.`, "students");
     status.textContent = "Saved and published for students in this browser.";
