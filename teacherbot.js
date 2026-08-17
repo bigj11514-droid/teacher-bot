@@ -167,7 +167,7 @@ const learningCatalog = {
               examples: [
               { title: "Addition in Ones", problem: "What is 2 + 5?", steps: ["Draw 2 strokes and 5 strokes on s sheet of papper. Now, add all the strokes. Count all your strokes"], result: "2 + 5 =  7. meaning: 2( | | ) + 5( | | | | | ) = 7( | | | | | | | )."},
               { title: "Addition in Tens", problem: "what is 20 + 15?", steps: ["Another way to find this: Put the bigger number in your headd. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew."], result: "20 + 15 = 35" },
-              { title: "Addition in Hundreds", problem: "What  is 234 + 458?", steps: ["what is 20 + 15?"], steps: [" Put the bigger number in your headd. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew."], result: "600" },
+              { title: "Addition in Hundreds", problem: "What  is 234 + 458?", steps: ["what is 20 + 15?"], steps: ["Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 458: from 458 count forward and continue with the 458 strokes you drew."], result: "234 + 458 = 782" },
               { title: "Addition in Thousands", problem: "In 7,245, what is the value of 7?", steps: ["The 7 is in the thousands place.", "Seven thousands means 7 × 1,000."], result: "7,000" },
               { title: "All places together", problem: "Break down 4,582.", steps: ["4 is thousands.", "5 is hundreds, 8 is tens, and 2 is ones."], result: "4,000 + 500 + 80 + 2 = 4,582" },
             ],
