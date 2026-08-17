@@ -173,6 +173,7 @@ const learningCatalog = {
             ],
             questions: [
               ["What is 27 + 15?", ["32", "42", "52", "41"], 1],
+              ["What is 127 + 125?", ["132", "42", "253", "41"], 2],
               [
                 "Which column do you add first?",
                 ["Hundreds", "Tens", "Ones", "Thousands"],
