@@ -189,6 +189,7 @@ const learningCatalog = {
               ["What is 3 × 5?", ["14", "12", "15", "20"], 2],
               ["What is 4 × 5?", ["14", "20", "15", "20"], 1],
               ["What is 6 × 7?", ["14", "12", "15", "42"], 3],
+              ["What is the symbol for Multiplication?", ["+", "-", "/", " x"], 3],
               [
                 "Which operation is the same as 5 + 5 + 5?",
                 ["3 × 5", "5 × 3", "5 + 3", "3 + 5"],
