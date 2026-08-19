@@ -208,6 +208,7 @@ const learningCatalog = {
               "Division is the process of sharing or grouping things equally. When you divide, you are splitting a quantity into equal parts. In other Words, Division is the invers(oposite) for Multiplication. Eg, 4 ÷ 2 = 2. How did we arrive at answer = 2 ? what this means is that 2 x ___ = 4. Another Example, 8 ÷ 2 = 4. Hence, 2 x ____ = 8.  ",
             questions: [
               ["What is 12 ÷ 3?", ["3", "4", "5", "6"], 1],
+              ["What is 8 ÷ 4?", ["3", "4", "2", "6"], 2],
               [
                 "Which operation is the inverse of multiplication?",
                 ["Addition", "Subtraction", "Division", "Exponentiation"],
