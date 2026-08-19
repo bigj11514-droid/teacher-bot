@@ -147,7 +147,7 @@ const learningCatalog = {
             exercise: { question: "What is the value of 3 in 3,426?", answers: ["3000", "3,000"], hint: "Look at the position of 3: thousands, hundreds, tens or ones?" },
             questions: [
               [
-                "What is the value of 5 in 4,582?",
+                "What is the place value of 5 in 4,582?",
                 ["5", "50", "500", "5,000"],
                 2,
               ],
@@ -156,7 +156,7 @@ const learningCatalog = {
                 ["4", "5", "8", "2"],
                 2,
               ],
-              ["What is the value of 6 in 5,639?", ["6", "60", "600", "6,000"], 2],
+              ["What is the place value of 6 in 5,639?", ["6", "60", "600", "6,000"], 2],
               ["Which digit is in the thousands place in 7,245?", ["7", "2", "4", "5"], 0],
               ["Which expanded form equals 4,582?", ["4,000 + 500 + 80 + 2", "400 + 50 + 8 + 2", "4,000 + 50 + 8 + 2", "4,000 + 500 + 8 + 2"], 0],
             ],
@@ -166,7 +166,7 @@ const learningCatalog = {
               "Addition combines quantities. Line up numbers by ones, tens and hundreds, then add each column from right to left. Regroup ten ones as one ten when needed.",
               examples: [
               { title: "Addition in Ones", problem: "What is 2 + 5?", steps: ["Draw 2 strokes and 5 strokes on s sheet of papper. Now, add all the strokes. Count all your strokes"], result: "2 + 5 =  7. meaning: 2( | | ) + 5( | | | | | ) = 7( | | | | | | | )."},
-              { title: "Addition in Tens", problem: "what is 20 + 15?", steps: ["Another way to find this: Put the bigger number in your headd. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew."], result: "20 + 15 = 35" },
+              { title: "Addition in Tens", problem: "what is 20 + 15?", steps: ["Another way to find this: Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew."], result: "20 + 15 = 35" },
               { title: "Addition in Hundreds", problem: "What  is 234 + 458?", steps: ["what is 20 + 15?"], steps: ["Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 458: from 458 count forward and continue with the 458 strokes you drew."], result: "234 + 458 = 782" },
               { title: "Addition in Thousands", problem: "What is 7,245 + 3452?", steps: ["Add them verticaly on thier correcnt place values. Meaning 5 and 2 place value is ONCE, 4 and 5 place value are in TENS, 2 and 4 place value are on HUNDREDS, 7 and 3 place value are in THOUSANDS."], result: "So 7,245 + 3452 = 10,697. Starting from the RIght, 5 + 2 = 7, 4 + 5 = 9, 4 + 2 = 6, 7 + 3 = 10" },
               { title: "All places together", problem: "Break down 4,582.", steps: ["4 is thousands.", "5 is hundreds, 8 is tens, and 2 is ones."], result: "4,000 + 500 + 80 + 2 = 4,582" },
@@ -174,6 +174,7 @@ const learningCatalog = {
             questions: [
               ["What is 27 + 15?", ["32", "42", "52", "41"], 1],
               ["What is 127 + 125?", ["132", "42", "253", "41"], 2],
+              ["Add 50 + 24", ["132", "42", "253", "74"], 3],
               [
                 "Which column do you add first?",
                 ["Hundreds", "Tens", "Ones", "Thousands"],
@@ -183,7 +184,7 @@ const learningCatalog = {
           },
           Multiplication: {
             lesson:
-              "Multiplication is repeated addition. When you multiply two numbers, you are adding one number to itself a certain number of times.",
+              "Multiplication is repeated addition. When you multiply two numbers, you are adding one number to itself a certain number of times. Learn your Multipication Time Table. 2 x 1 = 2, 2 x 2 = 4, etc",
             questions: [
               ["What is 3 × 4?", ["14", "12", "15", "20"], 1],
               ["What is 3 × 5?", ["14", "12", "15", "20"], 2],
@@ -204,7 +205,7 @@ const learningCatalog = {
           },
           Division: {
             lesson:
-              "Division is the process of sharing or grouping things equally. When you divide, you are splitting a quantity into equal parts.",
+              "Division is the process of sharing or grouping things equally. When you divide, you are splitting a quantity into equal parts. In other Words, Division is the invers(oposite) for Multiplication. Eg, 4 ÷ 2 = 2. How did we arrive at answer = 2 ? what this means is that 2 x ___ = 4. Another Example, 8 ÷ 2 = 4. Hence, 2 x ____ = 8.  ",
             questions: [
               ["What is 12 ÷ 3?", ["3", "4", "5", "6"], 1],
               [
