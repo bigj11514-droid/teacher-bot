@@ -209,6 +209,7 @@ const learningCatalog = {
             questions: [
               ["What is 12 ÷ 3?", ["3", "4", "5", "6"], 1],
               ["What is 8 ÷ 4?", ["3", "4", "2", "6"], 2],
+              ["What is 54 ÷ 6?", ["3", "5", "2", "6"], 1],
               [
                 "Which operation is the inverse of multiplication?",
                 ["Addition", "Subtraction", "Division", "Exponentiation"],
