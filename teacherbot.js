@@ -1925,9 +1925,11 @@ function getYouTubeEmbedUrl(url) {
 }
 
 // QUESTION EDITING BY DEPARTMENT/CLASS:
-// - Edit LEVEL_QUESTION_TEMPLATES to change the automatic questions for Basic,
-//   JHS and SHS learners.
+// - BASIC 1 to BASIC 6: edit the six `basic` entries below.
+// - JHS 1 to JHS 3: edit the three `jhs` entries below.
+// - SHS 1 to SHS 3: edit the three `shs` entries below.
 // - Edit `questions` inside a specific lesson above to replace its five checks.
+//   Administrator/teacher-authored five-question sets are never rewritten here.
 const LEVEL_QUESTION_TEMPLATES = {
   basic1: ["Which picture or object shows", "Can you point to", "Choose the simple answer for", "What is one thing you remember about"],
   basic2: ["Which answer matches", "Choose the best example of", "What happens when you use", "Show that you understand"],
@@ -1944,15 +1946,27 @@ const LEVEL_QUESTION_TEMPLATES = {
 };
 
 function getLearnerClassKey(context = {}) {
-  const className = context.className || getStudentSession()?.className || "";
+  // LEARNER CLASS: learning.html carries `?class=basic1` (or jhs/shs) from
+  // the department picker. Use it when the demo login has no stored class.
+  const className = context.className || getStudentSession()?.className || getClassKey();
   return String(className).toLowerCase().replace(/\s+/g, "");
 }
 
 function getFiveQuizQuestions(lesson, subtopic, configuredQuestions, context = {}) {
-  const questions = [...(configuredQuestions || lesson._guidedQuestions || (lesson.generated ? [] : lesson.questions) || [])];
   const classKey = getLearnerClassKey(context);
   const templates = LEVEL_QUESTION_TEMPLATES[classKey] || LEVEL_QUESTION_TEMPLATES.basic4;
   const subject = context.subject ? ` in ${context.subject}` : "";
+  const sourceQuestions = configuredQuestions || lesson._guidedQuestions || (lesson.generated ? [] : lesson.questions) || [];
+  // CLASS-TAILORED CHECKS: retain each lesson's correct answer, but phrase its
+  // questions at the learner's level. This prevents Basic 1 and Basic 6 from
+  // receiving the same question wording for the same subject.
+  const questions = lesson._hasManagedQuestions
+    ? [...sourceQuestions]
+    : sourceQuestions.map(([question, answers, correct], index) => [
+      `${templates[index % templates.length]} ${subtopic}${subject}: ${question}`,
+      answers,
+      correct,
+    ]);
   const fillers = [...templates, `For a ${classKey || "learner"}, what is the best final check for`].map((prompt) => [
     `${prompt} ${subtopic}${subject}?`,
     ["Use the lesson idea carefully", "Skip the lesson", "Choose without thinking", "Stop practising"],
@@ -1974,6 +1988,9 @@ function showAnswerPopup(correct, answer, onClose) {
   let popup = document.getElementById("answer-mark-modal");
   if (!popup) {
     document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="answer-mark-modal"><div class="modal-card"><h2 id="answer-mark-title"></h2><p id="answer-mark-copy"></p><button class="btn" id="answer-mark-close">Continue</button></div></div>');
+    // MODAL NEXT-LESSON FIX: refresh the reference after creating the modal.
+    // The Continue button can now call its stored callback and open the next lesson.
+    popup = document.getElementById("answer-mark-modal");
     document.getElementById("answer-mark-close").addEventListener("click", () => {
       popup.classList.remove("visible");
       popup._onClose?.();
@@ -2269,6 +2286,10 @@ function setupLearningSpace() {
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section><button class="btn" id="finish-lesson">I understand this lesson</button></article>`;
     activeLesson._guidedVideo = video;
     activeLesson._guidedQuestions = extras.questions;
+    // CONTENT-STUDIO QUESTIONS: exact five-question sets saved by an admin or
+    // approved teacher are intentionally kept word-for-word for every class.
+    // Built-in lesson questions use the department/class wording above instead.
+    activeLesson._hasManagedQuestions = Boolean(contentOverride.questions);
     startLessonTimer();
     document
       .getElementById("back-to-topics")
