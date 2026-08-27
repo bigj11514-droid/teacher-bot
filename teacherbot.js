@@ -1712,26 +1712,30 @@ function applySavedCatalogNames() {
 function applyCatalogStructureChange({ syllabusKey, originalSubject, originalTopic, originalSubtopic, subject, topic, subtopic }) {
   const syllabusTopics = learningCatalog[syllabusKey]?.topics;
   if (!syllabusTopics?.[originalSubject]) return false;
+  const originalTopics = syllabusTopics[originalSubject];
+  const originalSubtopics = originalTopics[originalTopic];
+  // Validate every destination before changing anything, so an unsuccessful
+  // approval cannot leave a partial subject/topic rename behind.
+  if (!originalSubtopics || (subject !== originalSubject && syllabusTopics[subject]) ||
+      (topic !== originalTopic && originalTopics[topic]) ||
+      (subtopic !== originalSubtopic && originalSubtopics[subtopic])) return false;
   const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
   names.subjects = names.subjects || {};
   names.topics = names.topics || {};
   names.subtopics = names.subtopics || {};
   if (subject !== originalSubject) {
-    if (syllabusTopics[subject]) return false;
     syllabusTopics[subject] = syllabusTopics[originalSubject];
     delete syllabusTopics[originalSubject];
     names.subjects[`${syllabusKey}|${originalSubject}`] = subject;
   }
   const activeSubject = syllabusTopics[subject];
   if (topic !== originalTopic) {
-    if (activeSubject[topic]) return false;
     activeSubject[topic] = activeSubject[originalTopic];
     delete activeSubject[originalTopic];
     names.topics[`${syllabusKey}|${subject}|${originalTopic}`] = topic;
   }
   const activeTopic = activeSubject[topic];
   if (subtopic !== originalSubtopic) {
-    if (activeTopic[subtopic]) return false;
     activeTopic[subtopic] = activeTopic[originalSubtopic];
     delete activeTopic[originalSubtopic];
     names.subtopics[`${syllabusKey}|${subject}|${topic}|${originalSubtopic}`] = subtopic;
@@ -5333,6 +5337,17 @@ function populateContentPicker(departmentSelect, classSelect, subjectSelect, top
 function setupContentStudio({ administrator = false } = {}) {
   const form = document.getElementById("content-studio-form");
   if (!form) return;
+  // CURRICULUM EDIT: both administrators and teachers can request new names.
+  // Teachers' changes remain in the approval queue until an administrator publishes them.
+  const addRenameField = (id, label, afterId) => {
+    if (document.getElementById(id)) return;
+    const field = document.createElement("label");
+    field.innerHTML = `${label}<input id="${id}" required>`;
+    document.getElementById(afterId).closest("label").insertAdjacentElement("afterend", field);
+  };
+  addRenameField("content-subject-name", "New subject name", "content-subject");
+  addRenameField("content-topic-name", "New main topic name", "content-topic");
+  addRenameField("content-subtopic-name", "New subtopic name", "content-subtopic");
   const department = document.getElementById("content-department");
   const classSelect = document.getElementById("content-class");
   const subject = document.getElementById("content-subject");
@@ -5342,6 +5357,7 @@ function setupContentStudio({ administrator = false } = {}) {
   const video = document.getElementById("content-video");
   const examples = document.getElementById("content-examples");
   const questions = document.getElementById("content-questions");
+  const subjectName = document.getElementById("content-subject-name");
   const topicName = document.getElementById("content-topic-name");
   const subtopicName = document.getElementById("content-subtopic-name");
   const status = document.getElementById("content-status");
@@ -5354,10 +5370,9 @@ function setupContentStudio({ administrator = false } = {}) {
     video.value = existing.videoUrl || "";
     examples.value = JSON.stringify(existing.examples || getLessonExtras(syllabusKey, subject.value, topic.value, subtopic.value, activeLesson).examples, null, 2);
     questions.value = JSON.stringify(existing.questions || getFiveQuizQuestions(activeLesson, subtopic.value), null, 2);
-    if (administrator) {
-      topicName.value = topic.value;
-      subtopicName.value = subtopic.value;
-    }
+    subjectName.value = subject.value;
+    topicName.value = topic.value;
+    subtopicName.value = subtopic.value;
   };
   [department, classSelect, subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
   load();
@@ -5381,43 +5396,27 @@ function setupContentStudio({ administrator = false } = {}) {
     }
     const originalTopic = topic.value;
     const originalSubtopic = subtopic.value;
-    const newTopic = administrator ? topicName.value.trim() : originalTopic;
-    const newSubtopic = administrator ? subtopicName.value.trim() : originalSubtopic;
-    if (!newTopic || !newSubtopic) { status.textContent = "Topic and subtopic names cannot be empty."; return; }
+    const originalSubject = subject.value;
+    const newSubject = subjectName.value.trim();
+    const newTopic = topicName.value.trim();
+    const newSubtopic = subtopicName.value.trim();
+    if (!newSubject || !newTopic || !newSubtopic) { status.textContent = "Subject, topic and subtopic names cannot be empty."; return; }
     const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
-    const subjectTopics = learningCatalog[syllabusKey].topics[subject.value];
-    if (administrator && newTopic !== originalTopic) {
-      if (subjectTopics[newTopic]) { status.textContent = "That main topic name already exists."; return; }
-      subjectTopics[newTopic] = subjectTopics[originalTopic];
-      delete subjectTopics[originalTopic];
-      const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
-      names.topics = names.topics || {};
-      names.topics[`${syllabusKey}|${subject.value}|${originalTopic}`] = newTopic;
-      localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
-    }
-    const activeTopic = subjectTopics[newTopic];
-    if (administrator && newSubtopic !== originalSubtopic) {
-      if (activeTopic[newSubtopic]) { status.textContent = "That subtopic name already exists."; return; }
-      activeTopic[newSubtopic] = activeTopic[originalSubtopic];
-      delete activeTopic[originalSubtopic];
-      const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
-      names.subtopics = names.subtopics || {};
-      names.subtopics[`${syllabusKey}|${subject.value}|${newTopic}|${originalSubtopic}`] = newSubtopic;
-      localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
-    }
+    const structure = { syllabusKey, originalSubject, originalTopic, originalSubtopic, subject: newSubject, topic: newTopic, subtopic: newSubtopic };
     const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, questions: parsedQuestions, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
     if (!administrator) {
       const pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
-      pending.push({ key: getCatalogLessonKey(syllabusKey, subject.value, newTopic, newSubtopic), change, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
+      pending.push({ key: getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic), change, structure, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
       localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
       addSiteNotification(`Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`, "administrator");
       addSiteNotification(`A teacher has posted a new ${subject.value} lesson update.`, "students");
       status.textContent = "Sent to the administrator for review. It will not appear to students until approved.";
       return;
     }
+    if (!applyCatalogStructureChange(structure)) { status.textContent = "That subject, topic or subtopic name already exists."; return; }
     const all = getContentOverrides();
-    delete all[getCatalogLessonKey(syllabusKey, subject.value, originalTopic, originalSubtopic)];
-    all[getCatalogLessonKey(syllabusKey, subject.value, newTopic, newSubtopic)] = change;
+    delete all[getCatalogLessonKey(syllabusKey, originalSubject, originalTopic, originalSubtopic)];
+    all[getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic)] = change;
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
     addSiteNotification(`A ${subject.value} lesson has been updated.`, "students");
     status.textContent = "Saved and published for students in this browser.";
@@ -5474,6 +5473,10 @@ function setupAdministratorPanel() {
     pendingList.querySelectorAll("[data-approve]").forEach((button) => button.addEventListener("click", () => {
       const index = Number(button.dataset.approve);
       const item = pending[index];
+      if (item.structure && !applyCatalogStructureChange(item.structure)) {
+        window.alert("This rename cannot be approved because that subject, topic or subtopic name now exists.");
+        return;
+      }
       const overrides = getContentOverrides();
       overrides[item.key] = item.change;
       localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(overrides));
