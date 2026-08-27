@@ -244,7 +244,7 @@ const learningCatalog = {
         "Shapes and measurement": {
           "2D shapes": {
             lesson:
-              "A 2D shape is flat. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.",
+              "A 2D shapes are drawn with lines. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.",
             questions: [
               ["How many sides does a triangle have?", ["2", "3", "4", "5"], 1],
               [
@@ -1647,7 +1647,9 @@ function addThirtyExtraSubtopics() {
 }
 
 function createDepartmentLesson(subject, topic, subtopic) {
-  return { lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`, questions: [[`What should you do after learning ${subtopic}?`, ["Practise the idea", "Skip the lesson", "Guess", "Stop reading"], 0]], examples: Array.from({ length: 5 }, (_, index) => ({ title: `${subtopic} example ${index + 1}`, problem: `Apply ${subtopic} to a ${subject} situation.`, steps: ["Read the task.", "Use the lesson idea.", "Check the result."], result: `A correct ${subtopic} response.` })) };
+  // DEPARTMENT GENERATOR: JHS and SHS lessons begin with no shared questions.
+  // getFiveQuizQuestions creates five class-level checks when a student opens one.
+  return { lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`, questions: [], generated: true, examples: Array.from({ length: 5 }, (_, index) => ({ title: `${subtopic} example ${index + 1}`, problem: `Apply ${subtopic} to a ${subject} situation.`, steps: ["Read the task.", "Use the lesson idea.", "Check the result."], result: `A correct ${subtopic} response.` })) };
 }
 
 function createJhsCatalog() {
@@ -1947,11 +1949,11 @@ function getLearnerClassKey(context = {}) {
 }
 
 function getFiveQuizQuestions(lesson, subtopic, configuredQuestions, context = {}) {
-  const questions = [...(configuredQuestions || lesson._guidedQuestions || lesson.questions || [])];
+  const questions = [...(configuredQuestions || lesson._guidedQuestions || (lesson.generated ? [] : lesson.questions) || [])];
   const classKey = getLearnerClassKey(context);
   const templates = LEVEL_QUESTION_TEMPLATES[classKey] || LEVEL_QUESTION_TEMPLATES.basic4;
   const subject = context.subject ? ` in ${context.subject}` : "";
-  const fillers = templates.map((prompt) => [
+  const fillers = [...templates, `For a ${classKey || "learner"}, what is the best final check for`].map((prompt) => [
     `${prompt} ${subtopic}${subject}?`,
     ["Use the lesson idea carefully", "Skip the lesson", "Choose without thinking", "Stop practising"],
     0,
@@ -5394,7 +5396,13 @@ function setupContentStudio({ administrator = false } = {}) {
     lesson.value = existing.lesson || activeLesson.lesson;
     video.value = existing.videoUrl || "";
     examples.value = JSON.stringify(existing.examples || getLessonExtras(syllabusKey, subject.value, topic.value, subtopic.value, activeLesson).examples, null, 2);
-    questions.value = JSON.stringify(existing.questions || getFiveQuizQuestions(activeLesson, subtopic.value), null, 2);
+    // PANEL QUESTION EDIT: this preview uses the selected department/class,
+    // so staff edit the same level-appropriate questions students will see.
+    questions.value = JSON.stringify(existing.questions || getFiveQuizQuestions(activeLesson, subtopic.value, undefined, {
+      department: department.value,
+      className: classSelect.value,
+      subject: subject.value,
+    }), null, 2);
     subjectName.value = subject.value;
     topicName.value = topic.value;
     subtopicName.value = subtopic.value;
