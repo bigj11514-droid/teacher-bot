@@ -244,7 +244,7 @@ const learningCatalog = {
         "Shapes and measurement": {
           "2D shapes": {
             lesson:
-              "A 2D shapes are drawn with lines. A triangle has three sides, a square has four equal sides, and a rectangle has two pairs of equal sides.",
+              "A 2D shapes are drawn with lines. A triangle has three sides(lines), a square has four equal sides, and a rectangle has two pairs of equal sides.",
             questions: [
               ["How many sides does a triangle have?", ["2", "3", "4", "5"], 1],
               [
