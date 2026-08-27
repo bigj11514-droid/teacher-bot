@@ -2226,7 +2226,7 @@ function setupLearningSpace() {
       );
   };
   const renderExercise = () => {
-    const exerciseQuestions = getTenExerciseQuestions(activeLesson, activeLessonMeta.subtopic);
+    const exerciseQuestions = getTenExerciseQuestions(activeLesson, activeLessonMeta.subtopic, activeLessonMeta);
     let questionIndex = 0;
     const showExerciseQuestion = () => {
       const current = exerciseQuestions[questionIndex];
@@ -2239,7 +2239,9 @@ function setupLearningSpace() {
         if (!correct) { input.focus(); return; }
         questionIndex++;
         if (questionIndex < exerciseQuestions.length) showExerciseQuestion();
-        else document.getElementById("enjoyment-modal").classList.add("visible");
+        // NEXT LESSON: after the last marked exercise answer, go directly to
+        // the following subtopic instead of leaving the learner in a modal.
+        else continueAfterExercise();
       });
     };
     document.getElementById("check-exercise").addEventListener("click", checkExercise);
@@ -2286,10 +2288,8 @@ function setupLearningSpace() {
     const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
     saveCompletedSubtopic(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
     if (!nextLesson) { renderTopics(); return; }
-    if (!isSubtopicUnlocked(syllabus, nextLesson.subject, nextLesson.topic, nextLesson.subtopic)) {
-      window.location.href = "payment.html";
-      return;
-    }
+    // NEXT LESSON: completion always opens the next subtopic. The learner has
+    // already completed the prerequisite, so the modal must never block here.
     renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
   };
   ["enjoyed-yes", "enjoyed-no"].forEach((id) => {
@@ -2329,7 +2329,7 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
-  const quizQuestions = getFiveQuizQuestions(lesson, subtopic);
+  const quizQuestions = getFiveQuizQuestions(lesson, subtopic, undefined, metadata);
   let index = 0,
     score = 0;
   const showQuestion = () => {
