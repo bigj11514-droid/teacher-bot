@@ -1685,6 +1685,12 @@ function createShsCourseCatalog(course, subjects) {
 function applySavedCatalogNames() {
   try {
     const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
+    // CURRICULUM EDIT: saved subject names are applied before their topics.
+    Object.entries(names.subjects || {}).forEach(([key, nextName]) => {
+      const [syllabusKey, subject] = key.split("|");
+      const topics = learningCatalog[syllabusKey]?.topics;
+      if (topics?.[subject] && nextName && !topics[nextName]) { topics[nextName] = topics[subject]; delete topics[subject]; }
+    });
     Object.entries(names.topics || {}).forEach(([key, nextName]) => {
       const parts = key.split("|");
       const [syllabusKey, subject, topic] = parts.length === 3 ? parts : ["ges", ...parts];
@@ -1698,6 +1704,40 @@ function applySavedCatalogNames() {
       if (subtopics?.[subtopic] && nextName && !subtopics[nextName]) { subtopics[nextName] = subtopics[subtopic]; delete subtopics[subtopic]; }
     });
   } catch { /* use the original catalogue if saved names are unavailable */ }
+}
+
+// CURRICULUM EDIT: this is the single place that renames a subject, main topic,
+// or subtopic. It is used immediately by administrators and on approval of a
+// teacher's requested structural change.
+function applyCatalogStructureChange({ syllabusKey, originalSubject, originalTopic, originalSubtopic, subject, topic, subtopic }) {
+  const syllabusTopics = learningCatalog[syllabusKey]?.topics;
+  if (!syllabusTopics?.[originalSubject]) return false;
+  const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
+  names.subjects = names.subjects || {};
+  names.topics = names.topics || {};
+  names.subtopics = names.subtopics || {};
+  if (subject !== originalSubject) {
+    if (syllabusTopics[subject]) return false;
+    syllabusTopics[subject] = syllabusTopics[originalSubject];
+    delete syllabusTopics[originalSubject];
+    names.subjects[`${syllabusKey}|${originalSubject}`] = subject;
+  }
+  const activeSubject = syllabusTopics[subject];
+  if (topic !== originalTopic) {
+    if (activeSubject[topic]) return false;
+    activeSubject[topic] = activeSubject[originalTopic];
+    delete activeSubject[originalTopic];
+    names.topics[`${syllabusKey}|${subject}|${originalTopic}`] = topic;
+  }
+  const activeTopic = activeSubject[topic];
+  if (subtopic !== originalSubtopic) {
+    if (activeTopic[subtopic]) return false;
+    activeTopic[subtopic] = activeTopic[originalSubtopic];
+    delete activeTopic[originalSubtopic];
+    names.subtopics[`${syllabusKey}|${subject}|${topic}|${originalSubtopic}`] = subtopic;
+  }
+  localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
+  return true;
 }
 
 function getLessonKey(subject, topic, subtopic) {
