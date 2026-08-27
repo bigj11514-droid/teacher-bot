@@ -1922,21 +1922,46 @@ function getYouTubeEmbedUrl(url) {
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
-function getFiveQuizQuestions(lesson, subtopic, configuredQuestions) {
+// QUESTION EDITING BY DEPARTMENT/CLASS:
+// - Edit LEVEL_QUESTION_TEMPLATES to change the automatic questions for Basic,
+//   JHS and SHS learners.
+// - Edit `questions` inside a specific lesson above to replace its five checks.
+const LEVEL_QUESTION_TEMPLATES = {
+  basic1: ["Which picture or object shows", "Can you point to", "Choose the simple answer for", "What is one thing you remember about"],
+  basic2: ["Which answer matches", "Choose the best example of", "What happens when you use", "Show that you understand"],
+  basic3: ["Choose the correct idea about", "Use a short example to think about", "Which step helps with", "What did you learn about"],
+  basic4: ["Which example correctly uses", "Apply the lesson to", "Choose the best explanation of", "Check your understanding of"],
+  basic5: ["Apply what you learned about", "Which answer best explains", "Use an example to show", "Choose the correct method for"],
+  basic6: ["Which solution best applies", "Explain the main idea in", "Use the lesson to solve", "Which reasoning is correct for"],
+  jhs1: ["Choose the best explanation of", "Apply the concept in", "Which evidence supports", "What is the correct method for"],
+  jhs2: ["Analyse this idea about", "Which answer best applies", "Choose the strongest explanation for", "How would you solve a task on"],
+  jhs3: ["Evaluate the correct approach to", "Which conclusion follows from", "Apply your knowledge of", "Choose the most accurate explanation of"],
+  shs1: ["Apply the concept of", "Which explanation is most accurate for", "Analyse a problem involving", "Choose the best supporting reason for"],
+  shs2: ["Evaluate this application of", "Which method is most suitable for", "Analyse the relationship in", "Choose the strongest conclusion about"],
+  shs3: ["Which advanced application best shows", "Justify the best solution for", "Analyse and evaluate", "Choose the most defensible answer about"],
+};
+
+function getLearnerClassKey(context = {}) {
+  const className = context.className || getStudentSession()?.className || "";
+  return String(className).toLowerCase().replace(/\s+/g, "");
+}
+
+function getFiveQuizQuestions(lesson, subtopic, configuredQuestions, context = {}) {
   const questions = [...(configuredQuestions || lesson._guidedQuestions || lesson.questions || [])];
-  const fillers = [
-    [`What should you do first when learning ${subtopic}?`, ["Read and understand the lesson", "Skip straight to answers", "Guess", "Stop learning"], 0],
-    [`Which action helps you remember ${subtopic}?`, ["Practise with examples", "Ignore the lesson", "Copy without reading", "Never check work"], 0],
-    [`When an answer about ${subtopic} is difficult, what should you do?`, ["Read the example again", "Give up immediately", "Choose any answer", "Skip the question"], 0],
-    [`Why do examples help with ${subtopic}?`, ["They show the idea in use", "They replace learning", "They make the topic disappear", "They are not useful"], 0],
-    [`What is a good final step after answering a ${subtopic} question?`, ["Check your answer", "Delete your work", "Never think again", "Skip to another topic"], 0],
-  ];
+  const classKey = getLearnerClassKey(context);
+  const templates = LEVEL_QUESTION_TEMPLATES[classKey] || LEVEL_QUESTION_TEMPLATES.basic4;
+  const subject = context.subject ? ` in ${context.subject}` : "";
+  const fillers = templates.map((prompt) => [
+    `${prompt} ${subtopic}${subject}?`,
+    ["Use the lesson idea carefully", "Skip the lesson", "Choose without thinking", "Stop practising"],
+    0,
+  ]);
   while (questions.length < 5) questions.push(fillers[questions.length % fillers.length]);
   return questions.slice(0, 5);
 }
 
-function getTenExerciseQuestions(lesson, subtopic) {
-  const base = getFiveQuizQuestions(lesson, subtopic);
+function getTenExerciseQuestions(lesson, subtopic, context = {}) {
+  const base = getFiveQuizQuestions(lesson, subtopic, undefined, context);
   return Array.from({ length: 10 }, (_, index) => {
     const [question, answers, correct] = base[index % base.length];
     return { question, answer: answers[correct] };
