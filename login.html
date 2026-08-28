@@ -11,7 +11,7 @@
   </head>
   <body class="login-page">
     <header class="simple-site-header"><a href="login.html" class="simple-brand">Y_Cohde</a><nav class="simple-nav" id="simple-nav"><a href="login.html">Log in</a><a href="-index.html">Courses</a><a href="index.html">Dashboard</a></nav></header>
-    <main class="login-card">
+    <main class="login-card" id="login-card" hidden aria-hidden="true">
       <div class="brand-mark">Y</div>
       <h1>Welcome to Y_Cohde Academy</h1>
       <p>Log in to open your learning, teacher, or administrator space.</p>
@@ -25,6 +25,19 @@
         <button class="btn" type="submit">Log in to dashboard</button>
       </form>
     </main>
+    <!-- FIRST-VISIT ROLE CHOICE: shown before the login fields are available. -->
+    <div class="role-choice-modal" id="role-choice-modal" role="dialog" aria-modal="true" aria-labelledby="role-choice-title">
+      <section class="role-choice-card">
+        <div class="brand-mark">Y</div>
+        <h1 id="role-choice-title">Welcome to Y_Cohde Academy</h1>
+        <p>Before you log in, tell us which space you need.</p>
+        <div class="role-choice-actions">
+          <button type="button" class="role-choice-btn" data-role="student"><strong>Student</strong><span>Start learning and complete lessons.</span></button>
+          <button type="button" class="role-choice-btn" data-role="teacher"><strong>Teacher</strong><span>Manage learning content for approval.</span></button>
+          <button type="button" class="role-choice-btn" data-role="administrator"><strong>Administrator</strong><span>Manage the school platform and content.</span></button>
+        </div>
+      </section>
+    </div>
     <script>
     const menuButton = document.querySelector(".simple-menu-toggle");
     const navigation = document.getElementById("simple-nav");
@@ -38,12 +51,36 @@
     }
 
     const sessionKey = "ycohdeStudentSession";
+    const roleChoiceKey = "ycohdeLoginRoleChoice";
+    const loginCard = document.getElementById("login-card");
+    const roleModal = document.getElementById("role-choice-modal");
+    const accountRole = document.getElementById("account-role");
+
+    // FIRST-VISIT ROLE CHOICE: choose a role before the login fields open.
+    // This is stored only for the current browser tab/session, not as an account.
+    function openLoginForRole(role) {
+        accountRole.value = role;
+        sessionStorage.setItem(roleChoiceKey, role);
+        roleModal.hidden = true;
+        loginCard.hidden = false;
+        loginCard.setAttribute("aria-hidden", "false");
+        document.getElementById("student-name").focus();
+    }
 
     // If already logged in, return to that account's own workspace.
     if (localStorage.getItem(sessionKey)) {
         const savedSession = JSON.parse(localStorage.getItem(sessionKey));
         window.location.replace(savedSession.role === "administrator" ? "admin.html" : savedSession.role === "teacher" ? "teacher.html" : "index.html");
+    } else {
+        const savedRoleChoice = sessionStorage.getItem(roleChoiceKey);
+        if (["student", "teacher", "administrator"].includes(savedRoleChoice)) {
+            openLoginForRole(savedRoleChoice);
+        }
     }
+
+    document.querySelectorAll("[data-role]").forEach((button) => {
+        button.addEventListener("click", () => openLoginForRole(button.dataset.role));
+    });
 
     // Login form
     document.getElementById("login-form").addEventListener("submit", (event) => {

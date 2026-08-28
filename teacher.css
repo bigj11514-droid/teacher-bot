@@ -136,6 +136,9 @@ a {
   gap: 8px;
 }
 
+/* SIDEBAR LAYOUT: the navigation fills the sidebar so logout stays at bottom. */
+.sidebar .site-nav { flex: 1; }
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -1027,6 +1030,7 @@ body.menu-open::before {
   width: 100%;
   text-align: left;
   color: var(--muted);
+  margin-top: auto;
 }
 
 .department-quiz-nav {
@@ -1065,6 +1069,17 @@ body.menu-open::before {
 }
 .login-form input:focus { outline: 2px solid rgba(127, 231, 255, .35); }
 .login-error { min-height: 1.25rem; color: #fca5a5 !important; font-size: .9rem; }
+
+/* FIRST-VISIT ROLE CHOICE: edit these labels in login.html if your role names change. */
+.role-choice-modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 24px; background: rgba(1, 11, 20, .8); }
+.role-choice-modal[hidden] { display: none; }
+.role-choice-card { width: min(100%, 520px); padding: 32px; border: 1px solid var(--border); border-radius: 24px; background: var(--panel-strong); box-shadow: var(--shadow); }
+.role-choice-card h1 { margin: 18px 0 8px; }
+.role-choice-card > p { color: var(--muted); line-height: 1.6; }
+.role-choice-actions { display: grid; gap: 12px; margin-top: 24px; }
+.role-choice-btn { display: grid; gap: 5px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(127, 231, 255, .07); color: var(--text); text-align: left; cursor: pointer; }
+.role-choice-btn:hover, .role-choice-btn:focus-visible { border-color: var(--accent); background: rgba(127, 231, 255, .14); outline: none; }
+.role-choice-btn span { color: var(--muted); font-size: .9rem; }
 
 .syllabus-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; }
 .syllabus-table { width: 100%; border-collapse: collapse; min-width: 680px; }

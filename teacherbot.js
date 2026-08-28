@@ -65,6 +65,8 @@ function setupStudentSession() {
     logoutButton.textContent = "Log out";
     logoutButton.addEventListener("click", () => {
       localStorage.removeItem(STUDENT_SESSION_KEY);
+      // FIRST-VISIT ROLE CHOICE: let the next person choose their own role.
+      sessionStorage.removeItem("ycohdeLoginRoleChoice");
       window.location.replace("login.html");
     });
     navigation.append(logoutButton);
