@@ -115,11 +115,21 @@ function setupStudentSession() {
     simpleNav.append(communityLink);
   }
   addLogout(simpleNav, "simple-nav-logout");
-  setupSidebarProgressCard();
+  // STUDENT-ONLY SIDEBAR: teachers and administrators do not see learning progress.
+  if (student.role === "student") setupSidebarProgressCard();
   showSiteNotifications(student);
 }
 
+// CURRICULUM EDIT GUIDE
+// - BASIC DEPARTMENT (Basic 1–6): edit the `ges` catalogue directly below.
+// - JHS DEPARTMENT (JHS 1–3): edit `createJhsCatalog` further down.
+// - SHS DEPARTMENT (SHS 1–3): edit `createShsCourseCatalog` and its course calls.
+// - For one exact lesson, find its subject → main topic → subtopic in the
+//   relevant section, then edit its `lesson`, `questions`, `examples` or `image`.
 const learningCatalog = {
+  // BASIC DEPARTMENT: this is the lesson content used by Basic 1, Basic 2,
+  // Basic 3, Basic 4, Basic 5 and Basic 6. Question wording by class is set
+  // in LEVEL_QUESTION_TEMPLATES below.
   ges: {
     name: "GES Standard-Based Curriculum",
     years: [
@@ -1615,6 +1625,8 @@ const EXTRA_SUBTOPIC_STEPS = [
 ];
 
 function createExtraLesson(subject, topic, step, number) {
+  // BASIC DEPARTMENT GENERATED SUBTOPICS: edit this template to update the
+  // extra practice lessons added across the Basic curriculum.
   const title = `${topic}: ${step}`;
   return {
     lesson: `${step} helps you build confidence in ${topic}. Read the earlier lesson, identify the main idea, and use it to solve a small problem. Learning one step at a time makes the whole ${topic} topic easier to understand.`,
@@ -1655,6 +1667,8 @@ function createDepartmentLesson(subject, topic, subtopic) {
 }
 
 function createJhsCatalog() {
+  // JHS DEPARTMENT (JHS 1, JHS 2, JHS 3): edit subjects, topic totals and
+  // generated lesson wording here. Use the content studio for one lesson.
   const topics = {};
   ["Mathematics", "Science", "English Language", "Our World Our People", "History", "Religious and Moral Education", "Creative Arts"].forEach((subject) => {
     topics[subject] = {};
@@ -1671,6 +1685,8 @@ function createJhsCatalog() {
 }
 
 function createShsCourseCatalog(course, subjects) {
+  // SHS DEPARTMENT (SHS 1, SHS 2, SHS 3): each call below creates one course.
+  // Edit this function for all SHS courses, or edit a call for one course only.
   const topics = {};
   subjects.forEach((subject) => {
     topics[subject] = {};
@@ -2132,11 +2148,13 @@ function setupSidebarProgressCard() {
   const student = getStudentSession();
   if (!sidebar || !student) return;
   const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "ST";
+  // STUDENT-ONLY SIDEBAR: remove an old card and stop for teacher/admin views.
+  sidebar.querySelector(".sidebar-progress-card")?.remove();
+  if (student.role !== "student") return;
   const completed = Object.keys(getLearningProgress()).length;
   const progress = Math.min(100, Math.round((completed / getAllLessons(learningCatalog.ges).length) * 100));
   const streak = getStudyStreak();
   const game = getGamification();
-  sidebar.querySelector(".sidebar-progress-card")?.remove();
   const sideCard = document.createElement("section");
   sideCard.className = "sidebar-card sidebar-progress-card";
   sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${student.name}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="learning.html?syllabus=ges" class="small-btn">Continue learning</a>`;
