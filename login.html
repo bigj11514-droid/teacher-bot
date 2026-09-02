@@ -5,117 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="teacher.css" />
     <title>Log in | Y_Cohde</title>
   </head>
   <body class="login-page">
-    <header class="simple-site-header"><a href="login.html" class="simple-brand">Y_Cohde</a><nav class="simple-nav" id="simple-nav"><a href="login.html">Log in</a><a href="-index.html">Courses</a><a href="index.html">Dashboard</a></nav></header>
+    <header class="simple-site-header">
+      <a href="login.html" class="simple-brand">Y_Cohde</a>
+      <nav class="simple-nav" id="simple-nav">
+        <a href="login.html">Log in</a><a href="-index.html">Courses</a
+        ><a href="index.html">Dashboard</a>
+      </nav>
+    </header>
     <main class="login-card" id="login-card" hidden aria-hidden="true">
       <div class="brand-mark">Y</div>
       <h1>Welcome to Y_Cohde Academy</h1>
       <p>Log in to open your learning, teacher, or administrator space.</p>
       <form class="login-form" id="login-form">
-        <label>Full name<input id="student-name" type="text" autocomplete="name" placeholder="Enter your name" required /></label>
-        <label>Student email<input id="student-email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-        <label>Account type<select id="account-role"><option value="student">Student</option><option value="teacher">Teacher</option><option value="administrator">Administrator</option></select></label>
-        <label>Department<select id="student-department"><option value="basic">Basic Department</option><option value="jhs">Junior High Department</option><option value="shs">Senior High Department</option></select></label>
-        <label>Password<input id="student-password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="4" /></label>
-        <p id="login-error" class="login-error" role="alert">Forgot your password?<a href="" target="_self" rel="noopener noreferrer">Sign In</a></p>
+        <label
+          >Full name<input
+            id="student-name"
+            type="text"
+            autocomplete="name"
+            placeholder="Enter your name"
+            required
+        /></label>
+        <label
+          >Student email<input
+            id="student-email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+        /></label>
+        <label
+          >Account type<select id="account-role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="administrator">Administrator</option>
+          </select></label
+        >
+        <label
+          >Occupation<input
+            id="profile-occupation"
+            type="text"
+            placeholder="e.g. Mathematics teacher"
+        /></label>
+        <label
+          >School name<input
+            id="profile-school"
+            type="text"
+            placeholder="Enter your school name"
+        /></label>
+        <label
+          >Profile picture URL<input
+            id="profile-picture"
+            type="url"
+            placeholder="https://example.com/photo.jpg"
+        /></label>
+        <label
+          >Department<select id="student-department">
+            <option value="basic">Basic Department</option>
+            <option value="jhs">Junior High Department</option>
+            <option value="shs">Senior High Department</option>
+          </select></label
+        >
+        <label
+          >Password<input
+            id="student-password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+            minlength="4"
+        /></label>
+        <p id="login-error" class="login-error" role="alert">
+          Forgot your password?<a
+            href=""
+            target="_self"
+            rel="noopener noreferrer"
+            >Sign In</a
+          >
+        </p>
         <button class="btn" type="submit">Log in to dashboard</button>
       </form>
     </main>
     <!-- FIRST-VISIT ROLE CHOICE: shown before the login fields are available. -->
-    <div class="role-choice-modal" id="role-choice-modal" role="dialog" aria-modal="true" aria-labelledby="role-choice-title">
+    <div
+      class="role-choice-modal"
+      id="role-choice-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="role-choice-title"
+    >
       <section class="role-choice-card">
         <div class="brand-mark">Y</div>
         <h1 id="role-choice-title">Welcome to Y_Cohde Academy</h1>
         <p>Before you log in, tell us which space you need.</p>
         <div class="role-choice-actions">
-          <button type="button" class="role-choice-btn" data-role="student"><strong>Student</strong><span>Start learning and complete lessons.</span></button>
-          <button type="button" class="role-choice-btn" data-role="teacher"><strong>Teacher</strong><span>Manage learning content for approval.</span></button>
-          <button type="button" class="role-choice-btn" data-role="administrator"><strong>Administrator</strong><span>Manage the school platform and content.</span></button>
+          <button type="button" class="role-choice-btn" data-role="student">
+            <strong>Student</strong
+            ><span>Start learning and complete lessons.</span>
+          </button>
+          <button type="button" class="role-choice-btn" data-role="teacher">
+            <strong>Teacher</strong
+            ><span>Manage learning content for approval.</span>
+          </button>
+          <button
+            type="button"
+            class="role-choice-btn"
+            data-role="administrator"
+          >
+            <strong>Administrator</strong
+            ><span>Manage the school platform and content.</span>
+          </button>
         </div>
       </section>
     </div>
     <script>
-    const menuButton = document.querySelector(".simple-menu-toggle");
-    const navigation = document.getElementById("simple-nav");
+      const menuButton = document.querySelector(".simple-menu-toggle");
+      const navigation = document.getElementById("simple-nav");
 
-    // Only run menu code if the menu button exists
-    if (menuButton && navigation) {
+      // Only run menu code if the menu button exists
+      if (menuButton && navigation) {
         menuButton.addEventListener("click", () => {
-            const open = navigation.classList.toggle("open");
-            menuButton.setAttribute("aria-expanded", open);
+          const open = navigation.classList.toggle("open");
+          menuButton.setAttribute("aria-expanded", open);
         });
-    }
+      }
 
-    const sessionKey = "ycohdeStudentSession";
-    const roleChoiceKey = "ycohdeLoginRoleChoice";
-    const loginCard = document.getElementById("login-card");
-    const roleModal = document.getElementById("role-choice-modal");
-    const accountRole = document.getElementById("account-role");
+      const sessionKey = "ycohdeStudentSession";
+      const roleChoiceKey = "ycohdeLoginRoleChoice";
+      const loginCard = document.getElementById("login-card");
+      const roleModal = document.getElementById("role-choice-modal");
+      const accountRole = document.getElementById("account-role");
 
-    // FIRST-VISIT ROLE CHOICE: choose a role before the login fields open.
-    // This is stored only for the current browser tab/session, not as an account.
-    function openLoginForRole(role) {
+      // FIRST-VISIT ROLE CHOICE: choose a role before the login fields open.
+      // This is stored only for the current browser tab/session, not as an account.
+      function openLoginForRole(role) {
         accountRole.value = role;
         sessionStorage.setItem(roleChoiceKey, role);
         roleModal.hidden = true;
         loginCard.hidden = false;
         loginCard.setAttribute("aria-hidden", "false");
         document.getElementById("student-name").focus();
-    }
+      }
 
-    // If already logged in, return to that account's own workspace.
-    if (localStorage.getItem(sessionKey)) {
+      // If already logged in, return to that account's own workspace.
+      if (localStorage.getItem(sessionKey)) {
         const savedSession = JSON.parse(localStorage.getItem(sessionKey));
-        window.location.replace(savedSession.role === "administrator" ? "admin.html" : savedSession.role === "teacher" ? "teacher.html" : "index.html");
-    } else {
+        window.location.replace(
+          savedSession.role === "administrator"
+            ? "admin.html"
+            : savedSession.role === "teacher"
+              ? "teacher.html"
+              : "index.html",
+        );
+      } else {
         const savedRoleChoice = sessionStorage.getItem(roleChoiceKey);
         if (["student", "teacher", "administrator"].includes(savedRoleChoice)) {
-            openLoginForRole(savedRoleChoice);
+          openLoginForRole(savedRoleChoice);
         }
-    }
+      }
 
-    document.querySelectorAll("[data-role]").forEach((button) => {
-        button.addEventListener("click", () => openLoginForRole(button.dataset.role));
-    });
+      document.querySelectorAll("[data-role]").forEach((button) => {
+        button.addEventListener("click", () =>
+          openLoginForRole(button.dataset.role),
+        );
+      });
 
-    // Login form
-    document.getElementById("login-form").addEventListener("submit", (event) => {
+      // Login form
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
 
-        event.preventDefault();
+          const name = document.getElementById("student-name").value.trim();
+          const email = document.getElementById("student-email").value.trim();
+          const password = document.getElementById("student-password").value;
+          const occupation = document
+            .getElementById("profile-occupation")
+            .value.trim();
+          const school = document.getElementById("profile-school").value.trim();
+          const profilePicture = document
+            .getElementById("profile-picture")
+            .value.trim();
 
-        const name = document.getElementById("student-name").value.trim();
-        const email = document.getElementById("student-email").value.trim();
-        const password = document.getElementById("student-password").value;
+          const error = document.getElementById("login-error");
 
-        const error = document.getElementById("login-error");
-
-        if (!name || !email || password.length < 4) {
+          if (!name || !email || password.length < 4) {
             error.textContent =
-                "Enter your name, a valid email, and a password of at least 4 characters.";
+              "Enter your name, a valid email, and a password of at least 4 characters.";
             return;
-        }
+          }
 
-        const role = document.getElementById("account-role").value;
-        const department = document.getElementById("student-department").value;
-        // This local demo login stores the account role in this browser.
-        // Use a secure server-side account system before publishing the site.
-        localStorage.setItem(
+          const role = document.getElementById("account-role").value;
+          const department =
+            document.getElementById("student-department").value;
+          // This local demo login stores the account role in this browser.
+          // Use a secure server-side account system before publishing the site.
+          localStorage.setItem(
             sessionKey,
             JSON.stringify({
-                name: name,
-                email: email,
-                role: role,
-                department: department
-            })
-        );
+              name: name,
+              email: email,
+              role: role,
+              department: department,
+              occupation: occupation,
+              school: school,
+              profilePicture: profilePicture,
+            }),
+          );
 
-        // Go to dashboard
-        window.location.replace(role === "administrator" ? "admin.html" : role === "teacher" ? "teacher.html" : "index.html");
-    });
-</script>
+          // Go to dashboard
+          window.location.replace(
+            role === "administrator"
+              ? "admin.html"
+              : role === "teacher"
+                ? "teacher.html"
+                : "index.html",
+          );
+        });
+    </script>
   </body>
 </html>

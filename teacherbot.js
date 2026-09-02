@@ -3,6 +3,7 @@
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
 const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
 const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
+const STAFF_POSTS_KEY = "ycohdeStaffPosts";
 const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
 const PENDING_CONTENT_KEY = "ycohdePendingContent";
 const MEDIA_DATABASE_NAME = "ycohdeLessonMedia";
@@ -28,7 +29,8 @@ function openLessonMediaDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(MEDIA_DATABASE_NAME, 1);
     request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains(MEDIA_STORE_NAME)) request.result.createObjectStore(MEDIA_STORE_NAME);
+      if (!request.result.objectStoreNames.contains(MEDIA_STORE_NAME))
+        request.result.createObjectStore(MEDIA_STORE_NAME);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -53,7 +55,10 @@ async function getLessonMedia(id) {
   if (!id) return null;
   const database = await openLessonMediaDatabase();
   const result = await new Promise((resolve, reject) => {
-    const request = database.transaction(MEDIA_STORE_NAME, "readonly").objectStore(MEDIA_STORE_NAME).get(id);
+    const request = database
+      .transaction(MEDIA_STORE_NAME, "readonly")
+      .objectStore(MEDIA_STORE_NAME)
+      .get(id);
     request.onsuccess = () => resolve(request.result || null);
     request.onerror = () => reject(request.error);
   });
@@ -67,15 +72,27 @@ function requireStudentLogin() {
     window.location.replace("login.html");
     return false;
   }
-  if (user.role === "administrator") { window.location.replace("admin.html"); return false; }
-  if (user.role === "teacher") { window.location.replace("teacher.html"); return false; }
+  if (user.role === "administrator") {
+    window.location.replace("admin.html");
+    return false;
+  }
+  if (user.role === "teacher") {
+    window.location.replace("teacher.html");
+    return false;
+  }
   return true;
 }
 
 function requireRole(...roles) {
   const user = getStudentSession();
   if (!user || !roles.includes(user.role)) {
-    window.location.replace(user?.role === "administrator" ? "admin.html" : user?.role === "teacher" ? "teacher.html" : "login.html");
+    window.location.replace(
+      user?.role === "administrator"
+        ? "admin.html"
+        : user?.role === "teacher"
+          ? "teacher.html"
+          : "login.html",
+    );
     return false;
   }
   return true;
@@ -84,6 +101,33 @@ function requireRole(...roles) {
 function setupStudentSession() {
   const student = getStudentSession();
   if (!student) return;
+
+  document.querySelectorAll(".sidebar").forEach((sidebar) => {
+    if (student.role !== "teacher" && student.role !== "administrator") return;
+    const existingProfile = sidebar.querySelector(".staff-profile");
+    if (existingProfile) existingProfile.remove();
+    const isAdministrator = student.role === "administrator";
+    const initials = student.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+    const profile = document.createElement("section");
+    profile.className = "staff-profile";
+    profile.setAttribute(
+      "aria-label",
+      `${isAdministrator ? "Administrator" : "Teacher"} profile`,
+    );
+    profile.innerHTML = `<div class="staff-profile-image"><img src="picture in coat.jpeg" alt="${isAdministrator ? "Administrator" : "Teacher"} profile picture"><span>${initials || (isAdministrator ? "AD" : "TE")}</span></div><div class="staff-profile-details"><strong></strong><span>${student.occupation || (isAdministrator ? "Platform administrator" : "Learning content teacher")}</span><small>${student.school || "Y_Cohde Academy"}</small></div>`;
+    profile.querySelector("strong").textContent = student.name;
+    const image = profile.querySelector("img");
+    image.addEventListener("error", () => {
+      image.hidden = true;
+    });
+    sidebar.append(profile);
+  });
 
   document.querySelectorAll(".profile-pill").forEach((profile) => {
     const initials = student.name
@@ -104,6 +148,7 @@ function setupStudentSession() {
     const logoutButton = document.createElement("button");
     logoutButton.type = "button";
     logoutButton.className = `${className} logout-btn`;
+    logoutButton.setAttribute("aria-label", "Log out of Y_Cohde");
     logoutButton.textContent = "Log out";
     logoutButton.addEventListener("click", () => {
       localStorage.removeItem(STUDENT_SESSION_KEY);
@@ -115,19 +160,38 @@ function setupStudentSession() {
   };
 
   document.querySelectorAll(".site-nav").forEach((navigation) => {
-    const isStaffPanel = Boolean(document.getElementById("teacher-studio") || document.getElementById("administrator-panel"));
+    const isStaffPanel = Boolean(
+      document.getElementById("teacher-studio") ||
+      document.getElementById("administrator-panel"),
+    );
     if (isStaffPanel) {
       // Staff sidebars intentionally contain only their own studio. Students
       // retain the community and department-quiz navigation elsewhere.
-      navigation.querySelectorAll(".community-nav-link, .department-quiz-nav, .admin-nav-link, .teacher-nav-link").forEach((item) => item.remove());
+      navigation
+        .querySelectorAll(
+          ".community-nav-link, .department-quiz-nav, .admin-nav-link, .teacher-nav-link",
+        )
+        .forEach((item) => item.remove());
       addLogout(navigation, "nav-item");
       return;
     }
-    if (student.role === "administrator" && !navigation.querySelector(".admin-nav-link")) {
-      navigation.insertAdjacentHTML("beforeend", '<a class="nav-item admin-nav-link" href="admin.html"><span>⚙</span><span>Administrator panel</span></a>');
+    if (
+      student.role === "administrator" &&
+      !navigation.querySelector(".admin-nav-link")
+    ) {
+      navigation.insertAdjacentHTML(
+        "beforeend",
+        '<a class="nav-item admin-nav-link" href="admin.html"><span>⚙</span><span>Administrator panel</span></a>',
+      );
     }
-    if (student.role === "teacher" && !navigation.querySelector(".teacher-nav-link")) {
-      navigation.insertAdjacentHTML("beforeend", '<a class="nav-item teacher-nav-link" href="teacher.html"><span>🎥</span><span>Teacher studio</span></a>');
+    if (
+      student.role === "teacher" &&
+      !navigation.querySelector(".teacher-nav-link")
+    ) {
+      navigation.insertAdjacentHTML(
+        "beforeend",
+        '<a class="nav-item teacher-nav-link" href="teacher.html"><span>🎥</span><span>Teacher studio</span></a>',
+      );
     }
     if (!navigation.querySelector(".community-nav-link")) {
       const communityLink = document.createElement("a");
@@ -147,7 +211,10 @@ function setupStudentSession() {
       `;
       navigation.append(quizMenu);
     }
-    if (student.role === "student" && !navigation.querySelector(".payment-nav-link")) {
+    if (
+      student.role === "student" &&
+      !navigation.querySelector(".payment-nav-link")
+    ) {
       const paymentLink = document.createElement("a");
       paymentLink.className = "nav-item payment-nav-link";
       paymentLink.href = "payment.html";
@@ -200,13 +267,54 @@ const learningCatalog = {
             lesson:
               "Place value tells us what each digit is worth because of its position. In 4,582, the 4 means 4 thousands, the 5 means 5 hundreds, the 8 means 8 tens, and the 2 means 2 ones.",
             examples: [
-              { title: "Ones", problem: "In 3,471, what is the value of 1?", steps: ["The 1 is in the ones place."], result: "1 one = 1" },
-              { title: "Tens", problem: "In 6,284, what is the value of 8?", steps: ["The 8 is in the tens place.", "Eight tens means 8 × 10."], result: "80" },
-              { title: "Hundreds", problem: "In 5,639, what is the value of 6?", steps: ["The 6 is in the hundreds place.", "Six hundreds means 6 × 100."], result: "600" },
-              { title: "Thousands", problem: "In 7,245, what is the value of 7?", steps: ["The 7 is in the thousands place.", "Seven thousands means 7 × 1,000."], result: "7,000" },
-              { title: "All places together", problem: "Break down 4,582.", steps: ["4 is thousands.", "5 is hundreds, 8 is tens, and 2 is ones."], result: "4,000 + 500 + 80 + 2 = 4,582" },
+              {
+                title: "Ones",
+                problem: "In 3,471, what is the value of 1?",
+                steps: ["The 1 is in the ones place."],
+                result: "1 one = 1",
+              },
+              {
+                title: "Tens",
+                problem: "In 6,284, what is the value of 8?",
+                steps: [
+                  "The 8 is in the tens place.",
+                  "Eight tens means 8 × 10.",
+                ],
+                result: "80",
+              },
+              {
+                title: "Hundreds",
+                problem: "In 5,639, what is the value of 6?",
+                steps: [
+                  "The 6 is in the hundreds place.",
+                  "Six hundreds means 6 × 100.",
+                ],
+                result: "600",
+              },
+              {
+                title: "Thousands",
+                problem: "In 7,245, what is the value of 7?",
+                steps: [
+                  "The 7 is in the thousands place.",
+                  "Seven thousands means 7 × 1,000.",
+                ],
+                result: "7,000",
+              },
+              {
+                title: "All places together",
+                problem: "Break down 4,582.",
+                steps: [
+                  "4 is thousands.",
+                  "5 is hundreds, 8 is tens, and 2 is ones.",
+                ],
+                result: "4,000 + 500 + 80 + 2 = 4,582",
+              },
             ],
-            exercise: { question: "What is the value of 3 in 3,426?", answers: ["3000", "3,000"], hint: "Look at the position of 3: thousands, hundreds, tens or ones?" },
+            exercise: {
+              question: "What is the value of 3 in 3,426?",
+              answers: ["3000", "3,000"],
+              hint: "Look at the position of 3: thousands, hundreds, tens or ones?",
+            },
             questions: [
               [
                 "What is the place value of 5 in 4,582?",
@@ -218,20 +326,76 @@ const learningCatalog = {
                 ["4", "5", "8", "2"],
                 2,
               ],
-              ["What is the place value of 6 in 5,639?", ["6", "60", "600", "6,000"], 2],
-              ["Which digit is in the thousands place in 7,245?", ["7", "2", "4", "5"], 0],
-              ["Which expanded form equals 4,582?", ["4,000 + 500 + 80 + 2", "400 + 50 + 8 + 2", "4,000 + 50 + 8 + 2", "4,000 + 500 + 8 + 2"], 0],
+              [
+                "What is the place value of 6 in 5,639?",
+                ["6", "60", "600", "6,000"],
+                2,
+              ],
+              [
+                "Which digit is in the thousands place in 7,245?",
+                ["7", "2", "4", "5"],
+                0,
+              ],
+              [
+                "Which expanded form equals 4,582?",
+                [
+                  "4,000 + 500 + 80 + 2",
+                  "400 + 50 + 8 + 2",
+                  "4,000 + 50 + 8 + 2",
+                  "4,000 + 500 + 8 + 2",
+                ],
+                0,
+              ],
             ],
           },
           Addition: {
             lesson:
               "Addition combines quantities. Line up numbers by ones, tens and hundreds, then add each column from right to left. Regroup ten ones as one ten when needed.",
-              examples: [
-              { title: "Addition in Ones", problem: "What is 2 + 5?", steps: ["Draw 2 strokes and 5 strokes on s sheet of papper. Now, add all the strokes. Count all your strokes"], result: "2 + 5 =  7. meaning: 2( | | ) + 5( | | | | | ) = 7( | | | | | | | )."},
-              { title: "Addition in Tens", problem: "what is 20 + 15?", steps: ["Another way to find this: Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew."], result: "20 + 15 = 35" },
-              { title: "Addition in Hundreds", problem: "What  is 234 + 458?", steps: ["what is 20 + 15?"], steps: ["Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 458: from 458 count forward and continue with the 458 strokes you drew."], result: "234 + 458 = 782" },
-              { title: "Addition in Thousands", problem: "What is 7,245 + 3452?", steps: ["Add them verticaly on thier correcnt place values. Meaning 5 and 2 place value is ONCE, 4 and 5 place value are in TENS, 2 and 4 place value are on HUNDREDS, 7 and 3 place value are in THOUSANDS."], result: "So 7,245 + 3452 = 10,697. Starting from the RIght, 5 + 2 = 7, 4 + 5 = 9, 4 + 2 = 6, 7 + 3 = 10" },
-              { title: "All places together", problem: "Break down 4,582.", steps: ["4 is thousands.", "5 is hundreds, 8 is tens, and 2 is ones."], result: "4,000 + 500 + 80 + 2 = 4,582" },
+            examples: [
+              {
+                title: "Addition in Ones",
+                problem: "What is 2 + 5?",
+                steps: [
+                  "Draw 2 strokes and 5 strokes on s sheet of papper. Now, add all the strokes. Count all your strokes",
+                ],
+                result:
+                  "2 + 5 =  7. meaning: 2( | | ) + 5( | | | | | ) = 7( | | | | | | | ).",
+              },
+              {
+                title: "Addition in Tens",
+                problem: "what is 20 + 15?",
+                steps: [
+                  "Another way to find this: Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 20: from 20 count forward and continue with the 15 strokes you drew.",
+                ],
+                result: "20 + 15 = 35",
+              },
+              {
+                title: "Addition in Hundreds",
+                problem: "What  is 234 + 458?",
+                steps: ["what is 20 + 15?"],
+                steps: [
+                  "Put the bigger number in your head. So the bigger number we have in this Question is 20. Now Draw 15 strokes and start counting from 458: from 458 count forward and continue with the 458 strokes you drew.",
+                ],
+                result: "234 + 458 = 782",
+              },
+              {
+                title: "Addition in Thousands",
+                problem: "What is 7,245 + 3452?",
+                steps: [
+                  "Add them verticaly on thier correcnt place values. Meaning 5 and 2 place value is ONCE, 4 and 5 place value are in TENS, 2 and 4 place value are on HUNDREDS, 7 and 3 place value are in THOUSANDS.",
+                ],
+                result:
+                  "So 7,245 + 3452 = 10,697. Starting from the RIght, 5 + 2 = 7, 4 + 5 = 9, 4 + 2 = 6, 7 + 3 = 10",
+              },
+              {
+                title: "All places together",
+                problem: "Break down 4,582.",
+                steps: [
+                  "4 is thousands.",
+                  "5 is hundreds, 8 is tens, and 2 is ones.",
+                ],
+                result: "4,000 + 500 + 80 + 2 = 4,582",
+              },
             ],
             questions: [
               ["What is 27 + 15?", ["32", "42", "52", "41"], 1],
@@ -252,7 +416,11 @@ const learningCatalog = {
               ["What is 3 × 5?", ["14", "12", "15", "20"], 2],
               ["What is 4 × 5?", ["14", "20", "15", "20"], 1],
               ["What is 6 × 7?", ["14", "12", "15", "42"], 3],
-              ["What is the symbol for Multiplication?", ["+", "-", "/", " x"], 3],
+              [
+                "What is the symbol for Multiplication?",
+                ["+", "-", "/", " x"],
+                3,
+              ],
               [
                 "Which operation is the same as 5 + 5 + 5?",
                 ["3 × 5", "5 × 3", "5 + 3", "3 + 5"],
@@ -1665,13 +1833,36 @@ const GAMIFICATION_KEY = "ycohdeGamification";
 const LESSON_RESUME_KEY = "ycohdeLessonResume";
 const FREE_LESSON_LIMIT = 3;
 const EXTRA_SUBTOPIC_STEPS = [
-  "Key vocabulary", "Important ideas", "Everyday connection", "Worked example",
-  "Guided practice", "Think carefully", "Use the right method", "Check your work",
-  "Common mistakes", "Quick recap", "Skill builder 1", "Skill builder 2",
-  "Skill builder 3", "Skill builder 4", "Skill builder 5", "Challenge 1",
-  "Challenge 2", "Challenge 3", "Challenge 4", "Challenge 5", "Revision 1",
-  "Revision 2", "Revision 3", "Revision 4", "Revision 5", "Apply your learning",
-  "Explain your thinking", "Real-life task", "Final practice", "Main-topic review",
+  "Key vocabulary",
+  "Important ideas",
+  "Everyday connection",
+  "Worked example",
+  "Guided practice",
+  "Think carefully",
+  "Use the right method",
+  "Check your work",
+  "Common mistakes",
+  "Quick recap",
+  "Skill builder 1",
+  "Skill builder 2",
+  "Skill builder 3",
+  "Skill builder 4",
+  "Skill builder 5",
+  "Challenge 1",
+  "Challenge 2",
+  "Challenge 3",
+  "Challenge 4",
+  "Challenge 5",
+  "Revision 1",
+  "Revision 2",
+  "Revision 3",
+  "Revision 4",
+  "Revision 5",
+  "Apply your learning",
+  "Explain your thinking",
+  "Real-life task",
+  "Final practice",
+  "Main-topic review",
 ];
 
 function createExtraLesson(subject, topic, step, number) {
@@ -1680,18 +1871,35 @@ function createExtraLesson(subject, topic, step, number) {
   const title = `${topic}: ${step}`;
   return {
     lesson: `${step} helps you build confidence in ${topic}. Read the earlier lesson, identify the main idea, and use it to solve a small problem. Learning one step at a time makes the whole ${topic} topic easier to understand.`,
-    examples: [{
-      title: "How to practise",
-      problem: `Use one idea from ${topic} in a daily-life situation.`,
-      steps: ["Read the question carefully.", "Choose the idea or method that fits.", "Check that your answer makes sense."],
-      result: "A clear, checked answer.",
-    }],
+    examples: [
+      {
+        title: "How to practise",
+        problem: `Use one idea from ${topic} in a daily-life situation.`,
+        steps: [
+          "Read the question carefully.",
+          "Choose the idea or method that fits.",
+          "Check that your answer makes sense.",
+        ],
+        result: "A clear, checked answer.",
+      },
+    ],
     exercise: {
       question: `In your own words, what is one important idea you learned about ${topic}?`,
       minLength: 3,
       hint: "Write a short sentence. Your teacher can review this answer later.",
     },
-    questions: [[`Which habit helps you learn ${topic}?`, ["Skipping the lesson", "Reading, practising and checking", "Guessing without thinking", "Never asking questions"], 1]],
+    questions: [
+      [
+        `Which habit helps you learn ${topic}?`,
+        [
+          "Skipping the lesson",
+          "Reading, practising and checking",
+          "Guessing without thinking",
+          "Never asking questions",
+        ],
+        1,
+      ],
+    ],
     generated: true,
     order: number,
   };
@@ -1703,7 +1911,13 @@ function addThirtyExtraSubtopics() {
       Object.entries(topics).forEach(([topic, subtopics]) => {
         EXTRA_SUBTOPIC_STEPS.forEach((step, index) => {
           const name = `${String(index + 1).padStart(2, "0")}. ${step}`;
-          if (!subtopics[name]) subtopics[name] = createExtraLesson(subject, topic, step, index + 1);
+          if (!subtopics[name])
+            subtopics[name] = createExtraLesson(
+              subject,
+              topic,
+              step,
+              index + 1,
+            );
         });
       });
     });
@@ -1713,25 +1927,51 @@ function addThirtyExtraSubtopics() {
 function createDepartmentLesson(subject, topic, subtopic) {
   // DEPARTMENT GENERATOR: JHS and SHS lessons begin with no shared questions.
   // getFiveQuizQuestions creates five class-level checks when a student opens one.
-  return { lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`, questions: [], generated: true, examples: Array.from({ length: 5 }, (_, index) => ({ title: `${subtopic} example ${index + 1}`, problem: `Apply ${subtopic} to a ${subject} situation.`, steps: ["Read the task.", "Use the lesson idea.", "Check the result."], result: `A correct ${subtopic} response.` })) };
+  return {
+    lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`,
+    questions: [],
+    generated: true,
+    examples: Array.from({ length: 5 }, (_, index) => ({
+      title: `${subtopic} example ${index + 1}`,
+      problem: `Apply ${subtopic} to a ${subject} situation.`,
+      steps: ["Read the task.", "Use the lesson idea.", "Check the result."],
+      result: `A correct ${subtopic} response.`,
+    })),
+  };
 }
 
 function createJhsCatalog() {
   // JHS DEPARTMENT (JHS 1, JHS 2, JHS 3): edit subjects, topic totals and
   // generated lesson wording here. Use the content studio for one lesson.
   const topics = {};
-  ["Mathematics", "Science", "English Language", "Our World Our People", "History", "Religious and Moral Education", "Creative Arts"].forEach((subject) => {
+  [
+    "Mathematics",
+    "Science",
+    "English Language",
+    "Our World Our People",
+    "History",
+    "Religious and Moral Education",
+    "Creative Arts",
+  ].forEach((subject) => {
     topics[subject] = {};
     for (let topicNumber = 1; topicNumber <= 71; topicNumber++) {
       const topic = `JHS ${subject} Topic ${String(topicNumber).padStart(2, "0")}`;
       topics[subject][topic] = {};
       for (let subtopicNumber = 1; subtopicNumber <= 30; subtopicNumber++) {
         const subtopic = `Subtopic ${String(subtopicNumber).padStart(2, "0")}`;
-        topics[subject][topic][subtopic] = createDepartmentLesson(subject, topic, subtopic);
+        topics[subject][topic][subtopic] = createDepartmentLesson(
+          subject,
+          topic,
+          subtopic,
+        );
       }
     }
   });
-  learningCatalog.jhs = { name: "JHS Learning Programme", years: ["JHS 1", "JHS 2", "JHS 3"], topics };
+  learningCatalog.jhs = {
+    name: "JHS Learning Programme",
+    years: ["JHS 1", "JHS 2", "JHS 3"],
+    topics,
+  };
 }
 
 function createShsCourseCatalog(course, subjects) {
@@ -1745,11 +1985,19 @@ function createShsCourseCatalog(course, subjects) {
       topics[subject][topic] = {};
       for (let subtopicNumber = 1; subtopicNumber <= 30; subtopicNumber++) {
         const subtopic = `Subtopic ${String(subtopicNumber).padStart(2, "0")}`;
-        topics[subject][topic][subtopic] = createDepartmentLesson(subject, topic, subtopic);
+        topics[subject][topic][subtopic] = createDepartmentLesson(
+          subject,
+          topic,
+          subtopic,
+        );
       }
     }
   });
-  learningCatalog[`shs-${course}`] = { name: `SHS ${course.replace(/-/g, " ")}`, years: ["SHS 1", "SHS 2", "SHS 3"], topics };
+  learningCatalog[`shs-${course}`] = {
+    name: `SHS ${course.replace(/-/g, " ")}`,
+    years: ["SHS 1", "SHS 2", "SHS 3"],
+    topics,
+  };
 }
 
 function applySavedCatalogNames() {
@@ -1759,36 +2007,61 @@ function applySavedCatalogNames() {
     Object.entries(names.subjects || {}).forEach(([key, nextName]) => {
       const [syllabusKey, subject] = key.split("|");
       const topics = learningCatalog[syllabusKey]?.topics;
-      if (topics?.[subject] && nextName && !topics[nextName]) { topics[nextName] = topics[subject]; delete topics[subject]; }
+      if (topics?.[subject] && nextName && !topics[nextName]) {
+        topics[nextName] = topics[subject];
+        delete topics[subject];
+      }
     });
     Object.entries(names.topics || {}).forEach(([key, nextName]) => {
       const parts = key.split("|");
-      const [syllabusKey, subject, topic] = parts.length === 3 ? parts : ["ges", ...parts];
+      const [syllabusKey, subject, topic] =
+        parts.length === 3 ? parts : ["ges", ...parts];
       const topics = learningCatalog[syllabusKey]?.topics[subject];
-      if (topics?.[topic] && nextName && !topics[nextName]) { topics[nextName] = topics[topic]; delete topics[topic]; }
+      if (topics?.[topic] && nextName && !topics[nextName]) {
+        topics[nextName] = topics[topic];
+        delete topics[topic];
+      }
     });
     Object.entries(names.subtopics || {}).forEach(([key, nextName]) => {
       const parts = key.split("|");
-      const [syllabusKey, subject, topic, subtopic] = parts.length === 4 ? parts : ["ges", ...parts];
+      const [syllabusKey, subject, topic, subtopic] =
+        parts.length === 4 ? parts : ["ges", ...parts];
       const subtopics = learningCatalog[syllabusKey]?.topics[subject]?.[topic];
-      if (subtopics?.[subtopic] && nextName && !subtopics[nextName]) { subtopics[nextName] = subtopics[subtopic]; delete subtopics[subtopic]; }
+      if (subtopics?.[subtopic] && nextName && !subtopics[nextName]) {
+        subtopics[nextName] = subtopics[subtopic];
+        delete subtopics[subtopic];
+      }
     });
-  } catch { /* use the original catalogue if saved names are unavailable */ }
+  } catch {
+    /* use the original catalogue if saved names are unavailable */
+  }
 }
 
 // CURRICULUM EDIT: this is the single place that renames a subject, main topic,
 // or subtopic. It is used immediately by administrators and on approval of a
 // teacher's requested structural change.
-function applyCatalogStructureChange({ syllabusKey, originalSubject, originalTopic, originalSubtopic, subject, topic, subtopic }) {
+function applyCatalogStructureChange({
+  syllabusKey,
+  originalSubject,
+  originalTopic,
+  originalSubtopic,
+  subject,
+  topic,
+  subtopic,
+}) {
   const syllabusTopics = learningCatalog[syllabusKey]?.topics;
   if (!syllabusTopics?.[originalSubject]) return false;
   const originalTopics = syllabusTopics[originalSubject];
   const originalSubtopics = originalTopics[originalTopic];
   // Validate every destination before changing anything, so an unsuccessful
   // approval cannot leave a partial subject/topic rename behind.
-  if (!originalSubtopics || (subject !== originalSubject && syllabusTopics[subject]) ||
-      (topic !== originalTopic && originalTopics[topic]) ||
-      (subtopic !== originalSubtopic && originalSubtopics[subtopic])) return false;
+  if (
+    !originalSubtopics ||
+    (subject !== originalSubject && syllabusTopics[subject]) ||
+    (topic !== originalTopic && originalTopics[topic]) ||
+    (subtopic !== originalSubtopic && originalSubtopics[subtopic])
+  )
+    return false;
   const names = JSON.parse(localStorage.getItem(CATALOG_NAMES_KEY)) || {};
   names.subjects = names.subjects || {};
   names.topics = names.topics || {};
@@ -1808,7 +2081,8 @@ function applyCatalogStructureChange({ syllabusKey, originalSubject, originalTop
   if (subtopic !== originalSubtopic) {
     activeTopic[subtopic] = activeTopic[originalSubtopic];
     delete activeTopic[originalSubtopic];
-    names.subtopics[`${syllabusKey}|${subject}|${topic}|${originalSubtopic}`] = subtopic;
+    names.subtopics[`${syllabusKey}|${subject}|${topic}|${originalSubtopic}`] =
+      subtopic;
   }
   localStorage.setItem(CATALOG_NAMES_KEY, JSON.stringify(names));
   return true;
@@ -1819,8 +2093,11 @@ function getLessonKey(subject, topic, subtopic) {
 }
 
 function getContentOverrides() {
-  try { return JSON.parse(localStorage.getItem(CONTENT_OVERRIDES_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(CONTENT_OVERRIDES_KEY)) || {};
+  } catch {
+    return {};
+  }
 }
 
 function getCatalogLessonKey(syllabusKey, subject, topic, subtopic) {
@@ -1829,12 +2106,19 @@ function getCatalogLessonKey(syllabusKey, subject, topic, subtopic) {
 
 function getLessonOverride(syllabusKey, subject, topic, subtopic) {
   const all = getContentOverrides();
-  return all[getCatalogLessonKey(syllabusKey, subject, topic, subtopic)] || all[getLessonKey(subject, topic, subtopic)] || {};
+  return (
+    all[getCatalogLessonKey(syllabusKey, subject, topic, subtopic)] ||
+    all[getLessonKey(subject, topic, subtopic)] ||
+    {}
+  );
 }
 
 function getLearningProgress() {
-  try { return JSON.parse(localStorage.getItem(LEARNING_PROGRESS_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(LEARNING_PROGRESS_KEY)) || {};
+  } catch {
+    return {};
+  }
 }
 
 function saveCompletedSubtopic(subject, topic, subtopic) {
@@ -1855,32 +2139,67 @@ function recordStudyActivity() {
       days.push(today);
       localStorage.setItem(STUDY_ACTIVITY_KEY, JSON.stringify(days));
     }
-  } catch { localStorage.setItem(STUDY_ACTIVITY_KEY, JSON.stringify([today])); }
+  } catch {
+    localStorage.setItem(STUDY_ACTIVITY_KEY, JSON.stringify([today]));
+  }
 }
 
 function saveQuizResult(scoreValue, total, subject) {
   try {
     const history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || [];
     const student = getStudentSession() || {};
-    history.push({ score: scoreValue, total, subject, studentName: student.name || "Student", studentEmail: student.email || "", department: student.department || getDepartmentKey() || "", className: student.className || getClassKey() || "", date: new Date().toISOString() });
+    history.push({
+      score: scoreValue,
+      total,
+      subject,
+      studentName: student.name || "Student",
+      studentEmail: student.email || "",
+      department: student.department || getDepartmentKey() || "",
+      className: student.className || getClassKey() || "",
+      date: new Date().toISOString(),
+    });
     localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(history));
     recordStudyActivity();
     awardXp(10 + Math.round((scoreValue / total) * 40));
-  } catch { /* The quiz remains usable if storage is unavailable. */ }
+  } catch {
+    /* The quiz remains usable if storage is unavailable. */
+  }
 }
 
 function saveLessonCheckResult(scoreValue, total, metadata) {
   try {
-    const history = JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || [];
+    const history =
+      JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || [];
     const student = getStudentSession() || {};
-    history.push({ score: scoreValue, total, subject: metadata.subject, topic: metadata.topic, subtopic: metadata.subtopic, syllabus: metadata.syllabus, studentName: student.name || "Student", studentEmail: student.email || "", department: student.department || getSyllabusDepartment(metadata.syllabus) || "", className: student.className || "", date: new Date().toISOString() });
-    localStorage.setItem(LESSON_CHECK_HISTORY_KEY, JSON.stringify(history.slice(-500)));
-  } catch { /* learning can continue without local analytics */ }
+    history.push({
+      score: scoreValue,
+      total,
+      subject: metadata.subject,
+      topic: metadata.topic,
+      subtopic: metadata.subtopic,
+      syllabus: metadata.syllabus,
+      studentName: student.name || "Student",
+      studentEmail: student.email || "",
+      department:
+        student.department || getSyllabusDepartment(metadata.syllabus) || "",
+      className: student.className || "",
+      date: new Date().toISOString(),
+    });
+    localStorage.setItem(
+      LESSON_CHECK_HISTORY_KEY,
+      JSON.stringify(history.slice(-500)),
+    );
+  } catch {
+    /* learning can continue without local analytics */
+  }
 }
 
 function getGamification() {
-  try { return JSON.parse(localStorage.getItem(GAMIFICATION_KEY)) || { xp: 0 }; }
-  catch { return { xp: 0 }; }
+  try {
+    return JSON.parse(localStorage.getItem(GAMIFICATION_KEY)) || { xp: 0 };
+  } catch {
+    return { xp: 0 };
+  }
 }
 
 function awardXp(points) {
@@ -1899,32 +2218,53 @@ function playFeedbackSound(type) {
     const context = new AudioContext();
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    const tones = { correct: 740, wrong: 180, xp: 880, achievement: 1047, notification: 660 };
+    const tones = {
+      correct: 740,
+      wrong: 180,
+      xp: 880,
+      achievement: 1047,
+      notification: 660,
+    };
     oscillator.frequency.value = tones[type] || 440;
     oscillator.type = type === "wrong" ? "sawtooth" : "sine";
     gain.gain.setValueAtTime(0.08, context.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
     oscillator.connect(gain).connect(context.destination);
-    oscillator.start(); oscillator.stop(context.currentTime + 0.2);
-  } catch { /* Audio is optional and may be blocked until the first interaction. */ }
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.2);
+  } catch {
+    /* Audio is optional and may be blocked until the first interaction. */
+  }
 }
 
-function getLevel(xp) { return Math.floor(xp / 200) + 1; }
+function getLevel(xp) {
+  return Math.floor(xp / 200) + 1;
+}
 
 function saveLessonResume(subject, topic, subtopic) {
-  localStorage.setItem(LESSON_RESUME_KEY, JSON.stringify({ subject, topic, subtopic }));
+  localStorage.setItem(
+    LESSON_RESUME_KEY,
+    JSON.stringify({ subject, topic, subtopic }),
+  );
 }
 
 function getLessonResume() {
-  try { return JSON.parse(localStorage.getItem(LESSON_RESUME_KEY)); }
-  catch { return null; }
+  try {
+    return JSON.parse(localStorage.getItem(LESSON_RESUME_KEY));
+  } catch {
+    return null;
+  }
 }
 
 function hasActiveSubscription() {
   try {
     const subscription = JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY));
-    return Boolean(subscription && new Date(subscription.expiresAt) > new Date());
-  } catch { return false; }
+    return Boolean(
+      subscription && new Date(subscription.expiresAt) > new Date(),
+    );
+  } catch {
+    return false;
+  }
 }
 
 function getAllLessons(syllabus) {
@@ -1936,9 +2276,14 @@ function getAllLessons(syllabus) {
 }
 
 function isFreeLesson(syllabus, subject, topic, subtopic) {
-  return getAllLessons(syllabus).findIndex((item) =>
-    item.subject === subject && item.topic === topic && item.subtopic === subtopic,
-  ) < FREE_LESSON_LIMIT;
+  return (
+    getAllLessons(syllabus).findIndex(
+      (item) =>
+        item.subject === subject &&
+        item.topic === topic &&
+        item.subtopic === subtopic,
+    ) < FREE_LESSON_LIMIT
+  );
 }
 
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
@@ -1948,47 +2293,156 @@ function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
   if (!isFreeLesson(syllabus, subject, topic, subtopic)) return false;
-  return index === 0 || Boolean(getLearningProgress()[getLessonKey(subject, topic, names[index - 1])]);
+  return (
+    index === 0 ||
+    Boolean(
+      getLearningProgress()[getLessonKey(subject, topic, names[index - 1])],
+    )
+  );
 }
 
 function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
   const override = getLessonOverride(syllabusKey, subject, topic, subtopic);
   const subjectExamples = {
-    Science: ["Observe a real object", "Name what happens", "Explain why it happens", "Compare two examples", "Use it in daily life"],
-    "English Language": ["Read the sentence", "Find the key word", "Choose the correct meaning", "Write your own sentence", "Check punctuation"],
-    Computing: ["Identify the computer part", "Say what it does", "Use it safely", "Follow the correct step", "Check your work"],
-    ICT: ["Choose the digital tool", "Follow the instructions", "Create a simple example", "Save your work safely", "Share responsibly"],
-    History: ["Read the event", "Identify who was involved", "Put events in order", "Explain what changed", "Connect it to Ghana today"],
-    French: ["Read the French phrase", "Say it aloud", "Match it to its meaning", "Use it in a short dialogue", "Practise with a friend"],
-    "Creative Arts": ["Look at the art idea", "Choose materials", "Make a simple design", "Add your own detail", "Talk about your work"],
-    "Physical Education": ["Prepare safely", "Practise the movement", "Keep good balance", "Follow the game rule", "Cool down afterwards"],
-    "Religious and Moral Education": ["Read the value", "Identify a kind action", "Think about a school example", "Choose the responsible response", "Explain why it matters"],
-    "Our World Our People": ["Look at the community example", "Name the people involved", "Explain the responsibility", "Choose a helpful action", "Connect it to Ghana"],
+    Science: [
+      "Observe a real object",
+      "Name what happens",
+      "Explain why it happens",
+      "Compare two examples",
+      "Use it in daily life",
+    ],
+    "English Language": [
+      "Read the sentence",
+      "Find the key word",
+      "Choose the correct meaning",
+      "Write your own sentence",
+      "Check punctuation",
+    ],
+    Computing: [
+      "Identify the computer part",
+      "Say what it does",
+      "Use it safely",
+      "Follow the correct step",
+      "Check your work",
+    ],
+    ICT: [
+      "Choose the digital tool",
+      "Follow the instructions",
+      "Create a simple example",
+      "Save your work safely",
+      "Share responsibly",
+    ],
+    History: [
+      "Read the event",
+      "Identify who was involved",
+      "Put events in order",
+      "Explain what changed",
+      "Connect it to Ghana today",
+    ],
+    French: [
+      "Read the French phrase",
+      "Say it aloud",
+      "Match it to its meaning",
+      "Use it in a short dialogue",
+      "Practise with a friend",
+    ],
+    "Creative Arts": [
+      "Look at the art idea",
+      "Choose materials",
+      "Make a simple design",
+      "Add your own detail",
+      "Talk about your work",
+    ],
+    "Physical Education": [
+      "Prepare safely",
+      "Practise the movement",
+      "Keep good balance",
+      "Follow the game rule",
+      "Cool down afterwards",
+    ],
+    "Religious and Moral Education": [
+      "Read the value",
+      "Identify a kind action",
+      "Think about a school example",
+      "Choose the responsible response",
+      "Explain why it matters",
+    ],
+    "Our World Our People": [
+      "Look at the community example",
+      "Name the people involved",
+      "Explain the responsibility",
+      "Choose a helpful action",
+      "Connect it to Ghana",
+    ],
   };
-  const additionExamples = subject === "Mathematics" && subtopic === "Addition"
-    ? [{ title: "Adding without regrouping", problem: "23 + 14", steps: ["Add ones: 3 + 4 = 7.", "Add tens: 2 + 1 = 3."], result: "23 + 14 = 37" }, { title: "Adding with regrouping", problem: "27 + 15", steps: ["Add ones: 7 + 5 = 12. Write 2 and carry 1 ten.", "Add tens: 2 + 1 + 1 carried ten = 4."], result: "27 + 15 = 42" }]
-    : (subjectExamples[subject] || ["Read the example", "Identify the main idea", "Use the idea", "Practise carefully", "Explain your answer"]).map((title, index) => ({
-      title: `${subtopic}: ${title}`,
-      problem: `Example ${index + 1}: Apply ${subtopic} while learning ${topic}.`,
-      steps: [`Use the lesson definition of ${subtopic}.`, title, "Check that your answer matches the topic."],
-      result: `This shows ${subtopic} in a ${subject} lesson.`,
-    }));
+  const additionExamples =
+    subject === "Mathematics" && subtopic === "Addition"
+      ? [
+          {
+            title: "Adding without regrouping",
+            problem: "23 + 14",
+            steps: ["Add ones: 3 + 4 = 7.", "Add tens: 2 + 1 = 3."],
+            result: "23 + 14 = 37",
+          },
+          {
+            title: "Adding with regrouping",
+            problem: "27 + 15",
+            steps: [
+              "Add ones: 7 + 5 = 12. Write 2 and carry 1 ten.",
+              "Add tens: 2 + 1 + 1 carried ten = 4.",
+            ],
+            result: "27 + 15 = 42",
+          },
+        ]
+      : (
+          subjectExamples[subject] || [
+            "Read the example",
+            "Identify the main idea",
+            "Use the idea",
+            "Practise carefully",
+            "Explain your answer",
+          ]
+        ).map((title, index) => ({
+          title: `${subtopic}: ${title}`,
+          problem: `Example ${index + 1}: Apply ${subtopic} while learning ${topic}.`,
+          steps: [
+            `Use the lesson definition of ${subtopic}.`,
+            title,
+            "Check that your answer matches the topic.",
+          ],
+          result: `This shows ${subtopic} in a ${subject} lesson.`,
+        }));
   const examples = lesson.examples || additionExamples;
   while (examples.length < 5) {
     const number = examples.length + 1;
-    examples.push({ title: `Example ${number}`, problem: `Practise ${subtopic} with another simple situation.`, steps: ["Use the lesson idea.", "Work carefully.", "Check your answer."], result: `You are building your ${subtopic} skill.` });
+    examples.push({
+      title: `Example ${number}`,
+      problem: `Practise ${subtopic} with another simple situation.`,
+      steps: ["Use the lesson idea.", "Work carefully.", "Check your answer."],
+      result: `You are building your ${subtopic} skill.`,
+    });
   }
   return {
     examples: override.examples || examples,
     questions: override.questions || lesson.questions || [],
-    exercise: lesson.exercise || { question: `In one short sentence, explain what you learned about ${subtopic}.`, minLength: 3, hint: "Use your own words, then submit your answer to continue." },
-    videoUrl: override.videoUrl || lesson.videoUrl || LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] || "",
+    exercise: lesson.exercise || {
+      question: `In one short sentence, explain what you learned about ${subtopic}.`,
+      minLength: 3,
+      hint: "Use your own words, then submit your answer to continue.",
+    },
+    videoUrl:
+      override.videoUrl ||
+      lesson.videoUrl ||
+      LESSON_VIDEO_URLS[getLessonKey(subject, topic, subtopic)] ||
+      "",
   };
 }
 
 function getYouTubeEmbedUrl(url) {
   if (!url) return "";
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/);
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/,
+  );
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
@@ -1999,48 +2453,128 @@ function getYouTubeEmbedUrl(url) {
 // - Edit `questions` inside a specific lesson above to replace its five checks.
 //   Administrator/teacher-authored five-question sets are never rewritten here.
 const LEVEL_QUESTION_TEMPLATES = {
-  basic1: ["Which picture or object shows", "Can you point to", "Choose the simple answer for", "What is one thing you remember about"],
-  basic2: ["Which answer matches", "Choose the best example of", "What happens when you use", "Show that you understand"],
-  basic3: ["Choose the correct idea about", "Use a short example to think about", "Which step helps with", "What did you learn about"],
-  basic4: ["Which example correctly uses", "Apply the lesson to", "Choose the best explanation of", "Check your understanding of"],
-  basic5: ["Apply what you learned about", "Which answer best explains", "Use an example to show", "Choose the correct method for"],
-  basic6: ["Which solution best applies", "Explain the main idea in", "Use the lesson to solve", "Which reasoning is correct for"],
-  jhs1: ["Choose the best explanation of", "Apply the concept in", "Which evidence supports", "What is the correct method for"],
-  jhs2: ["Analyse this idea about", "Which answer best applies", "Choose the strongest explanation for", "How would you solve a task on"],
-  jhs3: ["Evaluate the correct approach to", "Which conclusion follows from", "Apply your knowledge of", "Choose the most accurate explanation of"],
-  shs1: ["Apply the concept of", "Which explanation is most accurate for", "Analyse a problem involving", "Choose the best supporting reason for"],
-  shs2: ["Evaluate this application of", "Which method is most suitable for", "Analyse the relationship in", "Choose the strongest conclusion about"],
-  shs3: ["Which advanced application best shows", "Justify the best solution for", "Analyse and evaluate", "Choose the most defensible answer about"],
+  basic1: [
+    "Which picture or object shows",
+    "Can you point to",
+    "Choose the simple answer for",
+    "What is one thing you remember about",
+  ],
+  basic2: [
+    "Which answer matches",
+    "Choose the best example of",
+    "What happens when you use",
+    "Show that you understand",
+  ],
+  basic3: [
+    "Choose the correct idea about",
+    "Use a short example to think about",
+    "Which step helps with",
+    "What did you learn about",
+  ],
+  basic4: [
+    "Which example correctly uses",
+    "Apply the lesson to",
+    "Choose the best explanation of",
+    "Check your understanding of",
+  ],
+  basic5: [
+    "Apply what you learned about",
+    "Which answer best explains",
+    "Use an example to show",
+    "Choose the correct method for",
+  ],
+  basic6: [
+    "Which solution best applies",
+    "Explain the main idea in",
+    "Use the lesson to solve",
+    "Which reasoning is correct for",
+  ],
+  jhs1: [
+    "Choose the best explanation of",
+    "Apply the concept in",
+    "Which evidence supports",
+    "What is the correct method for",
+  ],
+  jhs2: [
+    "Analyse this idea about",
+    "Which answer best applies",
+    "Choose the strongest explanation for",
+    "How would you solve a task on",
+  ],
+  jhs3: [
+    "Evaluate the correct approach to",
+    "Which conclusion follows from",
+    "Apply your knowledge of",
+    "Choose the most accurate explanation of",
+  ],
+  shs1: [
+    "Apply the concept of",
+    "Which explanation is most accurate for",
+    "Analyse a problem involving",
+    "Choose the best supporting reason for",
+  ],
+  shs2: [
+    "Evaluate this application of",
+    "Which method is most suitable for",
+    "Analyse the relationship in",
+    "Choose the strongest conclusion about",
+  ],
+  shs3: [
+    "Which advanced application best shows",
+    "Justify the best solution for",
+    "Analyse and evaluate",
+    "Choose the most defensible answer about",
+  ],
 };
 
 function getLearnerClassKey(context = {}) {
   // LEARNER CLASS: learning.html carries `?class=basic1` (or jhs/shs) from
   // the department picker. Use it when the demo login has no stored class.
-  const className = context.className || getStudentSession()?.className || getClassKey();
+  const className =
+    context.className || getStudentSession()?.className || getClassKey();
   return String(className).toLowerCase().replace(/\s+/g, "");
 }
 
-function getFiveQuizQuestions(lesson, subtopic, configuredQuestions, context = {}) {
+function getFiveQuizQuestions(
+  lesson,
+  subtopic,
+  configuredQuestions,
+  context = {},
+) {
   const classKey = getLearnerClassKey(context);
-  const templates = LEVEL_QUESTION_TEMPLATES[classKey] || LEVEL_QUESTION_TEMPLATES.basic4;
+  const templates =
+    LEVEL_QUESTION_TEMPLATES[classKey] || LEVEL_QUESTION_TEMPLATES.basic4;
   const subject = context.subject ? ` in ${context.subject}` : "";
-  const sourceQuestions = configuredQuestions || lesson._guidedQuestions || (lesson.generated ? [] : lesson.questions) || [];
+  const sourceQuestions =
+    configuredQuestions ||
+    lesson._guidedQuestions ||
+    (lesson.generated ? [] : lesson.questions) ||
+    [];
   // CLASS-TAILORED CHECKS: retain each lesson's correct answer, but phrase its
   // questions at the learner's level. This prevents Basic 1 and Basic 6 from
   // receiving the same question wording for the same subject.
   const questions = lesson._hasManagedQuestions
     ? [...sourceQuestions]
     : sourceQuestions.map(([question, answers, correct], index) => [
-      `${templates[index % templates.length]} ${subtopic}${subject}: ${question}`,
-      answers,
-      correct,
-    ]);
-  const fillers = [...templates, `For a ${classKey || "learner"}, what is the best final check for`].map((prompt) => [
+        `${templates[index % templates.length]} ${subtopic}${subject}: ${question}`,
+        answers,
+        correct,
+      ]);
+  const fillers = [
+    ...templates,
+    `For a ${classKey || "learner"}, what is the best final check for`,
+  ].map((prompt) => [
     `${prompt} ${subtopic}${subject}?`,
-    ["Use the lesson idea carefully", "Skip the lesson", "Choose without thinking", "Stop practising"],
+    [
+      "Use the lesson idea carefully",
+      "Skip the lesson",
+      "Choose without thinking",
+      "Stop practising",
+    ],
     0,
   ]);
-  while (questions.length < 5) questions.push(fillers[questions.length % fillers.length]);
+  while (questions.length < 5)
+    questions.push(fillers[questions.length % fillers.length]);
   return questions.slice(0, 5);
 }
 
@@ -2055,38 +2589,78 @@ function getTenExerciseQuestions(lesson, subtopic, context = {}) {
 function showAnswerPopup(correct, answer, onClose) {
   let popup = document.getElementById("answer-mark-modal");
   if (!popup) {
-    document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="answer-mark-modal"><div class="modal-card"><h2 id="answer-mark-title"></h2><p id="answer-mark-copy"></p><button class="btn" id="answer-mark-close">Continue</button></div></div>');
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<div class="understanding-modal" id="answer-mark-modal"><div class="modal-card"><h2 id="answer-mark-title"></h2><p id="answer-mark-copy"></p><button class="btn" id="answer-mark-close">Continue</button></div></div>',
+    );
     // MODAL NEXT-LESSON FIX: refresh the reference after creating the modal.
     // The Continue button can now call its stored callback and open the next lesson.
     popup = document.getElementById("answer-mark-modal");
-    document.getElementById("answer-mark-close").addEventListener("click", () => {
-      popup.classList.remove("visible");
-      popup._onClose?.();
-    });
+    document
+      .getElementById("answer-mark-close")
+      .addEventListener("click", () => {
+        popup.classList.remove("visible");
+        popup._onClose?.();
+      });
   }
   popup._onClose = onClose;
-  document.getElementById("answer-mark-title").textContent = correct ? "Correct!" : "Not quite";
-  document.getElementById("answer-mark-copy").textContent = correct ? "Great work. Your answer has been marked correct." : `The correct answer is: ${answer}. Try again.`;
+  document.getElementById("answer-mark-title").textContent = correct
+    ? "Correct!"
+    : "Not quite";
+  document.getElementById("answer-mark-copy").textContent = correct
+    ? "Great work. Your answer has been marked correct."
+    : `The correct answer is: ${answer}. Try again.`;
   playFeedbackSound(correct ? "correct" : "wrong");
   popup.classList.add("visible");
 }
 
 function addSiteNotification(message, audience = "students") {
   try {
-    const notifications = JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
-    notifications.unshift({ message, audience, createdAt: new Date().toISOString() });
-    localStorage.setItem(SITE_NOTIFICATIONS_KEY, JSON.stringify(notifications.slice(0, 50)));
-  } catch { /* local notifications are optional */ }
+    const notifications =
+      JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
+    notifications.unshift({
+      message,
+      audience,
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem(
+      SITE_NOTIFICATIONS_KEY,
+      JSON.stringify(notifications.slice(0, 50)),
+    );
+  } catch {
+    /* local notifications are optional */
+  }
+}
+
+function addStaffPost(post) {
+  try {
+    const posts = JSON.parse(localStorage.getItem(STAFF_POSTS_KEY) || "[]");
+    posts.unshift({
+      ...post,
+      createdAt: post.createdAt || new Date().toISOString(),
+    });
+    localStorage.setItem(STAFF_POSTS_KEY, JSON.stringify(posts.slice(0, 30)));
+  } catch {
+    /* staff posts are local demo content */
+  }
 }
 
 function showSiteNotifications(user) {
   try {
-    const notifications = JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
-    const subscribed = JSON.parse(localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]");
-    const canReceiveStudentPosts = user.role !== "student" || subscribed.includes((user.email || "").toLowerCase());
+    const notifications =
+      JSON.parse(localStorage.getItem(SITE_NOTIFICATIONS_KEY)) || [];
+    const subscribed = JSON.parse(
+      localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]",
+    );
+    const canReceiveStudentPosts =
+      user.role !== "student" ||
+      subscribed.includes((user.email || "").toLowerCase());
     if (!canReceiveStudentPosts) return;
-    const audience = user.role === "administrator" ? "administrator" : "students";
-    const latest = notifications.find((item) => item.audience === audience || item.audience === "all");
+    const audience =
+      user.role === "administrator" ? "administrator" : "students";
+    const latest = notifications.find(
+      (item) => item.audience === audience || item.audience === "all",
+    );
     if (!latest) return;
     const seenKey = `ycohdeSeenNotification:${user.email || user.name}`;
     if (localStorage.getItem(seenKey) === latest.createdAt) return;
@@ -2094,20 +2668,57 @@ function showSiteNotifications(user) {
     const toast = document.createElement("div");
     toast.className = "site-notification";
     toast.innerHTML = `<strong>Y_Cohde update</strong><span>${latest.message}</span><button type="button" aria-label="Close notification">×</button>`;
-    toast.querySelector("button").addEventListener("click", () => toast.remove());
+    toast
+      .querySelector("button")
+      .addEventListener("click", () => toast.remove());
     document.body.append(toast);
     playFeedbackSound("notification");
-    if ("Notification" in window && Notification.permission === "granted") new Notification("Y_Cohde update", { body: latest.message });
-  } catch { /* browser notifications are optional */ }
+    if ("Notification" in window && Notification.permission === "granted")
+      new Notification("Y_Cohde update", { body: latest.message });
+  } catch {
+    /* browser notifications are optional */
+  }
 }
 
 addThirtyExtraSubtopics();
 createJhsCatalog();
-createShsCourseCatalog("general-arts", ["Core Mathematics", "English Language", "Social Studies", "Economics", "Government", "ICT"]);
-createShsCourseCatalog("general-science", ["Core Mathematics", "English Language", "Integrated Science", "Social Studies", "ICT"]);
-createShsCourseCatalog("business", ["Core Mathematics", "English Language", "Economics", "Business Management", "Accounting", "ICT"]);
-createShsCourseCatalog("home-economics", ["Core Mathematics", "English Language", "Food and Nutrition", "Management in Living", "ICT"]);
-createShsCourseCatalog("visual-arts", ["Core Mathematics", "English Language", "General Knowledge in Art", "Graphic Design", "ICT"]);
+createShsCourseCatalog("general-arts", [
+  "Core Mathematics",
+  "English Language",
+  "Social Studies",
+  "Economics",
+  "Government",
+  "ICT",
+]);
+createShsCourseCatalog("general-science", [
+  "Core Mathematics",
+  "English Language",
+  "Integrated Science",
+  "Social Studies",
+  "ICT",
+]);
+createShsCourseCatalog("business", [
+  "Core Mathematics",
+  "English Language",
+  "Economics",
+  "Business Management",
+  "Accounting",
+  "ICT",
+]);
+createShsCourseCatalog("home-economics", [
+  "Core Mathematics",
+  "English Language",
+  "Food and Nutrition",
+  "Management in Living",
+  "ICT",
+]);
+createShsCourseCatalog("visual-arts", [
+  "Core Mathematics",
+  "English Language",
+  "General Knowledge in Art",
+  "Graphic Design",
+  "ICT",
+]);
 applySavedCatalogNames();
 
 let lessonTimerId = null;
@@ -2140,8 +2751,9 @@ function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
   const studentDepartment = getStudentSession()?.department;
-  const visibleCatalog = Object.entries(learningCatalog).filter(([key]) =>
-    !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
+  const visibleCatalog = Object.entries(learningCatalog).filter(
+    ([key]) =>
+      !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
   );
   explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(
     Object.fromEntries(visibleCatalog),
@@ -2155,7 +2767,9 @@ function setupLearningExplorer() {
 
 function getStudyStreak() {
   try {
-    const days = new Set(JSON.parse(localStorage.getItem(STUDY_ACTIVITY_KEY)) || []);
+    const days = new Set(
+      JSON.parse(localStorage.getItem(STUDY_ACTIVITY_KEY)) || [],
+    );
     let streak = 0;
     const date = new Date();
     while (days.has(date.toISOString().slice(0, 10))) {
@@ -2163,31 +2777,57 @@ function getStudyStreak() {
       date.setDate(date.getDate() - 1);
     }
     return streak;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 }
 
 function setupStudentDashboard() {
   const dashboard = document.getElementById("student-dashboard");
   if (!dashboard) return;
   const student = getStudentSession() || { name: "Student" };
-  const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "ST";
+  const initials =
+    student.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "ST";
   const completed = Object.keys(getLearningProgress()).length;
   const allLessons = getAllLessons(learningCatalog.ges).length;
   let history = [];
-  try { history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || []; } catch { /* empty */ }
+  try {
+    history = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || [];
+  } catch {
+    /* empty */
+  }
   const average = history.length
-    ? Math.round(history.reduce((sum, item) => sum + (item.score / item.total) * 100, 0) / history.length)
+    ? Math.round(
+        history.reduce(
+          (sum, item) => sum + (item.score / item.total) * 100,
+          0,
+        ) / history.length,
+      )
     : 0;
   const streak = getStudyStreak();
   const game = getGamification();
   const level = getLevel(game.xp || 0);
   const progress = Math.min(100, Math.round((completed / allLessons) * 100));
   const achievements = [
-    completed >= 1 ? "🎓 First lesson completed" : "🔒 Complete your first lesson",
-    history.length >= 1 ? "🧠 First quiz completed" : "🔒 Complete your first quiz",
+    completed >= 1
+      ? "🎓 First lesson completed"
+      : "🔒 Complete your first lesson",
+    history.length >= 1
+      ? "🧠 First quiz completed"
+      : "🔒 Complete your first quiz",
     streak >= 3 ? "🔥 3-day study streak" : "🔒 Build a 3-day streak",
-    average >= 80 && history.length ? "⭐ Quiz star: 80% average" : "🔒 Reach an 80% quiz average",
-    (game.xp || 0) >= 200 ? "🏅 Rising learner: Level 2" : "🔒 Earn 200 XP for Level 2",
+    average >= 80 && history.length
+      ? "⭐ Quiz star: 80% average"
+      : "🔒 Reach an 80% quiz average",
+    (game.xp || 0) >= 200
+      ? "🏅 Rising learner: Level 2"
+      : "🔒 Earn 200 XP for Level 2",
   ];
   dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><div class="profile-pill dashboard-profile"><span>${initials}</span><div><strong>${student.name}</strong><small>Student progress</small></div></div></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="gamification-card"><strong>Level ${level} · ${game.xp || 0} XP</strong><span>${200 - ((game.xp || 0) % 200)} XP to Level ${level + 1}</span></section><section class="achievement-list"><h3>Badges & achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section><a class="btn dashboard-continue" href="learning.html?syllabus=ges">Continue learning</a></section>`;
   setupSidebarProgressCard();
@@ -2197,12 +2837,22 @@ function setupSidebarProgressCard() {
   const sidebar = document.querySelector(".sidebar");
   const student = getStudentSession();
   if (!sidebar || !student) return;
-  const initials = student.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "ST";
+  const initials =
+    student.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "ST";
   // STUDENT-ONLY SIDEBAR: remove an old card and stop for teacher/admin views.
   sidebar.querySelector(".sidebar-progress-card")?.remove();
   if (student.role !== "student") return;
   const completed = Object.keys(getLearningProgress()).length;
-  const progress = Math.min(100, Math.round((completed / getAllLessons(learningCatalog.ges).length) * 100));
+  const progress = Math.min(
+    100,
+    Math.round((completed / getAllLessons(learningCatalog.ges).length) * 100),
+  );
   const streak = getStudyStreak();
   const game = getGamification();
   const sideCard = document.createElement("section");
@@ -2266,7 +2916,10 @@ function setupLearningSpace() {
   const syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
   const studentDepartment = getStudentSession()?.department;
-  if (studentDepartment && getSyllabusDepartment(syllabusKey) !== studentDepartment) {
+  if (
+    studentDepartment &&
+    getSyllabusDepartment(syllabusKey) !== studentDepartment
+  ) {
     window.location.replace("department.html");
     return;
   }
@@ -2290,13 +2943,19 @@ function setupLearningSpace() {
                 `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(
                   subtopics,
                 )
-                  .map(
-                    (subtopic) => {
-                      const unlocked = isSubtopicUnlocked(syllabus, subject, topic, subtopic);
-                      const completed = getLearningProgress()[getLessonKey(subject, topic, subtopic)];
-                      return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
-                    },
-                  )
+                  .map((subtopic) => {
+                    const unlocked = isSubtopicUnlocked(
+                      syllabus,
+                      subject,
+                      topic,
+                      subtopic,
+                    );
+                    const completed =
+                      getLearningProgress()[
+                        getLessonKey(subject, topic, subtopic)
+                      ];
+                    return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
+                  })
                   .join("")}</div></details>`,
             )
             .join("")}</article>`,
@@ -2315,26 +2974,37 @@ function setupLearningSpace() {
       );
   };
   const renderExercise = () => {
-    const exerciseQuestions = getTenExerciseQuestions(activeLesson, activeLessonMeta.subtopic, activeLessonMeta);
+    const exerciseQuestions = getTenExerciseQuestions(
+      activeLesson,
+      activeLessonMeta.subtopic,
+      activeLessonMeta,
+    );
     let questionIndex = 0;
     const showExerciseQuestion = () => {
       const current = exerciseQuestions[questionIndex];
       space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Exercise · Question ${questionIndex + 1} of 10</p><h2>Apply what you learned</h2><section class="exercise-box"><h3>✎ ${current.question}</h3><div class="exercise-input-group"><input class="exercise-input" id="exercise-answer" type="text" autocomplete="off" placeholder="Type your answer here" /><button class="small-btn" id="check-exercise">Check answer</button></div><p class="hint-text">Type the exact answer from the lesson or quiz.</p></section></article>`;
-    const input = document.getElementById("exercise-answer");
-    const checkExercise = () => {
-      const answer = input.value.trim();
-      const correct = answer.toLowerCase() === current.answer.toLowerCase();
-      showAnswerPopup(correct, current.answer, () => {
-        if (!correct) { input.focus(); return; }
-        questionIndex++;
-        if (questionIndex < exerciseQuestions.length) showExerciseQuestion();
-        // NEXT LESSON: after the last marked exercise answer, go directly to
-        // the following subtopic instead of leaving the learner in a modal.
-        else continueAfterExercise();
+      const input = document.getElementById("exercise-answer");
+      const checkExercise = () => {
+        const answer = input.value.trim();
+        const correct = answer.toLowerCase() === current.answer.toLowerCase();
+        showAnswerPopup(correct, current.answer, () => {
+          if (!correct) {
+            input.focus();
+            return;
+          }
+          questionIndex++;
+          if (questionIndex < exerciseQuestions.length) showExerciseQuestion();
+          // NEXT LESSON: after the last marked exercise answer, go directly to
+          // the following subtopic instead of leaving the learner in a modal.
+          else continueAfterExercise();
+        });
+      };
+      document
+        .getElementById("check-exercise")
+        .addEventListener("click", checkExercise);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") checkExercise();
       });
-    };
-    document.getElementById("check-exercise").addEventListener("click", checkExercise);
-    input.addEventListener("keydown", (event) => { if (event.key === "Enter") checkExercise(); });
     };
     showExerciseQuestion();
   };
@@ -2343,20 +3013,36 @@ function setupLearningSpace() {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
-    const contentOverride = getLessonOverride(syllabusKey, subject, topic, subtopic);
+    const contentOverride = getLessonOverride(
+      syllabusKey,
+      subject,
+      topic,
+      subtopic,
+    );
     const lessonImage = contentOverride.imageMediaId
       ? `<div id="uploaded-lesson-image" class="lesson-media-placeholder"></div>`
       : activeLesson.image
-      ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
-      : "";
-    const extras = getLessonExtras(syllabusKey, subject, topic, subtopic, activeLesson);
-    const examples = extras.examples.map((example) => `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`).join("");
+        ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
+        : "";
+    const extras = getLessonExtras(
+      syllabusKey,
+      subject,
+      topic,
+      subtopic,
+      activeLesson,
+    );
+    const examples = extras.examples
+      .map(
+        (example) =>
+          `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`,
+      )
+      .join("");
     const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
     const video = contentOverride.videoMediaId
       ? `<div class="lesson-video-box" id="lesson-video-content"><h3>▶ Lesson video</h3><div class="video-wrapper lesson-media-placeholder"></div></div>`
       : videoUrl
-      ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
-      : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
+        ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
+        : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section><button class="btn" id="finish-lesson">I understand this lesson</button></article>`;
     activeLesson._guidedVideo = video;
     activeLesson._guidedQuestions = extras.questions;
@@ -2374,41 +3060,65 @@ function setupLearningSpace() {
       document.getElementById("understanding-modal").classList.add("visible");
     });
     if (contentOverride.imageMediaId) {
-      getLessonMedia(contentOverride.imageMediaId).then((file) => {
-        const holder = document.getElementById("uploaded-lesson-image");
-        if (!file || !holder) return;
-        const image = document.createElement("img");
-        image.className = "lesson-image";
-        image.alt = `Uploaded illustration for ${subtopic}`;
-        image.src = URL.createObjectURL(file);
-        holder.replaceWith(image);
-      }).catch(() => {});
+      getLessonMedia(contentOverride.imageMediaId)
+        .then((file) => {
+          const holder = document.getElementById("uploaded-lesson-image");
+          if (!file || !holder) return;
+          const image = document.createElement("img");
+          image.className = "lesson-image";
+          image.alt = `Uploaded illustration for ${subtopic}`;
+          image.src = URL.createObjectURL(file);
+          holder.replaceWith(image);
+        })
+        .catch(() => {});
     }
     if (contentOverride.videoMediaId) {
-      getLessonMedia(contentOverride.videoMediaId).then((file) => {
-        const holder = document.querySelector("#lesson-video-content .lesson-media-placeholder");
-        if (!file || !holder) return;
-        const player = document.createElement("video");
-        player.controls = true;
-        player.src = URL.createObjectURL(file);
-        player.textContent = "Your browser cannot play this video.";
-        holder.replaceWith(player);
-        const container = document.getElementById("lesson-video-content");
-        if (container) activeLesson._guidedVideo = container.outerHTML;
-      }).catch(() => {});
+      getLessonMedia(contentOverride.videoMediaId)
+        .then((file) => {
+          const holder = document.querySelector(
+            "#lesson-video-content .lesson-media-placeholder",
+          );
+          if (!file || !holder) return;
+          const player = document.createElement("video");
+          player.controls = true;
+          player.src = URL.createObjectURL(file);
+          player.textContent = "Your browser cannot play this video.";
+          holder.replaceWith(player);
+          const container = document.getElementById("lesson-video-content");
+          if (container) activeLesson._guidedVideo = container.outerHTML;
+        })
+        .catch(() => {});
     }
   };
   const modal = document.getElementById("understanding-modal");
   if (!document.getElementById("lesson-video-modal")) {
-    document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="lesson-video-modal" aria-hidden="true"><div class="modal-card lesson-video-modal-card"><h2>Watch the lesson video</h2><div id="guided-video-content"></div><div class="modal-actions"><button class="btn" id="start-topic-check">Continue to 5 questions</button></div></div></div>');
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<div class="understanding-modal" id="lesson-video-modal" aria-hidden="true"><div class="modal-card lesson-video-modal-card"><h2>Watch the lesson video</h2><div id="guided-video-content"></div><div class="modal-actions"><button class="btn" id="start-topic-check">Continue to 5 questions</button></div></div></div>',
+    );
   }
   if (!document.getElementById("enjoyment-modal")) {
-    document.body.insertAdjacentHTML("beforeend", `<div class="understanding-modal" id="enjoyment-modal" aria-hidden="true"><div class="modal-card"><h2>Did you enjoy the lesson?</h2><p>Your feedback helps us make Y_Cohde better for students.</p><div class="modal-actions"><button class="btn" id="enjoyed-yes">Yes, I enjoyed it</button><button class="soft-btn" id="enjoyed-no">Not yet</button></div></div></div>`);
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div class="understanding-modal" id="enjoyment-modal" aria-hidden="true"><div class="modal-card"><h2>Did you enjoy the lesson?</h2><p>Your feedback helps us make Y_Cohde better for students.</p><div class="modal-actions"><button class="btn" id="enjoyed-yes">Yes, I enjoyed it</button><button class="soft-btn" id="enjoyed-no">Not yet</button></div></div></div>`,
+    );
   }
   const continueAfterExercise = () => {
-    const nextLesson = getNextLessonTarget(syllabus, activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
-    saveCompletedSubtopic(activeLessonMeta.subject, activeLessonMeta.topic, activeLessonMeta.subtopic);
-    if (!nextLesson) { renderTopics(); return; }
+    const nextLesson = getNextLessonTarget(
+      syllabus,
+      activeLessonMeta.subject,
+      activeLessonMeta.topic,
+      activeLessonMeta.subtopic,
+    );
+    saveCompletedSubtopic(
+      activeLessonMeta.subject,
+      activeLessonMeta.topic,
+      activeLessonMeta.subtopic,
+    );
+    if (!nextLesson) {
+      renderTopics();
+      return;
+    }
     // NEXT LESSON: completion always opens the next subtopic. The learner has
     // already completed the prerequisite, so the modal must never block here.
     renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
@@ -2424,11 +3134,18 @@ function setupLearningSpace() {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
     const videoModal = document.getElementById("lesson-video-modal");
-    document.getElementById("guided-video-content").innerHTML = activeLesson?._guidedVideo || '<p class="review-note">No video has been added yet. You can continue to the learning check.</p>';
+    document.getElementById("guided-video-content").innerHTML =
+      activeLesson?._guidedVideo ||
+      '<p class="review-note">No video has been added yet. You can continue to the learning check.</p>';
     videoModal.classList.add("visible");
     document.getElementById("start-topic-check").onclick = () => {
       videoModal.classList.remove("visible");
-      renderTopicQuiz(activeLesson, activeLessonMeta.subtopic, renderExercise, activeLessonMeta);
+      renderTopicQuiz(
+        activeLesson,
+        activeLessonMeta.subtopic,
+        renderExercise,
+        activeLessonMeta,
+      );
     };
   });
   document.getElementById("understood-no").addEventListener("click", () => {
@@ -2441,7 +3158,12 @@ function setupLearningSpace() {
       );
   });
   const savedLesson = getLessonResume();
-  if (savedLesson && syllabus.topics[savedLesson.subject]?.[savedLesson.topic]?.[savedLesson.subtopic]) {
+  if (
+    savedLesson &&
+    syllabus.topics[savedLesson.subject]?.[savedLesson.topic]?.[
+      savedLesson.subtopic
+    ]
+  ) {
     renderLesson(savedLesson.subject, savedLesson.topic, savedLesson.subtopic);
   } else renderTopics();
 }
@@ -2450,7 +3172,12 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
-  const quizQuestions = getFiveQuizQuestions(lesson, subtopic, undefined, metadata);
+  const quizQuestions = getFiveQuizQuestions(
+    lesson,
+    subtopic,
+    undefined,
+    metadata,
+  );
   let index = 0,
     score = 0;
   const showQuestion = () => {
@@ -2477,7 +3204,12 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
     );
   };
   const finishQuiz = () => {
-    if (metadata.subject) saveLessonCheckResult(score, quizQuestions.length, { ...metadata, syllabus: new URLSearchParams(window.location.search).get("syllabus") || "ges" });
+    if (metadata.subject)
+      saveLessonCheckResult(score, quizQuestions.length, {
+        ...metadata,
+        syllabus:
+          new URLSearchParams(window.location.search).get("syllabus") || "ges",
+      });
     space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>${score === 5 ? "Excellent work—you understood this topic well." : "Good effort. Now complete the exercise to show what you know."}</p><button class="btn" id="choose-another-topic">Go to exercise</button></article>`;
     document
       .getElementById("choose-another-topic")
@@ -5229,6 +5961,31 @@ function setupCommunityPage() {
   const communityList = document.getElementById("community-list");
   if (!communityList) return;
 
+  const staffPostsSection = document.createElement("section");
+  staffPostsSection.className = "staff-posts-section page-panel";
+  staffPostsSection.innerHTML =
+    '<div class="panel-header"><p class="eyebrow">Staff updates</p><h2>Posts from your school team</h2></div><div class="staff-post-list"></div>';
+  communityList
+    .closest(".page-panel")
+    ?.insertAdjacentElement("beforebegin", staffPostsSection);
+  const staffPostList = staffPostsSection.querySelector(".staff-post-list");
+  let staffPosts = [];
+  try {
+    staffPosts = JSON.parse(localStorage.getItem(STAFF_POSTS_KEY) || "[]");
+  } catch {
+    /* empty */
+  }
+  staffPostList.innerHTML = staffPosts.length
+    ? staffPosts
+        .map((post) => {
+          const isAdministrator = post.role === "administrator";
+          const roleLabel = isAdministrator ? "Administrator" : "Teacher";
+          const photo = post.profilePicture || "picture in coat.jpeg";
+          return `<article class="staff-post"><img class="staff-post-avatar" src="${escapeCommunityText(photo)}" alt="Profile picture of ${escapeCommunityText(post.author || roleLabel)}" onerror="this.src='picture in coat.jpeg'"><div class="staff-post-content"><div class="staff-post-heading"><div><h3>${escapeCommunityText(post.author || roleLabel)}</h3><p>${roleLabel} · ${escapeCommunityText(post.school || "Y_Cohde Academy")}</p></div><small>${new Date(post.createdAt).toLocaleDateString()}</small></div><p>${escapeCommunityText(post.text || "Shared a new learning update.")}</p></div></article>`;
+        })
+        .join("")
+    : '<p class="empty-state">No teacher or administrator posts yet.</p>';
+
   const communityHighlights = [
     {
       name: "Ama K.",
@@ -5291,11 +6048,14 @@ function setupEngagementFeatures() {
       const emailInput = document.getElementById("newsletter-email");
       if (emailInput && emailInput.value.trim()) {
         const email = emailInput.value.trim().toLowerCase();
-        const subscribers = JSON.parse(localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]");
+        const subscribers = JSON.parse(
+          localStorage.getItem(PUSH_SUBSCRIBERS_KEY) || "[]",
+        );
         if (!subscribers.includes(email)) subscribers.push(email);
         localStorage.setItem(PUSH_SUBSCRIBERS_KEY, JSON.stringify(subscribers));
         newsletterStatus.textContent = `Thanks! ${email} will receive website updates on this device.`;
-        if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+        if ("Notification" in window && Notification.permission === "default")
+          Notification.requestPermission();
         emailInput.value = "";
       }
     });
@@ -5447,30 +6207,68 @@ function getContentSyllabusKey(department, className) {
   return `shs-${className || "general-arts"}`;
 }
 
-function populateContentPicker(departmentSelect, classSelect, subjectSelect, topicSelect, subtopicSelect) {
-  const departmentOptions = [{ key: "basic", label: "Basic" }, { key: "jhs", label: "JHS" }, { key: "shs", label: "SHS" }];
-  const shsCourses = [{ key: "general-arts", label: "General Arts" }, { key: "general-science", label: "General Science" }, { key: "business", label: "Business" }, { key: "home-economics", label: "Home Economics" }, { key: "visual-arts", label: "Visual Arts" }];
-  const classOptions = { basic: ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6"], jhs: ["JHS 1", "JHS 2", "JHS 3"] };
-  departmentSelect.innerHTML = departmentOptions.map(({ key, label }) => `<option value="${key}">${label}</option>`).join("");
+function populateContentPicker(
+  departmentSelect,
+  classSelect,
+  subjectSelect,
+  topicSelect,
+  subtopicSelect,
+) {
+  const departmentOptions = [
+    { key: "basic", label: "Basic" },
+    { key: "jhs", label: "JHS" },
+    { key: "shs", label: "SHS" },
+  ];
+  const shsCourses = [
+    { key: "general-arts", label: "General Arts" },
+    { key: "general-science", label: "General Science" },
+    { key: "business", label: "Business" },
+    { key: "home-economics", label: "Home Economics" },
+    { key: "visual-arts", label: "Visual Arts" },
+  ];
+  const classOptions = {
+    basic: ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6"],
+    jhs: ["JHS 1", "JHS 2", "JHS 3"],
+  };
+  departmentSelect.innerHTML = departmentOptions
+    .map(({ key, label }) => `<option value="${key}">${label}</option>`)
+    .join("");
   const refreshClasses = () => {
     const department = departmentSelect.value;
-    const choices = department === "shs" ? shsCourses.map((item) => item.label) : classOptions[department];
-    classSelect.innerHTML = choices.map((item) => `<option value="${department === "shs" ? shsCourses.find((course) => course.label === item).key : item}">${item}</option>`).join("");
+    const choices =
+      department === "shs"
+        ? shsCourses.map((item) => item.label)
+        : classOptions[department];
+    classSelect.innerHTML = choices
+      .map(
+        (item) =>
+          `<option value="${department === "shs" ? shsCourses.find((course) => course.label === item).key : item}">${item}</option>`,
+      )
+      .join("");
     refreshSubjects();
   };
-  const getTopics = () => learningCatalog[getContentSyllabusKey(departmentSelect.value, classSelect.value)]?.topics || learningCatalog.ges.topics;
+  const getTopics = () =>
+    learningCatalog[
+      getContentSyllabusKey(departmentSelect.value, classSelect.value)
+    ]?.topics || learningCatalog.ges.topics;
   const refreshTopics = () => {
     const topics = getTopics();
-    subjectSelect.innerHTML = Object.keys(topics).map((subject) => `<option value="${subject}">${subject}</option>`).join("");
+    subjectSelect.innerHTML = Object.keys(topics)
+      .map((subject) => `<option value="${subject}">${subject}</option>`)
+      .join("");
     const subject = subjectSelect.value;
-    topicSelect.innerHTML = Object.keys(topics[subject]).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
+    topicSelect.innerHTML = Object.keys(topics[subject])
+      .map((topic) => `<option value="${topic}">${topic}</option>`)
+      .join("");
     refreshSubtopics();
   };
   const refreshSubtopics = () => {
     const topics = getTopics();
     const subject = subjectSelect.value;
     const topic = topicSelect.value;
-    subtopicSelect.innerHTML = Object.keys(topics[subject][topic]).map((subtopic) => `<option value="${subtopic}">${subtopic}</option>`).join("");
+    subtopicSelect.innerHTML = Object.keys(topics[subject][topic])
+      .map((subtopic) => `<option value="${subtopic}">${subtopic}</option>`)
+      .join("");
   };
   const refreshSubjects = () => refreshTopics();
   departmentSelect.addEventListener("change", refreshClasses);
@@ -5489,11 +6287,18 @@ function setupContentStudio({ administrator = false } = {}) {
     if (document.getElementById(id)) return;
     const field = document.createElement("label");
     field.innerHTML = `${label}<input id="${id}" required>`;
-    document.getElementById(afterId).closest("label").insertAdjacentElement("afterend", field);
+    document
+      .getElementById(afterId)
+      .closest("label")
+      .insertAdjacentElement("afterend", field);
   };
   addRenameField("content-subject-name", "New subject name", "content-subject");
   addRenameField("content-topic-name", "New main topic name", "content-topic");
-  addRenameField("content-subtopic-name", "New subtopic name", "content-subtopic");
+  addRenameField(
+    "content-subtopic-name",
+    "New subtopic name",
+    "content-subtopic",
+  );
   const department = document.getElementById("content-department");
   const classSelect = document.getElementById("content-class");
   const subject = document.getElementById("content-subject");
@@ -5511,24 +6316,53 @@ function setupContentStudio({ administrator = false } = {}) {
   const status = document.getElementById("content-status");
   populateContentPicker(department, classSelect, subject, topic, subtopic);
   const load = () => {
-    const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
-    const activeLesson = learningCatalog[syllabusKey].topics[subject.value][topic.value][subtopic.value];
-    const existing = getLessonOverride(syllabusKey, subject.value, topic.value, subtopic.value);
+    const syllabusKey = getContentSyllabusKey(
+      department.value,
+      classSelect.value,
+    );
+    const activeLesson =
+      learningCatalog[syllabusKey].topics[subject.value][topic.value][
+        subtopic.value
+      ];
+    const existing = getLessonOverride(
+      syllabusKey,
+      subject.value,
+      topic.value,
+      subtopic.value,
+    );
     lesson.value = existing.lesson || activeLesson.lesson;
     video.value = existing.videoUrl || "";
-    examples.value = JSON.stringify(existing.examples || getLessonExtras(syllabusKey, subject.value, topic.value, subtopic.value, activeLesson).examples, null, 2);
+    examples.value = JSON.stringify(
+      existing.examples ||
+        getLessonExtras(
+          syllabusKey,
+          subject.value,
+          topic.value,
+          subtopic.value,
+          activeLesson,
+        ).examples,
+      null,
+      2,
+    );
     // PANEL QUESTION EDIT: this preview uses the selected department/class,
     // so staff edit the same level-appropriate questions students will see.
-    questions.value = JSON.stringify(existing.questions || getFiveQuizQuestions(activeLesson, subtopic.value, undefined, {
-      department: department.value,
-      className: classSelect.value,
-      subject: subject.value,
-    }), null, 2);
+    questions.value = JSON.stringify(
+      existing.questions ||
+        getFiveQuizQuestions(activeLesson, subtopic.value, undefined, {
+          department: department.value,
+          className: classSelect.value,
+          subject: subject.value,
+        }),
+      null,
+      2,
+    );
     subjectName.value = subject.value;
     topicName.value = topic.value;
     subtopicName.value = subtopic.value;
   };
-  [department, classSelect, subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
+  [department, classSelect, subject, topic, subtopic].forEach((select) =>
+    select.addEventListener("change", load),
+  );
   load();
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -5538,14 +6372,24 @@ function setupContentStudio({ administrator = false } = {}) {
       parsedExamples = JSON.parse(examples.value);
       if (!Array.isArray(parsedExamples)) throw new Error();
     } catch {
-      status.textContent = "Examples must be a valid JSON list. Keep the same format shown in the field.";
+      status.textContent =
+        "Examples must be a valid JSON list. Keep the same format shown in the field.";
       return;
     }
     try {
       parsedQuestions = JSON.parse(questions.value);
-      if (!Array.isArray(parsedQuestions) || parsedQuestions.length !== 5 || !parsedQuestions.every((item) => Array.isArray(item) && item.length === 3 && Array.isArray(item[1]))) throw new Error();
+      if (
+        !Array.isArray(parsedQuestions) ||
+        parsedQuestions.length !== 5 ||
+        !parsedQuestions.every(
+          (item) =>
+            Array.isArray(item) && item.length === 3 && Array.isArray(item[1]),
+        )
+      )
+        throw new Error();
     } catch {
-      status.textContent = "Questions must be exactly five JSON entries: [question, [answers], correctAnswerIndex].";
+      status.textContent =
+        "Questions must be exactly five JSON entries: [question, [answers], correctAnswerIndex].";
       return;
     }
     const originalTopic = topic.value;
@@ -5554,73 +6398,214 @@ function setupContentStudio({ administrator = false } = {}) {
     const newSubject = subjectName.value.trim();
     const newTopic = topicName.value.trim();
     const newSubtopic = subtopicName.value.trim();
-    if (!newSubject || !newTopic || !newSubtopic) { status.textContent = "Subject, topic and subtopic names cannot be empty."; return; }
-    const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
-    const structure = { syllabusKey, originalSubject, originalTopic, originalSubtopic, subject: newSubject, topic: newTopic, subtopic: newSubtopic };
-    const imageFile = imageUpload?.files?.[0];
-    const videoFile = videoUpload?.files?.[0];
-    const acceptedImages = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    const acceptedVideos = ["video/mp4", "video/webm", "video/ogg"];
-    if (imageFile && (!acceptedImages.includes(imageFile.type) || imageFile.size > MAX_IMAGE_UPLOAD_BYTES)) { status.textContent = "Choose a JPG, PNG, WebP or GIF picture up to 10 MB."; return; }
-    if (videoFile && (!acceptedVideos.includes(videoFile.type) || videoFile.size > MAX_VIDEO_UPLOAD_BYTES)) { status.textContent = "Choose an MP4, WebM or Ogg video up to 100 MB."; return; }
-    status.textContent = "Saving uploaded media…";
-    let imageMediaId = "", videoMediaId = "";
-    try { [imageMediaId, videoMediaId] = await Promise.all([saveLessonMedia(imageFile), saveLessonMedia(videoFile)]); }
-    catch { status.textContent = "The media could not be saved in this browser. Try a smaller file or check available storage."; return; }
-    const existingMedia = getLessonOverride(syllabusKey, originalSubject, originalTopic, originalSubtopic);
-    const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, questions: parsedQuestions, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
-    // Leaving a file field empty preserves the media already attached to this lesson.
-    if (imageMediaId || existingMedia.imageMediaId) change.imageMediaId = imageMediaId || existingMedia.imageMediaId;
-    if (videoMediaId || existingMedia.videoMediaId) change.videoMediaId = videoMediaId || existingMedia.videoMediaId;
-    if (!administrator) {
-      const pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
-      pending.push({ key: getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic), change, structure, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });
-      localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
-      addSiteNotification(`Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`, "administrator");
-      addSiteNotification(`A teacher has posted a new ${subject.value} lesson update.`, "students");
-      status.textContent = "Sent to the administrator for review. It will not appear to students until approved.";
+    if (!newSubject || !newTopic || !newSubtopic) {
+      status.textContent = "Subject, topic and subtopic names cannot be empty.";
       return;
     }
-    if (!applyCatalogStructureChange(structure)) { status.textContent = "That subject, topic or subtopic name already exists."; return; }
+    const syllabusKey = getContentSyllabusKey(
+      department.value,
+      classSelect.value,
+    );
+    const structure = {
+      syllabusKey,
+      originalSubject,
+      originalTopic,
+      originalSubtopic,
+      subject: newSubject,
+      topic: newTopic,
+      subtopic: newSubtopic,
+    };
+    const imageFile = imageUpload?.files?.[0];
+    const videoFile = videoUpload?.files?.[0];
+    const acceptedImages = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+    const acceptedVideos = ["video/mp4", "video/webm", "video/ogg"];
+    if (
+      imageFile &&
+      (!acceptedImages.includes(imageFile.type) ||
+        imageFile.size > MAX_IMAGE_UPLOAD_BYTES)
+    ) {
+      status.textContent =
+        "Choose a JPG, PNG, WebP or GIF picture up to 10 MB.";
+      return;
+    }
+    if (
+      videoFile &&
+      (!acceptedVideos.includes(videoFile.type) ||
+        videoFile.size > MAX_VIDEO_UPLOAD_BYTES)
+    ) {
+      status.textContent = "Choose an MP4, WebM or Ogg video up to 100 MB.";
+      return;
+    }
+    status.textContent = "Saving uploaded media…";
+    let imageMediaId = "",
+      videoMediaId = "";
+    try {
+      [imageMediaId, videoMediaId] = await Promise.all([
+        saveLessonMedia(imageFile),
+        saveLessonMedia(videoFile),
+      ]);
+    } catch {
+      status.textContent =
+        "The media could not be saved in this browser. Try a smaller file or check available storage.";
+      return;
+    }
+    const existingMedia = getLessonOverride(
+      syllabusKey,
+      originalSubject,
+      originalTopic,
+      originalSubtopic,
+    );
+    const change = {
+      lesson: lesson.value.trim(),
+      videoUrl: video.value.trim(),
+      examples: parsedExamples,
+      questions: parsedQuestions,
+      updatedAt: new Date().toISOString(),
+      updatedBy: getStudentSession()?.name || "Contributor",
+    };
+    // Leaving a file field empty preserves the media already attached to this lesson.
+    if (imageMediaId || existingMedia.imageMediaId)
+      change.imageMediaId = imageMediaId || existingMedia.imageMediaId;
+    if (videoMediaId || existingMedia.videoMediaId)
+      change.videoMediaId = videoMediaId || existingMedia.videoMediaId;
+    if (!administrator) {
+      const pending =
+        JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
+      pending.push({
+        key: getCatalogLessonKey(
+          syllabusKey,
+          newSubject,
+          newTopic,
+          newSubtopic,
+        ),
+        change,
+        structure,
+        teacher: getStudentSession()?.name || "Teacher",
+        author: getStudentSession()?.name || "Teacher",
+        role: getStudentSession()?.role || "teacher",
+        school: getStudentSession()?.school || "Y_Cohde Academy",
+        profilePicture: getStudentSession()?.profilePicture || "",
+        text: `A new ${subject.value} lesson update is ready for students.`,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
+      addSiteNotification(
+        `Teacher submission from ${getStudentSession()?.name || "a teacher"} is waiting for approval.`,
+        "administrator",
+      );
+      addSiteNotification(
+        `A teacher has posted a new ${subject.value} lesson update.`,
+        "students",
+      );
+      status.textContent =
+        "Sent to the administrator for review. It will not appear to students until approved.";
+      return;
+    }
+    if (!applyCatalogStructureChange(structure)) {
+      status.textContent =
+        "That subject, topic or subtopic name already exists.";
+      return;
+    }
     const all = getContentOverrides();
-    delete all[getCatalogLessonKey(syllabusKey, originalSubject, originalTopic, originalSubtopic)];
-    all[getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic)] = change;
+    delete all[
+      getCatalogLessonKey(
+        syllabusKey,
+        originalSubject,
+        originalTopic,
+        originalSubtopic,
+      )
+    ];
+    all[getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic)] =
+      change;
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
-    addSiteNotification(`A ${subject.value} lesson has been updated.`, "students");
+    addSiteNotification(
+      `A ${subject.value} lesson has been updated.`,
+      "students",
+    );
+    const administratorSession = getStudentSession();
+    addStaffPost({
+      author: administratorSession?.name || "Administrator",
+      role: administratorSession?.role || "administrator",
+      school: administratorSession?.school || "Y_Cohde Academy",
+      profilePicture: administratorSession?.profilePicture || "",
+      text: `A ${subject.value} lesson has been updated for students.`,
+    });
     status.textContent = "Saved and published for students in this browser.";
   });
   if (!administrator) {
     const user = getStudentSession();
     try {
-      const teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || [];
+      const teachers =
+        JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || [];
       if (!teachers.some((teacher) => teacher.email === user.email)) {
-        teachers.push({ name: user.name, email: user.email, joinedAt: new Date().toISOString() });
-        localStorage.setItem(CONTRIBUTING_TEACHERS_KEY, JSON.stringify(teachers));
+        teachers.push({
+          name: user.name,
+          email: user.email,
+          joinedAt: new Date().toISOString(),
+        });
+        localStorage.setItem(
+          CONTRIBUTING_TEACHERS_KEY,
+          JSON.stringify(teachers),
+        );
       }
-    } catch { /* content studio still works */ }
+    } catch {
+      /* content studio still works */
+    }
   }
 }
 
 function renderPerformanceReport() {
   const container = document.getElementById("performance-report");
   if (!container) return;
-  let quizHistory = [], lessonChecks = [];
-  try { quizHistory = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || []; } catch { /* empty */ }
-  try { lessonChecks = JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || []; } catch { /* empty */ }
-  const results = [...quizHistory, ...lessonChecks].filter((item) => item.total && item.studentName);
+  let quizHistory = [],
+    lessonChecks = [];
+  try {
+    quizHistory = JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY)) || [];
+  } catch {
+    /* empty */
+  }
+  try {
+    lessonChecks =
+      JSON.parse(localStorage.getItem(LESSON_CHECK_HISTORY_KEY)) || [];
+  } catch {
+    /* empty */
+  }
+  const results = [...quizHistory, ...lessonChecks].filter(
+    (item) => item.total && item.studentName,
+  );
   const grouped = results.reduce((all, item) => {
     const key = `${item.studentEmail || item.studentName}|${item.subject}`;
-    const record = all[key] || { name: item.studentName, subject: item.subject, scores: [], department: item.department || "" };
+    const record = all[key] || {
+      name: item.studentName,
+      subject: item.subject,
+      scores: [],
+      department: item.department || "",
+    };
     record.scores.push((item.score / item.total) * 100);
     all[key] = record;
     return all;
   }, {});
   const needingSupport = Object.values(grouped)
-    .map((item) => ({ ...item, average: Math.round(item.scores.reduce((sum, score) => sum + score, 0) / item.scores.length) }))
+    .map((item) => ({
+      ...item,
+      average: Math.round(
+        item.scores.reduce((sum, score) => sum + score, 0) / item.scores.length,
+      ),
+    }))
     .filter((item) => item.average < 60)
     .sort((a, b) => a.average - b.average);
   container.innerHTML = needingSupport.length
-    ? needingSupport.map((item) => `<article class="contributor-card"><strong>${item.name} · ${item.subject}</strong><span>${item.department || "Department not recorded"}</span><small>Average: ${item.average}% across ${item.scores.length} assessment${item.scores.length === 1 ? "" : "s"}. Consider a follow-up lesson.</small></article>`).join("")
+    ? needingSupport
+        .map(
+          (item) =>
+            `<article class="contributor-card"><strong>${item.name} · ${item.subject}</strong><span>${item.department || "Department not recorded"}</span><small>Average: ${item.average}% across ${item.scores.length} assessment${item.scores.length === 1 ? "" : "s"}. Consider a follow-up lesson.</small></article>`,
+        )
+        .join("")
     : '<p class="empty-state">No students are currently below 60%. Results appear here after students complete a lesson check or quiz in this browser.</p>';
 }
 
@@ -5630,29 +6615,67 @@ function setupAdministratorPanel() {
   setupContentStudio({ administrator: true });
   renderPerformanceReport();
   let teachers = [];
-  try { teachers = JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || []; } catch { /* empty */ }
-  teacherList.innerHTML = teachers.length ? teachers.map((teacher) => `<article class="contributor-card"><strong>${teacher.name}</strong><span>${teacher.email}</span><small>Joined ${new Date(teacher.joinedAt).toLocaleDateString()}</small></article>`).join("") : '<p class="empty-state">No teachers have contributed yet.</p>';
+  try {
+    teachers =
+      JSON.parse(localStorage.getItem(CONTRIBUTING_TEACHERS_KEY)) || [];
+  } catch {
+    /* empty */
+  }
+  teacherList.innerHTML = teachers.length
+    ? teachers
+        .map(
+          (teacher) =>
+            `<article class="contributor-card"><strong>${teacher.name}</strong><span>${teacher.email}</span><small>Joined ${new Date(teacher.joinedAt).toLocaleDateString()}</small></article>`,
+        )
+        .join("")
+    : '<p class="empty-state">No teachers have contributed yet.</p>';
   const pendingList = document.getElementById("pending-content");
   if (!pendingList) return;
   let pending = [];
-  try { pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || []; } catch { /* empty */ }
+  try {
+    pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
+  } catch {
+    /* empty */
+  }
   const renderPending = () => {
-    pendingList.innerHTML = pending.length ? pending.map((item, index) => `<article class="contributor-card"><strong>${item.teacher}: ${item.key}</strong><span>Submitted ${new Date(item.createdAt).toLocaleString()}</span><button class="small-btn" data-approve="${index}">Approve and publish</button></article>`).join("") : '<p class="empty-state">No teacher edits are waiting for approval.</p>';
-    pendingList.querySelectorAll("[data-approve]").forEach((button) => button.addEventListener("click", () => {
-      const index = Number(button.dataset.approve);
-      const item = pending[index];
-      if (item.structure && !applyCatalogStructureChange(item.structure)) {
-        window.alert("This rename cannot be approved because that subject, topic or subtopic name now exists.");
-        return;
-      }
-      const overrides = getContentOverrides();
-      overrides[item.key] = item.change;
-      localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(overrides));
-      addSiteNotification(`A new lesson update is available: ${item.key}.`, "students");
-      pending.splice(index, 1);
-      localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
-      renderPending();
-    }));
+    pendingList.innerHTML = pending.length
+      ? pending
+          .map(
+            (item, index) =>
+              `<article class="contributor-card"><strong>${item.teacher}: ${item.key}</strong><span>Submitted ${new Date(item.createdAt).toLocaleString()}</span><button class="small-btn" data-approve="${index}">Approve and publish</button></article>`,
+          )
+          .join("")
+      : '<p class="empty-state">No teacher edits are waiting for approval.</p>';
+    pendingList.querySelectorAll("[data-approve]").forEach((button) =>
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.approve);
+        const item = pending[index];
+        if (item.structure && !applyCatalogStructureChange(item.structure)) {
+          window.alert(
+            "This rename cannot be approved because that subject, topic or subtopic name now exists.",
+          );
+          return;
+        }
+        const overrides = getContentOverrides();
+        overrides[item.key] = item.change;
+        localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(overrides));
+        addStaffPost({
+          author: item.author || item.teacher || "Teacher",
+          role: item.role || "teacher",
+          school: item.school || "Y_Cohde Academy",
+          profilePicture: item.profilePicture || "",
+          text: item.text || `A new lesson update is available: ${item.key}.`,
+          createdAt: item.createdAt,
+        });
+        addSiteNotification(
+          `A new lesson update is available: ${item.key}.`,
+          "students",
+        );
+        pending.splice(index, 1);
+        localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
+        renderPending();
+      }),
+    );
   };
   renderPending();
 }
@@ -5660,12 +6683,17 @@ function setupAdministratorPanel() {
 if (document.getElementById("administrator-panel")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireRole("administrator")) return;
-    setupStudentSession(); setupMobileMenu(); setupAdministratorPanel();
+    setupStudentSession();
+    setupMobileMenu();
+    setupAdministratorPanel();
   });
 } else if (document.getElementById("teacher-studio")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireRole("teacher")) return;
-    setupStudentSession(); setupMobileMenu(); setupContentStudio(); renderPerformanceReport();
+    setupStudentSession();
+    setupMobileMenu();
+    setupContentStudio();
+    renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
