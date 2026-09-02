@@ -5,6 +5,10 @@ const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
 const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
 const PENDING_CONTENT_KEY = "ycohdePendingContent";
+const MEDIA_DATABASE_NAME = "ycohdeLessonMedia";
+const MEDIA_STORE_NAME = "media";
+const MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
 const SITE_NOTIFICATIONS_KEY = "ycohdeSiteNotifications";
 const PUSH_SUBSCRIBERS_KEY = "ycohdePushSubscribers";
 
@@ -17,6 +21,44 @@ function getStudentSession() {
   } catch {
     return null;
   }
+}
+
+// Uploaded files live in IndexedDB, which is suitable for media unlike localStorage.
+function openLessonMediaDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(MEDIA_DATABASE_NAME, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(MEDIA_STORE_NAME)) request.result.createObjectStore(MEDIA_STORE_NAME);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveLessonMedia(file) {
+  if (!file) return "";
+  const id = `${Date.now()}-${crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`;
+  const database = await openLessonMediaDatabase();
+  await new Promise((resolve, reject) => {
+    const transaction = database.transaction(MEDIA_STORE_NAME, "readwrite");
+    transaction.objectStore(MEDIA_STORE_NAME).put(file, id);
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+  database.close();
+  return id;
+}
+
+async function getLessonMedia(id) {
+  if (!id) return null;
+  const database = await openLessonMediaDatabase();
+  const result = await new Promise((resolve, reject) => {
+    const request = database.transaction(MEDIA_STORE_NAME, "readonly").objectStore(MEDIA_STORE_NAME).get(id);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+  database.close();
+  return result;
 }
 
 function requireStudentLogin() {
@@ -2294,13 +2336,17 @@ function setupLearningSpace() {
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
     const contentOverride = getLessonOverride(syllabusKey, subject, topic, subtopic);
-    const lessonImage = activeLesson.image
+    const lessonImage = contentOverride.imageMediaId
+      ? `<div id="uploaded-lesson-image" class="lesson-media-placeholder"></div>`
+      : activeLesson.image
       ? `<img class="lesson-image" src="${activeLesson.image}" alt="Illustration for ${subtopic}" />`
       : "";
     const extras = getLessonExtras(syllabusKey, subject, topic, subtopic, activeLesson);
     const examples = extras.examples.map((example) => `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`).join("");
     const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
-    const video = videoUrl
+    const video = contentOverride.videoMediaId
+      ? `<div class="lesson-video-box" id="lesson-video-content"><h3>▶ Lesson video</h3><div class="video-wrapper lesson-media-placeholder"></div></div>`
+      : videoUrl
       ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
       : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section><button class="btn" id="finish-lesson">I understand this lesson</button></article>`;
@@ -2319,6 +2365,30 @@ function setupLearningSpace() {
       lessonTimerId = null;
       document.getElementById("understanding-modal").classList.add("visible");
     });
+    if (contentOverride.imageMediaId) {
+      getLessonMedia(contentOverride.imageMediaId).then((file) => {
+        const holder = document.getElementById("uploaded-lesson-image");
+        if (!file || !holder) return;
+        const image = document.createElement("img");
+        image.className = "lesson-image";
+        image.alt = `Uploaded illustration for ${subtopic}`;
+        image.src = URL.createObjectURL(file);
+        holder.replaceWith(image);
+      }).catch(() => {});
+    }
+    if (contentOverride.videoMediaId) {
+      getLessonMedia(contentOverride.videoMediaId).then((file) => {
+        const holder = document.querySelector("#lesson-video-content .lesson-media-placeholder");
+        if (!file || !holder) return;
+        const player = document.createElement("video");
+        player.controls = true;
+        player.src = URL.createObjectURL(file);
+        player.textContent = "Your browser cannot play this video.";
+        holder.replaceWith(player);
+        const container = document.getElementById("lesson-video-content");
+        if (container) activeLesson._guidedVideo = container.outerHTML;
+      }).catch(() => {});
+    }
   };
   const modal = document.getElementById("understanding-modal");
   if (!document.getElementById("lesson-video-modal")) {
@@ -5423,6 +5493,8 @@ function setupContentStudio({ administrator = false } = {}) {
   const subtopic = document.getElementById("content-subtopic");
   const lesson = document.getElementById("content-lesson");
   const video = document.getElementById("content-video");
+  const imageUpload = document.getElementById("content-image-upload");
+  const videoUpload = document.getElementById("content-video-upload");
   const examples = document.getElementById("content-examples");
   const questions = document.getElementById("content-questions");
   const subjectName = document.getElementById("content-subject-name");
@@ -5450,7 +5522,7 @@ function setupContentStudio({ administrator = false } = {}) {
   };
   [department, classSelect, subject, topic, subtopic].forEach((select) => select.addEventListener("change", load));
   load();
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     let parsedExamples;
     let parsedQuestions;
@@ -5477,7 +5549,21 @@ function setupContentStudio({ administrator = false } = {}) {
     if (!newSubject || !newTopic || !newSubtopic) { status.textContent = "Subject, topic and subtopic names cannot be empty."; return; }
     const syllabusKey = getContentSyllabusKey(department.value, classSelect.value);
     const structure = { syllabusKey, originalSubject, originalTopic, originalSubtopic, subject: newSubject, topic: newTopic, subtopic: newSubtopic };
+    const imageFile = imageUpload?.files?.[0];
+    const videoFile = videoUpload?.files?.[0];
+    const acceptedImages = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const acceptedVideos = ["video/mp4", "video/webm", "video/ogg"];
+    if (imageFile && (!acceptedImages.includes(imageFile.type) || imageFile.size > MAX_IMAGE_UPLOAD_BYTES)) { status.textContent = "Choose a JPG, PNG, WebP or GIF picture up to 10 MB."; return; }
+    if (videoFile && (!acceptedVideos.includes(videoFile.type) || videoFile.size > MAX_VIDEO_UPLOAD_BYTES)) { status.textContent = "Choose an MP4, WebM or Ogg video up to 100 MB."; return; }
+    status.textContent = "Saving uploaded media…";
+    let imageMediaId = "", videoMediaId = "";
+    try { [imageMediaId, videoMediaId] = await Promise.all([saveLessonMedia(imageFile), saveLessonMedia(videoFile)]); }
+    catch { status.textContent = "The media could not be saved in this browser. Try a smaller file or check available storage."; return; }
+    const existingMedia = getLessonOverride(syllabusKey, originalSubject, originalTopic, originalSubtopic);
     const change = { lesson: lesson.value.trim(), videoUrl: video.value.trim(), examples: parsedExamples, questions: parsedQuestions, updatedAt: new Date().toISOString(), updatedBy: getStudentSession()?.name || "Contributor" };
+    // Leaving a file field empty preserves the media already attached to this lesson.
+    if (imageMediaId || existingMedia.imageMediaId) change.imageMediaId = imageMediaId || existingMedia.imageMediaId;
+    if (videoMediaId || existingMedia.videoMediaId) change.videoMediaId = videoMediaId || existingMedia.videoMediaId;
     if (!administrator) {
       const pending = JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
       pending.push({ key: getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic), change, structure, teacher: getStudentSession()?.name || "Teacher", createdAt: new Date().toISOString() });

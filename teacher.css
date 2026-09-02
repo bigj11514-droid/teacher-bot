@@ -1111,6 +1111,7 @@ body.menu-open::before {
 .lesson-card { max-width: 760px; }
 .lesson-timer { display: inline-flex; margin: 12px 0; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); background: rgba(127, 231, 255, .1); font-weight: 700; }
 .lesson-image { width: 100%; height: min(300px, 42vw); margin: 18px 0 0; object-fit: cover; border: 1px solid var(--border); border-radius: 16px; }
+.lesson-media-placeholder { min-height: 80px; }
 .lesson-copy { margin: 18px 0; padding: 18px; border-radius: 14px; background: rgba(127,231,255,.07); }
 .lesson-copy p, .lesson-card > p { line-height: 1.75; color: var(--muted); }
 .review-note { margin-top: 14px; color: var(--accent) !important; }
@@ -1403,6 +1404,9 @@ body.menu-open::before {
 }
 .content-form textarea { min-height: 150px; resize: vertical; line-height: 1.6; }
 .content-form select:focus, .content-form input:focus, .content-form textarea:focus { outline: 2px solid rgba(127, 231, 255, .35); }
+.media-upload-fields { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; color: var(--muted); }
+.media-upload-fields legend { padding: 0 6px; color: var(--accent); font-weight: 700; }
+.media-upload-fields small { line-height: 1.5; }
 .contributor-list { display: grid; gap: 12px; margin-top: 16px; }
 .contributor-card { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(127, 231, 255, .06); }
 .contributor-card span, .contributor-card small, .empty-state { color: var(--muted); }
