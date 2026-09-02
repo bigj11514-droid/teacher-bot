@@ -115,6 +115,14 @@ function setupStudentSession() {
   };
 
   document.querySelectorAll(".site-nav").forEach((navigation) => {
+    const isStaffPanel = Boolean(document.getElementById("teacher-studio") || document.getElementById("administrator-panel"));
+    if (isStaffPanel) {
+      // Staff sidebars intentionally contain only their own studio. Students
+      // retain the community and department-quiz navigation elsewhere.
+      navigation.querySelectorAll(".community-nav-link, .department-quiz-nav, .admin-nav-link, .teacher-nav-link").forEach((item) => item.remove());
+      addLogout(navigation, "nav-item");
+      return;
+    }
     if (student.role === "administrator" && !navigation.querySelector(".admin-nav-link")) {
       navigation.insertAdjacentHTML("beforeend", '<a class="nav-item admin-nav-link" href="admin.html"><span>⚙</span><span>Administrator panel</span></a>');
     }
@@ -5656,7 +5664,7 @@ if (document.getElementById("administrator-panel")) {
   });
 } else if (document.getElementById("teacher-studio")) {
   document.addEventListener("DOMContentLoaded", () => {
-    if (!requireRole("teacher", "administrator")) return;
+    if (!requireRole("teacher")) return;
     setupStudentSession(); setupMobileMenu(); setupContentStudio(); renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
