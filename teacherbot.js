@@ -2288,7 +2288,7 @@ function isFreeLesson(syllabus, subject, topic, subtopic) {
 
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   // A paid learning pass opens every subtopic; free learners progress through
-  // the introductory lessons in order.
+  // introductory lessons in order, with one starting lesson per subject.
   if (hasActiveSubscription()) return true;
   const firstTopic = Object.keys(syllabus.topics[subject])[0];
   const names = Object.keys(syllabus.topics[subject][topic]);
