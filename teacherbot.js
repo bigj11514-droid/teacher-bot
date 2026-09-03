@@ -3194,7 +3194,7 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
         if (selected === correct) {
           score++;
           const emoji = document.getElementById("correct-emoji");
-          emoji.textContent = "🎉 🌟";
+          emoji.textContent = "🎉";
           emoji.setAttribute("aria-hidden", "false");
           document.getElementById("topic-feedback").textContent =
             "Correct! Great learning.";
