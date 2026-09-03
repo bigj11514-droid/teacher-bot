@@ -3198,9 +3198,13 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
           emoji.setAttribute("aria-hidden", "false");
           document.getElementById("topic-feedback").textContent =
             "Correct! Great learning.";
-        } else
+        } else {
+          const emoji = document.getElementById("correct-emoji");
+          emoji.textContent = "❌";
+          emoji.setAttribute("aria-hidden", "false");
           document.getElementById("topic-feedback").textContent =
             `Not quite. The correct answer is ${answers[correct]}.`;
+        }
         setTimeout(() => {
           index++;
           index < quizQuestions.length ? showQuestion() : finishQuiz();
