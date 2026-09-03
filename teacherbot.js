@@ -2290,8 +2290,10 @@ function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   // A paid learning pass opens every subtopic; free learners progress through
   // the introductory lessons in order.
   if (hasActiveSubscription()) return true;
+  const firstTopic = Object.keys(syllabus.topics[subject])[0];
   const names = Object.keys(syllabus.topics[subject][topic]);
   const index = names.indexOf(subtopic);
+  if (topic === firstTopic && index === 0) return true;
   if (!isFreeLesson(syllabus, subject, topic, subtopic)) return false;
   return (
     index === 0 ||
