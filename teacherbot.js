@@ -3184,7 +3184,7 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
     score = 0;
   const showQuestion = () => {
     const [question, answers, correct] = quizQuestions[index];
-    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of 5</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><p id="topic-feedback" class="feedback-text"></p></article>`;
+    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of 5</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><div id="correct-emoji" class="correct-emoji" aria-live="polite" aria-hidden="true"></div><p id="topic-feedback" class="feedback-text"></p></article>`;
     space.querySelectorAll("[data-answer]").forEach((button) =>
       button.addEventListener("click", () => {
         const selected = Number(button.dataset.answer);
@@ -3193,6 +3193,9 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
           .forEach((item) => (item.disabled = true));
         if (selected === correct) {
           score++;
+          const emoji = document.getElementById("correct-emoji");
+          emoji.textContent = "🎉 🌟";
+          emoji.setAttribute("aria-hidden", "false");
           document.getElementById("topic-feedback").textContent =
             "Correct! Great learning.";
         } else
