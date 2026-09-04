@@ -2156,9 +2156,9 @@ function showFeatureRequestPopup(trigger) {
     modal.setAttribute("aria-hidden", "true");
     window.setTimeout(() => modal.remove(), 220);
   };
-  modal.querySelectorAll(".modal-close, .modal-dismiss").forEach((button) =>
-    button.addEventListener("click", close),
-  );
+  modal
+    .querySelectorAll(".modal-close, .modal-dismiss")
+    .forEach((button) => button.addEventListener("click", close));
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const input = document.getElementById("feature-request-input");
@@ -2166,7 +2166,8 @@ function showFeatureRequestPopup(trigger) {
     if (!suggestion) return;
     let requests = [];
     try {
-      requests = JSON.parse(localStorage.getItem("ycohdeFeatureRequests")) || [];
+      requests =
+        JSON.parse(localStorage.getItem("ycohdeFeatureRequests")) || [];
     } catch {
       requests = [];
     }
@@ -2286,7 +2287,18 @@ function playFeedbackSound(type) {
     gain.gain.setValueAtTime(0.08, context.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
     oscillator.connect(gain).connect(context.destination);
-            steps: [
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.2);
+    window.setTimeout(() => context.close(), 250);
+  } catch {
+    // Audio feedback is optional and may be unavailable in some browsers.
+  }
+}
+
+function isFreeLesson(syllabus, subject, topic, subtopic) {
+  const lessons = getAllLessons(syllabus);
+  return (
+    lessons.findIndex(
       (item) =>
         item.subject === subject &&
         item.topic === topic &&
@@ -2398,9 +2410,7 @@ function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
           {
             title: "Adding with regrouping",
             problem: "27 + 15",
-            steps: [
-              "Add tens: 2 + 1 + 1 carried ten = 4.",
-            ],
+            steps: ["Add tens: 2 + 1 + 1 carried ten = 4."],
             result: "27 + 15 = 42",
           },
         ]
