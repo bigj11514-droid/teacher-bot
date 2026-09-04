@@ -160,6 +160,14 @@ function setupStudentSession() {
   };
 
   document.querySelectorAll(".site-nav").forEach((navigation) => {
+    const addContributionLink = () => {
+      if (navigation.querySelector(".contribution-nav-link")) return;
+      const contributionLink = document.createElement("a");
+      contributionLink.className = "nav-item contribution-nav-link";
+      contributionLink.href = "contribution.html";
+      contributionLink.innerHTML = "<span>♥</span><span>Support Y_Cohde</span>";
+      navigation.append(contributionLink);
+    };
     const isStaffPanel = Boolean(
       document.getElementById("teacher-studio") ||
       document.getElementById("administrator-panel"),
@@ -172,6 +180,7 @@ function setupStudentSession() {
           ".community-nav-link, .department-quiz-nav, .admin-nav-link, .teacher-nav-link",
         )
         .forEach((item) => item.remove());
+      addContributionLink();
       addLogout(navigation, "nav-item");
       return;
     }
@@ -211,6 +220,7 @@ function setupStudentSession() {
       `;
       navigation.append(quizMenu);
     }
+    addContributionLink();
     if (
       student.role === "student" &&
       !navigation.querySelector(".payment-nav-link")

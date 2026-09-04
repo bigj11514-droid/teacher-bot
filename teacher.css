@@ -1535,3 +1535,24 @@ body.menu-open::before {
 .payment-card ul { display: grid; gap: 8px; margin: 22px 0; padding-left: 20px; }
 .price { margin: 24px 0 8px; color: var(--accent); font-size: 2rem; font-weight: 800; }
 .price span { color: var(--muted); font-size: .95rem; font-weight: 400; }
+.back-link { display: inline-block; margin-bottom: 14px; color: var(--muted); }
+.back-link:hover { color: var(--accent); }
+.contribution-card { width: min(100%, 560px); }
+.contribution-note { display: grid; gap: 4px; margin: 22px 0; padding: 14px 16px; border-left: 3px solid var(--accent); background: rgba(127, 231, 255, .08); }
+.contribution-note span { color: var(--muted); font-size: .86rem; }
+.contribution-form { display: grid; gap: 18px; }
+.contribution-form fieldset { border: 0; }
+.contribution-form legend, .contribution-form label { color: var(--muted); font-size: .9rem; }
+.amount-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 9px; }
+.amount-options label { position: relative; }
+.amount-options input { position: absolute; opacity: 0; }
+.amount-options span { display: block; padding: 11px 6px; border: 1px solid var(--border); border-radius: 10px; color: var(--text); text-align: center; cursor: pointer; }
+.amount-options input:checked + span, .amount-options span:hover { border-color: var(--accent); background: rgba(127, 231, 255, .12); color: var(--accent); }
+.custom-amount-label, .contribution-form > label { display: grid; gap: 8px; }
+.contribution-form input[type="number"], .contribution-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(3, 26, 43, .85); color: var(--text); }
+.contribution-form textarea { min-height: 90px; resize: vertical; }
+.contribution-form input:focus, .contribution-form textarea:focus { outline: 2px solid rgba(127, 231, 255, .35); }
+.contribution-form button:disabled { cursor: wait; opacity: .65; }
+.form-status { min-height: 24px; color: var(--accent) !important; }
+.payment-footnote { margin-top: 18px; font-size: .82rem; }
+@media (max-width: 480px) { .amount-options { grid-template-columns: repeat(2, 1fr); } .contribution-card { padding: 24px; } }

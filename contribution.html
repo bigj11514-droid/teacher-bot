@@ -5,17 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="teacher.css" />
     <title>Support Y_Cohde</title>
   </head>
   <body class="payment-page contribution-page">
     <main class="payment-container">
       <a class="back-link" href="index.html">&larr; Back to dashboard</a>
-      <section class="payment-card contribution-card" aria-labelledby="contribution-title">
+      <section
+        class="payment-card contribution-card"
+        aria-labelledby="contribution-title"
+      >
         <p class="eyebrow">KEEPING LEARNING OPEN</p>
         <h1 id="contribution-title">Support the next lesson</h1>
-        <p>When Y_Cohde helps you learn, you can choose to give any amount toward hosting, learning materials, and keeping lessons available to more students.</p>
+        <p>
+          When Y_Cohde helps you learn, you can choose to give any amount toward
+          hosting, learning materials, and keeping lessons available to more
+          students.
+        </p>
 
         <div class="contribution-note">
           <strong id="contributor-name">Your support matters</strong>
@@ -26,31 +36,73 @@
           <fieldset>
             <legend>Choose an amount</legend>
             <div class="amount-options">
-              <label><input type="radio" name="amount" value="5" checked /><span>GH₵5</span></label>
-              <label><input type="radio" name="amount" value="10" /><span>GH₵10</span></label>
-              <label><input type="radio" name="amount" value="25" /><span>GH₵25</span></label>
-              <label><input type="radio" name="amount" value="50" /><span>GH₵50</span></label>
+              <label
+                ><input type="radio" name="amount" value="5" checked /><span
+                  >GH₵5</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="amount" value="10" /><span
+                  >GH₵10</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="amount" value="25" /><span
+                  >GH₵25</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="amount" value="50" /><span
+                  >GH₵50</span
+                ></label
+              >
             </div>
           </fieldset>
-          <label class="custom-amount-label" for="custom-amount">Or enter another amount (GH₵)
-            <input id="custom-amount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="Optional" />
+          <label class="custom-amount-label" for="custom-amount"
+            >Or enter another amount (GH₵)
+            <input
+              id="custom-amount"
+              type="number"
+              min="1"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Optional"
+            />
           </label>
-          <label for="contribution-message">A note of encouragement (optional)
-            <textarea id="contribution-message" maxlength="240" placeholder="Tell us what Y_Cohde means to you"></textarea>
+          <label for="contribution-message"
+            >A note of encouragement (optional)
+            <textarea
+              id="contribution-message"
+              maxlength="240"
+              placeholder="Tell us what Y_Cohde means to you"
+            ></textarea>
           </label>
-          <button id="contribute-button" class="btn" type="submit">Continue to secure payment</button>
-          <p id="contribution-message-status" class="form-status" role="status" aria-live="polite"></p>
+          <button id="contribute-button" class="btn" type="submit">
+            Continue to secure payment
+          </button>
+          <p
+            id="contribution-message-status"
+            class="form-status"
+            role="status"
+            aria-live="polite"
+          ></p>
         </form>
-        <p class="payment-footnote">Your contribution is voluntary. Teachers and administrators can support Y_Cohde here too.</p>
+        <p class="payment-footnote">
+          Your contribution is voluntary. Teachers and administrators can
+          support Y_Cohde here too.
+        </p>
       </section>
     </main>
     <script src="https://js.paystack.co/v2/inline.js"></script>
     <script>
       const sessionKey = "ycohdeStudentSession";
       const contributionForm = document.getElementById("contribution-form");
-      const statusElement = document.getElementById("contribution-message-status");
+      const statusElement = document.getElementById(
+        "contribution-message-status",
+      );
       const customAmount = document.getElementById("custom-amount");
       const payButton = document.getElementById("contribute-button");
+      const paystackPublicKey = "YOUR_PUBLIC_KEY";
 
       let user;
       try {
@@ -62,24 +114,38 @@
       if (!user || !user.email) {
         window.location.replace("login.html");
       } else {
-        const role = user.role === "administrator" ? "Administrator" : user.role === "teacher" ? "Teacher" : "Student";
-        document.getElementById("contributor-name").textContent = `Thank you, ${user.name || role}`;
-        document.getElementById("contributor-role").textContent = `${role} contribution`;
+        const role =
+          user.role === "administrator"
+            ? "Administrator"
+            : user.role === "teacher"
+              ? "Teacher"
+              : "Student";
+        document.getElementById("contributor-name").textContent =
+          `Thank you, ${user.name || role}`;
+        document.getElementById("contributor-role").textContent =
+          `${role} contribution`;
       }
 
       contributionForm.addEventListener("submit", (event) => {
         event.preventDefault();
         if (!user || !user.email) return;
 
-        const selectedAmount = Number(document.querySelector("input[name=amount]:checked").value);
+        const selectedAmount = Number(
+          document.querySelector("input[name=amount]:checked").value,
+        );
         const amount = Number(customAmount.value) || selectedAmount;
         if (!Number.isFinite(amount) || amount < 1) {
-          statusElement.textContent = "Please enter a contribution of at least GH₵1.";
+          statusElement.textContent =
+            "Please enter a contribution of at least GH₵1.";
           return;
         }
 
-        if (typeof PaystackPop === "undefined" || "YOUR_PUBLIC_KEY" === "YOUR_PUBLIC_KEY") {
-          statusElement.textContent = "Secure contributions are being set up. Add your Paystack public key to enable checkout.";
+        if (
+          typeof PaystackPop === "undefined" ||
+          paystackPublicKey === "YOUR_PUBLIC_KEY"
+        ) {
+          statusElement.textContent =
+            "Secure contributions are being set up. Add your Paystack public key to enable checkout.";
           return;
         }
 
@@ -87,25 +153,59 @@
         statusElement.textContent = "Opening secure checkout...";
         const paystack = new PaystackPop();
         paystack.newTransaction({
-          key: "YOUR_PUBLIC_KEY",
+          key: paystackPublicKey,
           email: user.email,
           amount: Math.round(amount * 100),
           metadata: {
             custom_fields: [
-              { display_name: "Contributor role", variable_name: "contributor_role", value: user.role || "student" },
-              { display_name: "Message", variable_name: "message", value: document.getElementById("contribution-message").value.trim() },
+              {
+                display_name: "Contributor role",
+                variable_name: "contributor_role",
+                value: user.role || "student",
+              },
+              {
+                display_name: "Message",
+                variable_name: "message",
+                value: document
+                  .getElementById("contribution-message")
+                  .value.trim(),
+              },
             ],
           },
-          onSuccess: () => {
-            statusElement.textContent = "Payment received. Thank you for supporting Y_Cohde.";
-            payButton.disabled = false;
+          onSuccess: async (transaction) => {
+            try {
+              const response = await fetch("/api/verify-contribution", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  reference: transaction.reference,
+                  email: user.email,
+                  amount: Math.round(amount * 100),
+                  role: user.role || "student",
+                  note: document
+                    .getElementById("contribution-message")
+                    .value.trim(),
+                }),
+              });
+              const result = await response.json();
+              statusElement.textContent = result.success
+                ? "Payment received. Thank you for supporting Y_Cohde."
+                : "Payment could not be verified. Please contact support before trying again.";
+            } catch {
+              statusElement.textContent =
+                "Payment was submitted but could not be verified yet. Please contact support.";
+            } finally {
+              payButton.disabled = false;
+            }
           },
           onCancel: () => {
-            statusElement.textContent = "Checkout cancelled. No contribution was made.";
+            statusElement.textContent =
+              "Checkout cancelled. No contribution was made.";
             payButton.disabled = false;
           },
           onError: () => {
-            statusElement.textContent = "We could not open checkout. Please try again later.";
+            statusElement.textContent =
+              "We could not open checkout. Please try again later.";
             payButton.disabled = false;
           },
         });
