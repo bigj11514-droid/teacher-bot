@@ -2933,7 +2933,7 @@ function getNextLessonTarget(syllabus, subject, topic, subtopic) {
 function setupLearningSpace() {
   const space = document.getElementById("learning-space");
   if (!space) return;
-  const syllabusKey =
+  let syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
   const studentDepartment = getStudentSession()?.department;
   if (
@@ -2945,12 +2945,80 @@ function setupLearningSpace() {
   }
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
   const selectedYear = new URLSearchParams(window.location.search).get("year");
+  const classesByDepartment = {
+    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
+    jhs: ["jhs1", "jhs2", "jhs3"],
+    shs: ["shs1", "shs2", "shs3"],
+  };
+  const selectedDepartment = getSyllabusDepartment(syllabusKey);
+  const availableClasses = classesByDepartment[selectedDepartment];
+  const requestedClass = getClassKey();
+  const selectedClass = availableClasses.includes(requestedClass)
+    ? requestedClass
+    : availableClasses[0];
+
+  // Keep class and syllabus selection available on the lesson page. This is
+  // especially useful when students return directly to learning.html.
+  const selectionControls = document.createElement("section");
+  selectionControls.className = "class-picker department-card learning-selection";
+  selectionControls.innerHTML = `
+    <label for="learning-syllabus-select">Syllabus</label>
+    <select id="learning-syllabus-select"></select>
+    <label for="learning-class-select">Class</label>
+    <select id="learning-class-select"></select>
+    <button class="small-btn" id="apply-learning-selection" type="button">Start learning</button>
+  `;
+
+  const syllabusSelect = selectionControls.querySelector("#learning-syllabus-select");
+  const classSelect = selectionControls.querySelector("#learning-class-select");
+  const allowedSyllabuses = Object.entries(learningCatalog).filter(([key]) =>
+    !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
+  );
+  syllabusSelect.innerHTML = allowedSyllabuses
+    .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
+    .join("");
+  syllabusSelect.value = syllabusKey;
+
+  const updateClassChoices = () => {
+    const department = getSyllabusDepartment(syllabusSelect.value);
+    const classes = classesByDepartment[department];
+    const previousClass = classSelect.value;
+    classSelect.innerHTML = classes
+      .map((key) => `<option value="${key}">${classLabels[key]}</option>`)
+      .join("");
+    classSelect.value = classes.includes(previousClass)
+      ? previousClass
+      : classes.includes(selectedClass)
+        ? selectedClass
+        : classes[0];
+  };
+  updateClassChoices();
+  syllabusSelect.addEventListener("change", updateClassChoices);
+  selectionControls
+    .querySelector("#apply-learning-selection")
+    .addEventListener("click", () => {
+      const student = getStudentSession();
+      if (student) {
+        localStorage.setItem(
+          STUDENT_SESSION_KEY,
+          JSON.stringify({ ...student, className: classSelect.value }),
+        );
+      }
+      const params = new URLSearchParams({
+        syllabus: syllabusSelect.value,
+        class: classSelect.value,
+      });
+      window.location.href = `learning.html?${params.toString()}`;
+    });
   let activeLesson;
   let activeLessonMeta = { subject: null, topic: null, subtopic: null };
   const renderTopics = () => {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
-    space.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(
+    space.innerHTML = "";
+    space.appendChild(selectionControls);
+    const topicsPanel = document.createElement("div");
+    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(
       syllabus.topics,
     )
       .map(
@@ -2981,6 +3049,7 @@ function setupLearningSpace() {
             .join("")}</article>`,
       )
       .join("")}</div>`;
+    space.appendChild(topicsPanel);
     space
       .querySelectorAll(".subtopic-btn")
       .forEach((button) =>
