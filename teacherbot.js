@@ -2139,6 +2139,52 @@ function saveCompletedSubtopic(subject, topic, subtopic) {
   recordStudyActivity();
   if (isNewCompletion) awardXp(50);
   localStorage.removeItem(LESSON_RESUME_KEY);
+  showFeatureRequestPopup("lesson-completed");
+}
+
+function showFeatureRequestPopup(trigger) {
+  const user = getStudentSession();
+  if (!user || document.getElementById("feature-request-modal")) return;
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<div class="understanding-modal feature-request-modal" id="feature-request-modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="feature-request-title"><button class="modal-close" type="button" aria-label="Close feature request">&times;</button><p class="eyebrow">HELP SHAPE Y_COHDE</p><h2 id="feature-request-title">What feature would help you most?</h2><p>Your idea can help us make learning, teaching, and managing the website better.</p><form id="feature-request-form" class="feature-request-form"><label for="feature-request-input">Feature request<textarea id="feature-request-input" maxlength="500" required placeholder="I would like to see..."></textarea></label><div class="modal-actions"><button class="soft-btn modal-dismiss" type="button">Not now</button><button class="btn" type="submit">Send suggestion</button></div><p class="form-status" id="feature-request-status" role="status" aria-live="polite"></p></form></div></div>`,
+  );
+  const modal = document.getElementById("feature-request-modal");
+  const form = document.getElementById("feature-request-form");
+  const close = () => {
+    modal.classList.remove("visible");
+    modal.setAttribute("aria-hidden", "true");
+    window.setTimeout(() => modal.remove(), 220);
+  };
+  modal.querySelectorAll(".modal-close, .modal-dismiss").forEach((button) =>
+    button.addEventListener("click", close),
+  );
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("feature-request-input");
+    const suggestion = input.value.trim();
+    if (!suggestion) return;
+    let requests = [];
+    try {
+      requests = JSON.parse(localStorage.getItem("ycohdeFeatureRequests")) || [];
+    } catch {
+      requests = [];
+    }
+    requests.push({
+      suggestion,
+      role: user.role || "student",
+      name: user.name || "Anonymous",
+      trigger,
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem("ycohdeFeatureRequests", JSON.stringify(requests));
+    document.getElementById("feature-request-status").textContent =
+      "Thanks. Your suggestion has been recorded.";
+    window.setTimeout(close, 900);
+  });
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+  document.getElementById("feature-request-input").focus();
 }
 
 function recordStudyActivity() {
@@ -2240,54 +2286,7 @@ function playFeedbackSound(type) {
     gain.gain.setValueAtTime(0.08, context.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.2);
     oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.2);
-  } catch {
-    /* Audio is optional and may be blocked until the first interaction. */
-  }
-}
-
-function getLevel(xp) {
-  return Math.floor(xp / 200) + 1;
-}
-
-function saveLessonResume(subject, topic, subtopic) {
-  localStorage.setItem(
-    LESSON_RESUME_KEY,
-    JSON.stringify({ subject, topic, subtopic }),
-  );
-}
-
-function getLessonResume() {
-  try {
-    return JSON.parse(localStorage.getItem(LESSON_RESUME_KEY));
-  } catch {
-    return null;
-  }
-}
-
-function hasActiveSubscription() {
-  try {
-    const subscription = JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY));
-    return Boolean(
-      subscription && new Date(subscription.expiresAt) > new Date(),
-    );
-  } catch {
-    return false;
-  }
-}
-
-function getAllLessons(syllabus) {
-  return Object.entries(syllabus.topics).flatMap(([subject, topics]) =>
-    Object.entries(topics).flatMap(([topic, subtopics]) =>
-      Object.keys(subtopics).map((subtopic) => ({ subject, topic, subtopic })),
-    ),
-  );
-}
-
-function isFreeLesson(syllabus, subject, topic, subtopic) {
-  return (
-    getAllLessons(syllabus).findIndex(
+            steps: [
       (item) =>
         item.subject === subject &&
         item.topic === topic &&
