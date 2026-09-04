@@ -101,13 +101,14 @@ function requireRole(...roles) {
 function setupStudentSession() {
   const student = getStudentSession();
   if (!student) return;
+  const studentName = String(student.name || "Student");
 
   document.querySelectorAll(".sidebar").forEach((sidebar) => {
     if (student.role !== "teacher" && student.role !== "administrator") return;
     const existingProfile = sidebar.querySelector(".staff-profile");
     if (existingProfile) existingProfile.remove();
     const isAdministrator = student.role === "administrator";
-    const initials = student.name
+    const initials = studentName
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -121,7 +122,7 @@ function setupStudentSession() {
       `${isAdministrator ? "Administrator" : "Teacher"} profile`,
     );
     profile.innerHTML = `<div class="staff-profile-image"><img src="picture in coat.jpeg" alt="${isAdministrator ? "Administrator" : "Teacher"} profile picture"><span>${initials || (isAdministrator ? "AD" : "TE")}</span></div><div class="staff-profile-details"><strong></strong><span>${student.occupation || (isAdministrator ? "Platform administrator" : "Learning content teacher")}</span><small>${student.school || "Y_Cohde Academy"}</small></div>`;
-    profile.querySelector("strong").textContent = student.name;
+    profile.querySelector("strong").textContent = studentName;
     const image = profile.querySelector("img");
     image.addEventListener("error", () => {
       image.hidden = true;
@@ -130,7 +131,7 @@ function setupStudentSession() {
   });
 
   document.querySelectorAll(".profile-pill").forEach((profile) => {
-    const initials = student.name
+    const initials = studentName
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -2938,7 +2939,10 @@ function setupLearningSpace() {
   if (!space) return;
   let syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
-  const studentDepartment = getStudentSession()?.department;
+  const studentDepartment = normalizeDepartmentKey(
+    getStudentSession()?.department,
+    "",
+  );
   if (
     studentDepartment &&
     getSyllabusDepartment(syllabusKey) !== studentDepartment
@@ -6807,23 +6811,23 @@ function setupAdministratorPanel() {
 if (document.getElementById("administrator-panel")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireRole("administrator")) return;
-    setupStudentSession();
     setupMobileMenu();
+    setupStudentSession();
     setupAdministratorPanel();
   });
 } else if (document.getElementById("teacher-studio")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireRole("teacher")) return;
-    setupStudentSession();
     setupMobileMenu();
+    setupStudentSession();
     setupContentStudio();
     renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireStudentLogin()) return;
-    setupStudentSession();
     setupMobileMenu();
+    setupStudentSession();
     setupSimpleHamburgerMenu();
     setupDepartmentPage();
   });
@@ -6833,8 +6837,8 @@ if (document.getElementById("administrator-panel")) {
 ) {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireStudentLogin()) return;
-    setupStudentSession();
     setupMobileMenu();
+    setupStudentSession();
     setupSimpleHamburgerMenu();
     setupQuizPage();
     setupEngagementFeatures();
@@ -6844,8 +6848,8 @@ if (document.getElementById("administrator-panel")) {
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     if (!requireStudentLogin()) return;
-    setupStudentSession();
     setupMobileMenu();
+    setupStudentSession();
     setupSimpleHamburgerMenu();
     setupLearningExplorer();
     setupLearningSpace();

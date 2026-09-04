@@ -564,6 +564,15 @@ h3 {
   border: 1px solid rgba(65, 218, 238, 0.918);
 }
 
+/* Native select menus otherwise use a light system menu in some browsers,
+   making the light option text appear blank. */
+.reminder-card select option,
+.class-picker select option,
+.quiz-controls select option {
+  background: #0a253a;
+  color: var(--text);
+}
+
 .plan-card {
   padding: 14px;
   border-radius: 16px;
@@ -1016,6 +1025,13 @@ body.menu-open::before {
   .menu-toggle {
     display: inline-grid;
     place-items: center;
+  }
+
+  /* Keep the header trigger above the page overlay so it can both open and
+     close the mobile sidebar. */
+  .header-menu-toggle {
+    position: relative;
+    z-index: 31;
   }
 
   .site-header {
