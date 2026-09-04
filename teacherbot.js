@@ -2770,7 +2770,10 @@ function startLessonTimer(seconds = 600) {
 function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
-  const studentDepartment = getStudentSession()?.department;
+  const studentDepartment = normalizeDepartmentKey(
+    getStudentSession()?.department,
+    "",
+  );
   const visibleCatalog = Object.entries(learningCatalog).filter(
     ([key]) =>
       !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
@@ -5390,6 +5393,14 @@ function getDepartmentFromClass(classKey) {
   return "basic";
 }
 
+function normalizeDepartmentKey(value, fallback = "basic") {
+  const department = String(value || "").trim().toLowerCase();
+  if (department === "basic" || department.includes("basic")) return "basic";
+  if (department === "jhs" || department.includes("junior")) return "jhs";
+  if (department === "shs" || department.includes("senior")) return "shs";
+  return fallback;
+}
+
 function getSubjectCatalogForClass(classKey) {
   const department = getDepartmentFromClass(classKey);
   if (department === "shs") {
@@ -5567,12 +5578,15 @@ function setupDepartmentPage() {
     updateDepartmentVisual(selectedDepartment);
   }
 
-  const accountDepartment = getStudentSession()?.department;
-  const initialDepartment = accountDepartment || getDepartmentKey() || "basic";
+  const accountDepartment = normalizeDepartmentKey(
+    getStudentSession()?.department,
+    "",
+  );
+  const initialDepartment =
+    accountDepartment || normalizeDepartmentKey(getDepartmentKey(), "basic");
   const initialClass = getClassKey();
   const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
-  if (accountDepartment) departmentSelect.disabled = true;
   updateClassOptions();
   classSelect.value = optionsByDepartment[initialDepartment].includes(
     initialClass,
@@ -5596,6 +5610,17 @@ function setupDepartmentPage() {
       syllabus = `shs-${courseSelect.value}`;
     }
     params.set("syllabus", syllabus);
+    const student = getStudentSession();
+    if (student) {
+      localStorage.setItem(
+        STUDENT_SESSION_KEY,
+        JSON.stringify({
+          ...student,
+          department: departmentSelect.value,
+          className: classSelect.value,
+        }),
+      );
+    }
     window.location.href = `learning.html?${params.toString()}`;
   });
 }
