@@ -2400,7 +2400,52 @@ function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
             title: "Adding with regrouping",
             problem: "27 + 15",
             steps: [
-              "Add ones: 7 + 5 = 12. Write 2 and carry 1 ten.",
+      showFeatureRequestPopup("lesson-completed");
+    }
+
+    function showFeatureRequestPopup(trigger) {
+      const user = getStudentSession();
+      if (!user || document.getElementById("feature-request-modal")) return;
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `<div class="understanding-modal feature-request-modal" id="feature-request-modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="feature-request-title"><button class="modal-close" type="button" aria-label="Close feature request">&times;</button><p class="eyebrow">HELP SHAPE Y_COHDE</p><h2 id="feature-request-title">What feature would help you most?</h2><p>Your idea can help us make learning, teaching, and managing the website better.</p><form id="feature-request-form" class="feature-request-form"><label for="feature-request-input">Feature request<textarea id="feature-request-input" maxlength="500" required placeholder="I would like to see..."></textarea></label><div class="modal-actions"><button class="soft-btn modal-dismiss" type="button">Not now</button><button class="btn" type="submit">Send suggestion</button></div><p class="form-status" id="feature-request-status" role="status" aria-live="polite"></p></form></div></div>`,
+      );
+      const modal = document.getElementById("feature-request-modal");
+      const form = document.getElementById("feature-request-form");
+      const close = () => {
+        modal.classList.remove("visible");
+        modal.setAttribute("aria-hidden", "true");
+        window.setTimeout(() => modal.remove(), 220);
+      };
+      modal.querySelectorAll(".modal-close, .modal-dismiss").forEach((button) =>
+        button.addEventListener("click", close),
+      );
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const input = document.getElementById("feature-request-input");
+        const suggestion = input.value.trim();
+        if (!suggestion) return;
+        let requests = [];
+        try {
+          requests = JSON.parse(localStorage.getItem("ycohdeFeatureRequests")) || [];
+        } catch {
+          requests = [];
+        }
+        requests.push({
+          suggestion,
+          role: user.role || "student",
+          name: user.name || "Anonymous",
+          trigger,
+          createdAt: new Date().toISOString(),
+        });
+        localStorage.setItem("ycohdeFeatureRequests", JSON.stringify(requests));
+        document.getElementById("feature-request-status").textContent =
+          "Thanks. Your suggestion has been recorded.";
+        window.setTimeout(close, 900);
+      });
+      modal.classList.add("visible");
+      modal.setAttribute("aria-hidden", "false");
+      document.getElementById("feature-request-input").focus();
               "Add tens: 2 + 1 + 1 carried ten = 4.",
             ],
             result: "27 + 15 = 42",
@@ -6523,6 +6568,7 @@ function setupContentStudio({ administrator = false } = {}) {
       );
       status.textContent =
         "Sent to the administrator for review. It will not appear to students until approved.";
+      showFeatureRequestPopup("teacher-lesson-submitted");
       return;
     }
     if (!applyCatalogStructureChange(structure)) {
@@ -6555,6 +6601,7 @@ function setupContentStudio({ administrator = false } = {}) {
       text: `A ${subject.value} lesson has been updated for students.`,
     });
     status.textContent = "Saved and published for students in this browser.";
+    showFeatureRequestPopup("administrator-lesson-published");
   });
   if (!administrator) {
     const user = getStudentSession();
@@ -6693,6 +6740,7 @@ function setupAdministratorPanel() {
         pending.splice(index, 1);
         localStorage.setItem(PENDING_CONTENT_KEY, JSON.stringify(pending));
         renderPending();
+        showFeatureRequestPopup("administrator-edit-approved");
       }),
     );
   };

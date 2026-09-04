@@ -1555,4 +1555,11 @@ body.menu-open::before {
 .contribution-form button:disabled { cursor: wait; opacity: .65; }
 .form-status { min-height: 24px; color: var(--accent) !important; }
 .payment-footnote { margin-top: 18px; font-size: .82rem; }
+.feature-request-modal { z-index: 120; }
+.modal-close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: var(--muted); font-size: 1.7rem; cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.feature-request-form { display: grid; gap: 14px; margin-top: 18px; }
+.feature-request-form label { display: grid; gap: 8px; color: var(--muted); }
+.feature-request-form textarea { min-height: 110px; width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(3, 26, 43, .85); color: var(--text); resize: vertical; }
+.feature-request-form textarea:focus { outline: 2px solid rgba(127, 231, 255, .35); }
 @media (max-width: 480px) { .amount-options { grid-template-columns: repeat(2, 1fr); } .contribution-card { padding: 24px; } }
