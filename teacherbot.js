@@ -6867,15 +6867,23 @@ function setupAdministratorPanel() {
   renderPending();
 }
 
+function runWhenPageIsReady(callback) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback, { once: true });
+  } else {
+    callback();
+  }
+}
+
 if (document.getElementById("administrator-panel")) {
-  document.addEventListener("DOMContentLoaded", () => {
+  runWhenPageIsReady(() => {
     if (!requireRole("administrator")) return;
     setupMobileMenu();
     setupStudentSession();
     setupAdministratorPanel();
   });
 } else if (document.getElementById("teacher-studio")) {
-  document.addEventListener("DOMContentLoaded", () => {
+  runWhenPageIsReady(() => {
     if (!requireRole("teacher")) return;
     setupMobileMenu();
     setupStudentSession();
@@ -6883,35 +6891,35 @@ if (document.getElementById("administrator-panel")) {
     renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
-  document.addEventListener("DOMContentLoaded", () => {
+  runWhenPageIsReady(() => {
     if (!requireStudentLogin()) return;
     setupMobileMenu();
+    setupDepartmentPage();
     setupStudentSession();
     setupSimpleHamburgerMenu();
-    setupDepartmentPage();
   });
 } else if (
   document.getElementById("quiz-setup") &&
   document.getElementById("quiz-active-area")
 ) {
-  document.addEventListener("DOMContentLoaded", () => {
+  runWhenPageIsReady(() => {
     if (!requireStudentLogin()) return;
     setupMobileMenu();
+    setupQuizPage();
     setupStudentSession();
     setupSimpleHamburgerMenu();
-    setupQuizPage();
     setupEngagementFeatures();
     renderPublicReviews();
     document.getElementById("nextbtn")?.addEventListener("click", nextQuestion);
   });
 } else {
-  document.addEventListener("DOMContentLoaded", () => {
+  runWhenPageIsReady(() => {
     if (!requireStudentLogin()) return;
     setupMobileMenu();
-    setupStudentSession();
-    setupSimpleHamburgerMenu();
     setupLearningExplorer();
     setupLearningSpace();
+    setupStudentSession();
+    setupSimpleHamburgerMenu();
     setupStudentDashboard();
     setupCommunityPage();
     setupSubjectLinks();
