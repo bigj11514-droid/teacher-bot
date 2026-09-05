@@ -2771,22 +2771,61 @@ function startLessonTimer(seconds = 600) {
 function setupLearningExplorer() {
   const explorer = document.getElementById("learning-explorer");
   if (!explorer) return;
-  const studentDepartment = normalizeDepartmentKey(
-    getStudentSession()?.department,
-    "",
+  const classesByDepartment = {
+    basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
+    jhs: ["jhs1", "jhs2", "jhs3"],
+    shs: ["shs1", "shs2", "shs3"],
+  };
+  const student = getStudentSession() || {};
+  const savedClass = String(student.className || getClassKey()).toLowerCase();
+  const initialDepartment = normalizeDepartmentKey(
+    student.department,
+    getDepartmentFromClass(savedClass),
   );
-  const visibleCatalog = Object.entries(learningCatalog).filter(
-    ([key]) =>
-      !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
-  );
-  explorer.innerHTML = `<div class="syllabus-table-wrap learning-vertical"><table class="syllabus-table"><thead><tr><th>Syllabus</th><th>Available years</th><th>Start learning</th></tr></thead><tbody>${Object.entries(
-    Object.fromEntries(visibleCatalog),
-  )
-    .map(
-      ([key, syllabus]) =>
-        `<tr><td><strong>${syllabus.name}</strong></td><td>${syllabus.years.map((year) => `<a class="year-chip" href="learning.html?syllabus=${key}&year=${encodeURIComponent(year)}">${year}</a>`).join("")}</td><td><a class="small-btn" href="learning.html?syllabus=${key}">Choose topics</a></td></tr>`,
-    )
-    .join("")}</tbody></table></div>`;
+
+  explorer.innerHTML = `<section class="class-picker department-card"><label for="explorer-department-select">Department</label><select id="explorer-department-select"><option value="basic">Basic</option><option value="jhs">JHS</option><option value="shs">SHS</option></select><label for="explorer-class-select">Class</label><select id="explorer-class-select"></select><label for="explorer-syllabus-select">Syllabus / course</label><select id="explorer-syllabus-select"></select><button id="explorer-start-btn" class="small-btn" type="button">Start learning</button></section><div id="explorer-catalog"></div>`;
+
+  const departmentSelect = document.getElementById("explorer-department-select");
+  const classSelect = document.getElementById("explorer-class-select");
+  const syllabusSelect = document.getElementById("explorer-syllabus-select");
+  const catalog = document.getElementById("explorer-catalog");
+
+  const updateSyllabuses = () => {
+    const choices = Object.entries(learningCatalog).filter(
+      ([key]) => getSyllabusDepartment(key) === departmentSelect.value,
+    );
+    syllabusSelect.innerHTML = choices
+      .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
+      .join("");
+    catalog.innerHTML = `<p class="select">${classLabels[classSelect.value]} can choose from the syllabus or course above.</p>`;
+  };
+  const updateClasses = () => {
+    const choices = classesByDepartment[departmentSelect.value];
+    classSelect.innerHTML = choices
+      .map((key) => `<option value="${key}">${classLabels[key]}</option>`)
+      .join("");
+    classSelect.value = choices.includes(savedClass) ? savedClass : choices[0];
+    updateSyllabuses();
+  };
+
+  departmentSelect.value = initialDepartment;
+  updateClasses();
+  departmentSelect.addEventListener("change", updateClasses);
+  classSelect.addEventListener("change", updateSyllabuses);
+  document.getElementById("explorer-start-btn").addEventListener("click", () => {
+    const activeStudent = getStudentSession();
+    if (activeStudent) {
+      localStorage.setItem(
+        STUDENT_SESSION_KEY,
+        JSON.stringify({
+          ...activeStudent,
+          department: departmentSelect.value,
+          className: classSelect.value,
+        }),
+      );
+    }
+    window.location.href = `learning.html?${new URLSearchParams({ syllabus: syllabusSelect.value, class: classSelect.value }).toString()}`;
+  });
 }
 
 function getStudyStreak() {
@@ -2861,8 +2900,9 @@ function setupSidebarProgressCard() {
   const sidebar = document.querySelector(".sidebar");
   const student = getStudentSession();
   if (!sidebar || !student) return;
+  const studentName = String(student.name || "Student");
   const initials =
-    student.name
+    studentName
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -2881,7 +2921,7 @@ function setupSidebarProgressCard() {
   const game = getGamification();
   const sideCard = document.createElement("section");
   sideCard.className = "sidebar-card sidebar-progress-card";
-  sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${student.name}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="learning.html?syllabus=ges" class="small-btn">Continue learning</a>`;
+  sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${studentName}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="learning.html?syllabus=ges" class="small-btn">Continue learning</a>`;
   sidebar.append(sideCard);
 }
 
@@ -2939,17 +2979,6 @@ function setupLearningSpace() {
   if (!space) return;
   let syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
-  const studentDepartment = normalizeDepartmentKey(
-    getStudentSession()?.department,
-    "",
-  );
-  if (
-    studentDepartment &&
-    getSyllabusDepartment(syllabusKey) !== studentDepartment
-  ) {
-    window.location.replace("department.html");
-    return;
-  }
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
   const selectedYear = new URLSearchParams(window.location.search).get("year");
   const classesByDepartment = {
@@ -2978,9 +3007,7 @@ function setupLearningSpace() {
 
   const syllabusSelect = selectionControls.querySelector("#learning-syllabus-select");
   const classSelect = selectionControls.querySelector("#learning-class-select");
-  const allowedSyllabuses = Object.entries(learningCatalog).filter(([key]) =>
-    !studentDepartment || getSyllabusDepartment(key) === studentDepartment,
-  );
+  const allowedSyllabuses = Object.entries(learningCatalog);
   syllabusSelect.innerHTML = allowedSyllabuses
     .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
     .join("");
@@ -3008,7 +3035,11 @@ function setupLearningSpace() {
       if (student) {
         localStorage.setItem(
           STUDENT_SESSION_KEY,
-          JSON.stringify({ ...student, className: classSelect.value }),
+          JSON.stringify({
+            ...student,
+            department: getSyllabusDepartment(syllabusSelect.value),
+            className: classSelect.value,
+          }),
         );
       }
       const params = new URLSearchParams({
@@ -5297,40 +5328,40 @@ let quizStarted = false;
 
 const shsCourseCatalog = {
   "general-arts": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "english", label: "English Language" },
+    { key: "owop", label: "Social Studies" },
     { key: "economics", label: "Economics" },
     { key: "government", label: "Government" },
     { key: "ict", label: "ICT" },
   ],
   "general-science": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "integrated-science", label: "Integrated Science" },
-    { key: "social-studies", label: "Social Studies" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "english", label: "English Language" },
+    { key: "science", label: "Integrated Science" },
+    { key: "owop", label: "Social Studies" },
     { key: "ict", label: "ICT" },
   ],
   business: [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "english", label: "English Language" },
     { key: "economics", label: "Economics" },
-    { key: "social-studies", label: "Social Studies" },
+    { key: "owop", label: "Business Management" },
     { key: "ict", label: "ICT" },
   ],
   "home-economics": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
-    { key: "economics", label: "Economics" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "english", label: "English Language" },
+    { key: "science", label: "Food and Nutrition" },
+    { key: "owop", label: "Management in Living" },
     { key: "ict", label: "ICT" },
   ],
   "visual-arts": [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "social-studies", label: "Social Studies" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "english", label: "English Language" },
+    { key: "creative", label: "General Knowledge in Art" },
+    { key: "creative", label: "Graphic Design" },
     { key: "ict", label: "ICT" },
-    { key: "government", label: "Government" },
   ],
 };
 
@@ -5354,11 +5385,11 @@ const subjectCatalog = {
     { key: "creative", label: "Creative Arts" },
   ],
   shs: [
-    { key: "core-maths", label: "Core Mathematics" },
-    { key: "elective-maths", label: "Elective Mathematics" },
-    { key: "english-language", label: "English Language" },
-    { key: "integrated-science", label: "Integrated Science" },
-    { key: "social-studies", label: "Social Studies" },
+    { key: "maths", label: "Core Mathematics" },
+    { key: "maths", label: "Elective Mathematics" },
+    { key: "english", label: "English Language" },
+    { key: "science", label: "Integrated Science" },
+    { key: "owop", label: "Social Studies" },
     { key: "economics", label: "Economics" },
     { key: "government", label: "Government" },
     { key: "ict", label: "ICT" },
@@ -5405,10 +5436,10 @@ function normalizeDepartmentKey(value, fallback = "basic") {
   return fallback;
 }
 
-function getSubjectCatalogForClass(classKey) {
+function getSubjectCatalogForClass(classKey, course = getCourseKey()) {
   const department = getDepartmentFromClass(classKey);
   if (department === "shs") {
-    return shsCourseCatalog[getCourseKey()] || shsCourseCatalog["general-arts"];
+    return shsCourseCatalog[course] || shsCourseCatalog["general-arts"];
   }
   return subjectCatalog[department] || subjectCatalog.basic;
 }
@@ -5438,6 +5469,16 @@ function buildShuffledQuestion(question) {
     answers: shuffledItems.map((item) => item.answer),
     correct: correctIndex,
   };
+}
+
+function buildQuizQuestionSet(baseQuestions, total = 20) {
+  if (!Array.isArray(baseQuestions) || baseQuestions.length === 0) return [];
+
+  const questions = [];
+  while (questions.length < total) {
+    questions.push(...shuffleArray(baseQuestions).map(buildShuffledQuestion));
+  }
+  return questions.slice(0, total);
 }
 
 function renderSubjectLinks(selectedClass, container) {
@@ -5558,7 +5599,10 @@ function setupDepartmentPage() {
   }
 
   function updateClassOptions() {
-    const selectedDepartment = departmentSelect.value;
+    const selectedDepartment = optionsByDepartment[departmentSelect.value]
+      ? departmentSelect.value
+      : "basic";
+    departmentSelect.value = selectedDepartment;
     classSelect.innerHTML = "";
 
     optionsByDepartment[selectedDepartment].forEach((value) => {
@@ -5603,7 +5647,8 @@ function setupDepartmentPage() {
   }
 
   departmentSelect.addEventListener("change", updateClassOptions);
-  continueBtn.addEventListener("click", () => {
+  continueBtn.addEventListener("click", (event) => {
+    event.preventDefault();
     const params = new URLSearchParams();
     params.set("class", classSelect.value);
     params.set("department", departmentSelect.value);
@@ -5641,7 +5686,10 @@ function setupQuizPage() {
   const subjectSelect = document.getElementById("quiz-subject-select");
   const courseSelect = document.getElementById("quiz-course-select");
   const courseLabel = document.getElementById("quiz-course-label");
-  const accountDepartment = getStudentSession()?.department;
+  const accountDepartment = normalizeDepartmentKey(
+    getStudentSession()?.department,
+    "",
+  );
 
   if (!quizSetup || !startBtn || !timerSelect) {
     return;
@@ -5654,7 +5702,10 @@ function setupQuizPage() {
   };
 
   const updateSubjects = (useRequestedSubject = false) => {
-    const options = getSubjectCatalogForClass(classSelect.value);
+    const options = getSubjectCatalogForClass(
+      classSelect.value,
+      courseSelect?.value,
+    );
     const currentSubject = subjectSelect.value;
     subjectSelect.innerHTML = options
       .map(
@@ -5684,7 +5735,8 @@ function setupQuizPage() {
     const isShs = departmentSelect.value === "shs";
     if (courseSelect) courseSelect.hidden = !isShs;
     if (courseLabel) courseLabel.hidden = !isShs;
-    if (courseSelect && isShs) courseSelect.value = getCourseKey();
+    if (courseSelect && isShs && !courseSelect.value)
+      courseSelect.value = getCourseKey();
   };
 
   const updateClasses = () => {
@@ -5708,13 +5760,9 @@ function setupQuizPage() {
       ? requestedDepartment
       : getDepartmentFromClass(getClassKey());
     updateClasses();
-    if (accountDepartment) departmentSelect.disabled = true;
     departmentSelect.addEventListener("change", updateClasses);
     classSelect.addEventListener("change", () => updateSubjects(false));
     courseSelect?.addEventListener("change", () => {
-      const params = new URLSearchParams(window.location.search);
-      params.set("course", courseSelect.value);
-      window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
       updateSubjects(false);
     });
     subjectSelect.addEventListener("change", () => updateSubjects(false));
@@ -5730,6 +5778,17 @@ function setupQuizPage() {
       if (departmentSelect.value === "shs")
         params.set("course", courseSelect?.value || "general-arts");
       window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
+      const student = getStudentSession();
+      if (student) {
+        localStorage.setItem(
+          STUDENT_SESSION_KEY,
+          JSON.stringify({
+            ...student,
+            department: departmentSelect.value,
+            className: classSelect.value,
+          }),
+        );
+      }
     }
     quizTimerSeconds = Number(timerSelect.value) || 15;
     quizStarted = true;
@@ -5780,7 +5839,7 @@ function setupQuiz() {
 
   const levelKey = classLevels[classKey] || "early";
   const baseQuestions = subjectData[levelKey] || subjectData.early;
-  quizQuestions = shuffleArray(baseQuestions).map(buildShuffledQuestion);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, 20);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
