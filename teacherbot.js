@@ -3158,7 +3158,19 @@ function setupLearningSpace() {
       subtopic,
       activeLesson,
     );
-    const examples = extras.examples
+    const lessonExamples = extras.examples.length
+      ? extras.examples
+      : [
+          {
+            title: "Think it through",
+            problem: `Use the main idea from ${subtopic}.`,
+            steps: ["Read the lesson", "Identify the key idea", "Apply it carefully"],
+            result: "You are ready to practise.",
+          },
+        ];
+    const examples = Array.from({ length: 5 }, (_, index) =>
+      lessonExamples[index % lessonExamples.length],
+    )
       .map(
         (example) =>
           `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`,
@@ -3170,7 +3182,7 @@ function setupLearningSpace() {
       : videoUrl
         ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
         : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Examples</h3>${examples}</section><button class="btn" id="finish-lesson">I understand this lesson</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
     activeLesson._guidedVideo = video;
     activeLesson._guidedQuestions = extras.questions;
     // CONTENT-STUDIO QUESTIONS: exact five-question sets saved by an admin or
@@ -3184,7 +3196,13 @@ function setupLearningSpace() {
     document.getElementById("finish-lesson").addEventListener("click", () => {
       clearInterval(lessonTimerId);
       lessonTimerId = null;
-      document.getElementById("understanding-modal").classList.add("visible");
+      renderTopicQuiz(
+        activeLesson,
+        activeLessonMeta.subtopic,
+        () => renderLesson(subject, topic, subtopic),
+        continueAfterExercise,
+        activeLessonMeta,
+      );
     });
     if (contentOverride.imageMediaId) {
       getLessonMedia(contentOverride.imageMediaId)
@@ -3216,12 +3234,21 @@ function setupLearningSpace() {
         })
         .catch(() => {});
     }
+    // Every lesson begins with its video. The student chooses when to move on
+    // to the reading rather than being blocked by a timer or autoplay.
+    const videoModal = document.getElementById("lesson-video-modal");
+    document.getElementById("guided-video-content").innerHTML = video;
+    videoModal.classList.add("visible");
+    document.getElementById("start-topic-check").textContent = "Done watching";
+    document.getElementById("start-topic-check").onclick = () => {
+      videoModal.classList.remove("visible");
+    };
   };
   const modal = document.getElementById("understanding-modal");
   if (!document.getElementById("lesson-video-modal")) {
     document.body.insertAdjacentHTML(
       "beforeend",
-      '<div class="understanding-modal" id="lesson-video-modal" aria-hidden="true"><div class="modal-card lesson-video-modal-card"><h2>Watch the lesson video</h2><div id="guided-video-content"></div><div class="modal-actions"><button class="btn" id="start-topic-check">Continue to 5 questions</button></div></div></div>',
+      '<div class="understanding-modal" id="lesson-video-modal" aria-hidden="true"><div class="modal-card lesson-video-modal-card"><h2>Watch the lesson video</h2><div id="guided-video-content"></div><div class="modal-actions"><button class="btn" id="start-topic-check">Done watching</button></div></div></div>',
     );
   }
   if (!document.getElementById("enjoyment-modal")) {
@@ -3295,7 +3322,7 @@ function setupLearningSpace() {
   } else renderTopics();
 }
 
-function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
+function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
@@ -3344,10 +3371,18 @@ function renderTopicQuiz(lesson, subtopic, afterQuiz, metadata = {}) {
         syllabus:
           new URLSearchParams(window.location.search).get("syllabus") || "ges",
       });
-    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>${score === 5 ? "Excellent work—you understood this topic well." : "Good effort. Now complete the exercise to show what you know."}</p><button class="btn" id="choose-another-topic">Go to exercise</button></article>`;
+    if (score === quizQuestions.length) {
+      space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>Excellent work—you can move to the next lesson.</p><button class="btn" id="choose-another-topic">Next lesson</button></article>`;
+      document
+        .getElementById("choose-another-topic")
+        .addEventListener("click", onPassed || (() => setupLearningSpace()));
+      return;
+    }
+
+    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>Review the lesson and examples, then try the five questions again.</p><button class="soft-btn" id="choose-another-topic">Go back to lesson</button></article>`;
     document
       .getElementById("choose-another-topic")
-      .addEventListener("click", afterQuiz || (() => setupLearningSpace()));
+      .addEventListener("click", onRetry || (() => setupLearningSpace()));
   };
   showQuestion();
 }
