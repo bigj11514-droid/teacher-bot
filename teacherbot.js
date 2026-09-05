@@ -3136,7 +3136,7 @@ function setupLearningSpace() {
     showExerciseQuestion();
   };
 
-  const renderLesson = (subject, topic, subtopic) => {
+  const renderLesson = (subject, topic, subtopic, { showVideo = true } = {}) => {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
@@ -3196,10 +3196,10 @@ function setupLearningSpace() {
     document.getElementById("finish-lesson").addEventListener("click", () => {
       clearInterval(lessonTimerId);
       lessonTimerId = null;
-      renderTopicQuiz(
+      showLessonQuestionPopup(
         activeLesson,
         activeLessonMeta.subtopic,
-        () => renderLesson(subject, topic, subtopic),
+        () => renderLesson(subject, topic, subtopic, { showVideo: false }),
         continueAfterExercise,
         activeLessonMeta,
       );
@@ -3236,13 +3236,15 @@ function setupLearningSpace() {
     }
     // Every lesson begins with its video. The student chooses when to move on
     // to the reading rather than being blocked by a timer or autoplay.
-    const videoModal = document.getElementById("lesson-video-modal");
-    document.getElementById("guided-video-content").innerHTML = video;
-    videoModal.classList.add("visible");
-    document.getElementById("start-topic-check").textContent = "Done watching";
-    document.getElementById("start-topic-check").onclick = () => {
-      videoModal.classList.remove("visible");
-    };
+    if (showVideo) {
+      const videoModal = document.getElementById("lesson-video-modal");
+      document.getElementById("guided-video-content").innerHTML = video;
+      videoModal.classList.add("visible");
+      document.getElementById("start-topic-check").textContent = "Done watching";
+      document.getElementById("start-topic-check").onclick = () => {
+        videoModal.classList.remove("visible");
+      };
+    }
   };
   const modal = document.getElementById("understanding-modal");
   if (!document.getElementById("lesson-video-modal")) {
@@ -3320,6 +3322,73 @@ function setupLearningSpace() {
   ) {
     renderLesson(savedLesson.subject, savedLesson.topic, savedLesson.subtopic);
   } else renderTopics();
+}
+
+// The lesson check is deliberately one focused question. The lesson itself
+// already teaches the idea and shows five worked examples, so a student who
+// misses this check is returned to that material instead of being advanced.
+function showLessonQuestionPopup(
+  lesson,
+  subtopic,
+  onRetry,
+  onPassed,
+  metadata = {},
+) {
+  const questions = getFiveQuizQuestions(lesson, subtopic, undefined, metadata);
+  const [question, answers, correct] = questions[0];
+  let modal = document.getElementById("lesson-question-modal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<div class="understanding-modal" id="lesson-question-modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lesson-question-title"><p class="eyebrow">Lesson check</p><h2 id="lesson-question-title"></h2><div class="answers lesson-question-answers" id="lesson-question-answers"></div><p class="feedback-text" id="lesson-question-feedback" aria-live="polite"></p><div class="modal-actions" id="lesson-question-actions"></div></div></div>',
+    );
+    modal = document.getElementById("lesson-question-modal");
+  }
+
+  const title = modal.querySelector("#lesson-question-title");
+  const answerList = modal.querySelector("#lesson-question-answers");
+  const feedback = modal.querySelector("#lesson-question-feedback");
+  const actions = modal.querySelector("#lesson-question-actions");
+  title.textContent = question;
+  feedback.textContent = "Choose the best answer to finish this lesson.";
+  actions.innerHTML = "";
+  answerList.innerHTML = answers
+    .map(
+      (answer, index) =>
+        `<button type="button" data-lesson-answer="${index}">${answer}</button>`,
+    )
+    .join("");
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+
+  answerList.querySelectorAll("[data-lesson-answer]").forEach((button) =>
+    button.addEventListener("click", () => {
+      const selected = Number(button.dataset.lessonAnswer);
+      answerList
+        .querySelectorAll("[data-lesson-answer]")
+        .forEach((item) => (item.disabled = true));
+      const passed = selected === correct;
+      if (metadata.subject) {
+        saveLessonCheckResult(passed ? 1 : 0, 1, {
+          ...metadata,
+          syllabus:
+            new URLSearchParams(window.location.search).get("syllabus") || "ges",
+        });
+      }
+      feedback.textContent = passed
+        ? "Correct! You are ready for the next lesson."
+        : `Not quite. The answer is ${answers[correct]}. Review the lesson and examples, then try again.`;
+      actions.innerHTML = `<button class="${passed ? "btn" : "soft-btn"}" type="button" id="lesson-question-next">${passed ? "Next lesson" : "Go back to lesson"}</button>`;
+      document
+        .getElementById("lesson-question-next")
+        .addEventListener("click", () => {
+          modal.classList.remove("visible");
+          modal.setAttribute("aria-hidden", "true");
+          (passed ? onPassed : onRetry)?.();
+        });
+    }),
+  );
 }
 
 function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
