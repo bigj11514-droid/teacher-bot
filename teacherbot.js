@@ -2308,6 +2308,21 @@ function isFreeLesson(syllabus, subject, topic, subtopic) {
   );
 }
 
+// A subscription is stored by payment.html with an ISO expiry date. Keeping
+// this check defensive means the Learning Explorer still renders for students
+// who have never paid or whose browser storage is empty/corrupted.
+function hasActiveSubscription() {
+  try {
+    const subscription = JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY));
+    return Boolean(
+      subscription?.expiresAt &&
+        new Date(subscription.expiresAt).getTime() > Date.now(),
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isSubtopicUnlocked(syllabus, subject, topic, subtopic) {
   // A paid learning pass opens every subtopic; free learners progress through
   // introductory lessons in order, with one starting lesson per subject.
