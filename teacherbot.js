@@ -2316,7 +2316,7 @@ function hasActiveSubscription() {
     const subscription = JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY));
     return Boolean(
       subscription?.expiresAt &&
-        new Date(subscription.expiresAt).getTime() > Date.now(),
+      new Date(subscription.expiresAt).getTime() > Date.now(),
     );
   } catch {
     return false;
@@ -2800,7 +2800,9 @@ function setupLearningExplorer() {
 
   explorer.innerHTML = `<section class="class-picker department-card"><label for="explorer-department-select">Department</label><select id="explorer-department-select"><option value="basic">Basic</option><option value="jhs">JHS</option><option value="shs">SHS</option></select><label for="explorer-class-select">Class</label><select id="explorer-class-select"></select><label for="explorer-syllabus-select">Syllabus / course</label><select id="explorer-syllabus-select"></select><button id="explorer-start-btn" class="small-btn" type="button">Start learning</button></section><div id="explorer-catalog"></div>`;
 
-  const departmentSelect = document.getElementById("explorer-department-select");
+  const departmentSelect = document.getElementById(
+    "explorer-department-select",
+  );
   const classSelect = document.getElementById("explorer-class-select");
   const syllabusSelect = document.getElementById("explorer-syllabus-select");
   const catalog = document.getElementById("explorer-catalog");
@@ -2827,20 +2829,22 @@ function setupLearningExplorer() {
   updateClasses();
   departmentSelect.addEventListener("change", updateClasses);
   classSelect.addEventListener("change", updateSyllabuses);
-  document.getElementById("explorer-start-btn").addEventListener("click", () => {
-    const activeStudent = getStudentSession();
-    if (activeStudent) {
-      localStorage.setItem(
-        STUDENT_SESSION_KEY,
-        JSON.stringify({
-          ...activeStudent,
-          department: departmentSelect.value,
-          className: classSelect.value,
-        }),
-      );
-    }
-    window.location.href = `learning.html?${new URLSearchParams({ syllabus: syllabusSelect.value, class: classSelect.value }).toString()}`;
-  });
+  document
+    .getElementById("explorer-start-btn")
+    .addEventListener("click", () => {
+      const activeStudent = getStudentSession();
+      if (activeStudent) {
+        localStorage.setItem(
+          STUDENT_SESSION_KEY,
+          JSON.stringify({
+            ...activeStudent,
+            department: departmentSelect.value,
+            className: classSelect.value,
+          }),
+        );
+      }
+      window.location.href = `learning.html?${new URLSearchParams({ syllabus: syllabusSelect.value, class: classSelect.value }).toString()}`;
+    });
 }
 
 function getStudyStreak() {
@@ -2992,27 +2996,41 @@ function getNextLessonTarget(syllabus, subject, topic, subtopic) {
 function setupLearningSpace() {
   const space = document.getElementById("learning-space");
   if (!space) return;
-  space.innerHTML = '<div class="panel-header"><p class="eyebrow">Your lessons</p><h2>Loading your lessons...</h2><p class="select">Preparing topics and activities for you.</p></div>';
-  let syllabusKey =
-    new URLSearchParams(window.location.search).get("syllabus") || "ges";
-  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
-  const selectedYear = new URLSearchParams(window.location.search).get("year");
+  space.innerHTML =
+    '<div class="panel-header"><p class="eyebrow">Your lessons</p><h2>Loading your lessons...</h2><p class="select">Preparing topics and activities for you.</p></div>';
+  const params = new URLSearchParams(window.location.search);
+  const student = getStudentSession() || {};
   const classesByDepartment = {
     basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
     jhs: ["jhs1", "jhs2", "jhs3"],
     shs: ["shs1", "shs2", "shs3"],
   };
-  const selectedDepartment = getSyllabusDepartment(syllabusKey);
+  const requestedClass = (params.get("class") || student.className || "basic1").toLowerCase();
+  const classDepartment = getDepartmentFromClass(requestedClass);
+  const selectedDepartment = normalizeDepartmentKey(
+    params.get("department") || student.department,
+    classDepartment,
+  );
   const availableClasses = classesByDepartment[selectedDepartment];
-  const requestedClass = getClassKey();
   const selectedClass = availableClasses.includes(requestedClass)
     ? requestedClass
     : availableClasses[0];
+  const course = params.get("course") || student.course || "general-arts";
+  const requestedSyllabus = params.get("syllabus");
+  const syllabusKey =
+    requestedSyllabus &&
+    learningCatalog[requestedSyllabus] &&
+    getSyllabusDepartment(requestedSyllabus) === selectedDepartment
+      ? requestedSyllabus
+      : getDefaultSyllabusKey(selectedDepartment, course);
+  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const selectedYear = params.get("year");
 
   // Keep class and syllabus selection available on the lesson page. This is
   // especially useful when students return directly to learning.html.
   const selectionControls = document.createElement("section");
-  selectionControls.className = "class-picker department-card learning-selection";
+  selectionControls.className =
+    "class-picker department-card learning-selection";
   selectionControls.innerHTML = `
     <label for="learning-syllabus-select">Syllabus</label>
     <select id="learning-syllabus-select"></select>
@@ -3021,7 +3039,9 @@ function setupLearningSpace() {
     <button class="small-btn" id="apply-learning-selection" type="button">Start learning</button>
   `;
 
-  const syllabusSelect = selectionControls.querySelector("#learning-syllabus-select");
+  const syllabusSelect = selectionControls.querySelector(
+    "#learning-syllabus-select",
+  );
   const classSelect = selectionControls.querySelector("#learning-class-select");
   const allowedSyllabuses = Object.entries(learningCatalog);
   syllabusSelect.innerHTML = allowedSyllabuses
@@ -3152,7 +3172,12 @@ function setupLearningSpace() {
     showExerciseQuestion();
   };
 
-  const renderLesson = (subject, topic, subtopic, { showVideo = true } = {}) => {
+  const renderLesson = (
+    subject,
+    topic,
+    subtopic,
+    { showVideo = true } = {},
+  ) => {
     activeLessonMeta = { subject, topic, subtopic };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
@@ -3180,12 +3205,17 @@ function setupLearningSpace() {
           {
             title: "Think it through",
             problem: `Use the main idea from ${subtopic}.`,
-            steps: ["Read the lesson", "Identify the key idea", "Apply it carefully"],
+            steps: [
+              "Read the lesson",
+              "Identify the key idea",
+              "Apply it carefully",
+            ],
             result: "You are ready to practise.",
           },
         ];
-    const examples = Array.from({ length: 5 }, (_, index) =>
-      lessonExamples[index % lessonExamples.length],
+    const examples = Array.from(
+      { length: 5 },
+      (_, index) => lessonExamples[index % lessonExamples.length],
     )
       .map(
         (example) =>
@@ -3256,7 +3286,8 @@ function setupLearningSpace() {
       const videoModal = document.getElementById("lesson-video-modal");
       document.getElementById("guided-video-content").innerHTML = video;
       videoModal.classList.add("visible");
-      document.getElementById("start-topic-check").textContent = "Done watching";
+      document.getElementById("start-topic-check").textContent =
+        "Done watching";
       document.getElementById("start-topic-check").onclick = () => {
         videoModal.classList.remove("visible");
       };
@@ -3389,7 +3420,8 @@ function showLessonQuestionPopup(
         saveLessonCheckResult(passed ? 1 : 0, 1, {
           ...metadata,
           syllabus:
-            new URLSearchParams(window.location.search).get("syllabus") || "ges",
+            new URLSearchParams(window.location.search).get("syllabus") ||
+            "ges",
         });
       }
       feedback.textContent = passed
@@ -5542,6 +5574,12 @@ function getSyllabusDepartment(syllabusKey) {
   return "basic";
 }
 
+function getDefaultSyllabusKey(department, course = "general-arts") {
+  if (department === "jhs") return "jhs";
+  if (department === "shs") return `shs-${course}`;
+  return "ges";
+}
+
 function getDepartmentFromClass(classKey) {
   if (classKey.startsWith("shs")) return "shs";
   if (classKey.startsWith("jhs")) return "jhs";
@@ -5549,7 +5587,9 @@ function getDepartmentFromClass(classKey) {
 }
 
 function normalizeDepartmentKey(value, fallback = "basic") {
-  const department = String(value || "").trim().toLowerCase();
+  const department = String(value || "")
+    .trim()
+    .toLowerCase();
   if (department === "basic" || department.includes("basic")) return "basic";
   if (department === "jhs" || department.includes("junior")) return "jhs";
   if (department === "shs" || department.includes("senior")) return "shs";
@@ -7042,8 +7082,11 @@ if (document.getElementById("administrator-panel")) {
     } catch (error) {
       const space = document.getElementById("learning-space");
       if (space) {
-        space.innerHTML = '<article class="lesson-card"><p class="eyebrow">Lessons unavailable</p><h2>We could not open the lesson panel.</h2><p>Please refresh the page to load your lessons again.</p><button class="btn" type="button" id="reload-lessons">Refresh lessons</button></article>';
-        document.getElementById("reload-lessons")?.addEventListener("click", () => window.location.reload());
+        space.innerHTML =
+          '<article class="lesson-card"><p class="eyebrow">Lessons unavailable</p><h2>We could not open the lesson panel.</h2><p>Please refresh the page to load your lessons again.</p><button class="btn" type="button" id="reload-lessons">Refresh lessons</button></article>';
+        document
+          .getElementById("reload-lessons")
+          ?.addEventListener("click", () => window.location.reload());
       }
       console.error("Unable to initialise the student lesson panel", error);
     }
