@@ -2992,6 +2992,7 @@ function getNextLessonTarget(syllabus, subject, topic, subtopic) {
 function setupLearningSpace() {
   const space = document.getElementById("learning-space");
   if (!space) return;
+  space.innerHTML = '<div class="panel-header"><p class="eyebrow">Your lessons</p><h2>Loading your lessons...</h2><p class="select">Preparing topics and activities for you.</p></div>';
   let syllabusKey =
     new URLSearchParams(window.location.search).get("syllabus") || "ges";
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
@@ -7035,8 +7036,17 @@ if (document.getElementById("administrator-panel")) {
   runWhenPageIsReady(() => {
     if (!requireStudentLogin()) return;
     setupMobileMenu();
-    setupLearningExplorer();
-    setupLearningSpace();
+    try {
+      setupLearningExplorer();
+      setupLearningSpace();
+    } catch (error) {
+      const space = document.getElementById("learning-space");
+      if (space) {
+        space.innerHTML = '<article class="lesson-card"><p class="eyebrow">Lessons unavailable</p><h2>We could not open the lesson panel.</h2><p>Please refresh the page to load your lessons again.</p><button class="btn" type="button" id="reload-lessons">Refresh lessons</button></article>';
+        document.getElementById("reload-lessons")?.addEventListener("click", () => window.location.reload());
+      }
+      console.error("Unable to initialise the student lesson panel", error);
+    }
     setupStudentSession();
     setupSimpleHamburgerMenu();
     setupStudentDashboard();
