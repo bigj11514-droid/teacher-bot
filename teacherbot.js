@@ -2911,7 +2911,7 @@ function setupStudentDashboard() {
       ? "🏅 Rising learner: Level 2"
       : "🔒 Earn 200 XP for Level 2",
   ];
-  dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><div class="profile-pill dashboard-profile"><span>${initials}</span><div><strong>${student.name}</strong><small>Student progress</small></div></div></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="gamification-card"><strong>Level ${level} · ${game.xp || 0} XP</strong><span>${200 - ((game.xp || 0) % 200)} XP to Level ${level + 1}</span></section><section class="achievement-list"><h3>Badges & achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section><a class="btn dashboard-continue" href="learning.html?syllabus=ges">Continue learning</a></section>`;
+  dashboard.innerHTML = `<section class="student-dashboard panel-card"><div class="dashboard-heading"><div><p class="eyebrow">My learning dashboard</p><h2>Your progress at a glance</h2></div><div class="profile-pill dashboard-profile"><span>${initials}</span><div><strong>${student.name}</strong><small>Student progress</small></div></div></div><div class="dashboard-stats"><article><span>Lessons completed</span><strong>${completed}</strong></article><article><span>Quizzes completed</span><strong>${history.length}</strong></article><article><span>Average quiz score</span><strong>${average}%</strong></article><article><span>Study streak</span><strong>${streak} day${streak === 1 ? "" : "s"}</strong></article></div><section class="progress-overview"><div><strong>Overall progress</strong><span>${progress}% complete</span></div><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div></section><section class="gamification-card"><strong>Level ${level} · ${game.xp || 0} XP</strong><span>${200 - ((game.xp || 0) % 200)} XP to Level ${level + 1}</span></section><section class="achievement-list"><h3>Badges & achievements</h3>${achievements.map((item) => `<span>${item}</span>`).join("")}</section><a class="btn dashboard-continue" href="${getStudentLearningUrl(student)}">Continue learning</a></section>`;
   setupSidebarProgressCard();
 }
 
@@ -2940,7 +2940,7 @@ function setupSidebarProgressCard() {
   const game = getGamification();
   const sideCard = document.createElement("section");
   sideCard.className = "sidebar-card sidebar-progress-card";
-  sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${studentName}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="learning.html?syllabus=ges" class="small-btn">Continue learning</a>`;
+  sideCard.innerHTML = `<div class="sidebar-progress-name"><span>${initials}</span><strong>${studentName}</strong></div><p>Your learning progress</p><strong>${progress}% complete</strong><div class="subtopic-progress-bar"><div class="subtopic-progress-fill" style="width:${progress}%"></div></div><small>Level ${getLevel(game.xp || 0)} · ${game.xp || 0} XP · ${streak} day streak</small><a href="${getStudentLearningUrl(student)}" class="small-btn">Continue learning</a>`;
   sidebar.append(sideCard);
 }
 
@@ -3005,7 +3005,11 @@ function setupLearningSpace() {
     jhs: ["jhs1", "jhs2", "jhs3"],
     shs: ["shs1", "shs2", "shs3"],
   };
-  const requestedClass = (params.get("class") || student.className || "basic1").toLowerCase();
+  const requestedClass = (
+    params.get("class") ||
+    student.className ||
+    "basic1"
+  ).toLowerCase();
   const classDepartment = getDepartmentFromClass(requestedClass);
   const selectedDepartment = normalizeDepartmentKey(
     params.get("department") || student.department,
@@ -3081,6 +3085,7 @@ function setupLearningSpace() {
       const params = new URLSearchParams({
         syllabus: syllabusSelect.value,
         class: classSelect.value,
+        department: getSyllabusDepartment(syllabusSelect.value),
       });
       window.location.href = `learning.html?${params.toString()}`;
     });
@@ -5580,6 +5585,19 @@ function getDefaultSyllabusKey(department, course = "general-arts") {
   return "ges";
 }
 
+function getStudentLearningUrl(student = getStudentSession()) {
+  const department = normalizeDepartmentKey(student?.department, "basic");
+  const className = student?.className || `${department}1`;
+  const course = student?.course || "general-arts";
+  const params = new URLSearchParams({
+    syllabus: getDefaultSyllabusKey(department, course),
+    department,
+    class: className,
+  });
+  if (department === "shs") params.set("course", course);
+  return `learning.html?${params.toString()}`;
+}
+
 function getDepartmentFromClass(classKey) {
   if (classKey.startsWith("shs")) return "shs";
   if (classKey.startsWith("jhs")) return "jhs";
@@ -5827,6 +5845,7 @@ function setupDepartmentPage() {
           ...student,
           department: departmentSelect.value,
           className: classSelect.value,
+          course: courseSelect?.value || student.course || "general-arts",
         }),
       );
     }
