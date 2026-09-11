@@ -733,6 +733,13 @@ h3 {
   margin-bottom: 4px;
 }
 
+#setup-class-label,
+#setup-subject-label {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  text-align: center;
+}
+
 .quiz-active-area {
   display: flex;
   flex-direction: column;
