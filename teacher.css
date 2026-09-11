@@ -1014,6 +1014,7 @@ body.menu-open::before {
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 10px;
+  width: 100%;
 }
 
 .timer {
