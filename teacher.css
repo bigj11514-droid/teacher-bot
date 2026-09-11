@@ -894,7 +894,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(3, 16, 29, 0.24);
+  background: rgba(3, 16, 29, 0.14);
   backdrop-filter: blur(2px);
   opacity: 0;
   pointer-events: none;
@@ -903,8 +903,14 @@ body::before {
 }
 
 body.menu-open::before {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.main-panel {
+  position: relative;
+  z-index: 1;
+  transition: filter 0.25s ease, transform 0.25s ease;
 }
 
 .sidebar {
@@ -1121,6 +1127,11 @@ body.menu-open::before {
 
   .sidebar.open {
     transform: translateX(0);
+  }
+
+  body.menu-open .main-panel {
+    filter: blur(6px) saturate(0.8);
+    transform: scale(0.995);
   }
 
   .menu-toggle {
