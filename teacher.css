@@ -257,10 +257,11 @@ a {
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.015);
   transition: all 0.25s ease;
-  font-family: 'Orbitron', 'Rajdhani', sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.76rem;
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .nav-item:hover,
@@ -447,12 +448,12 @@ a {
 }
 
 .eyebrow {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.18em;
   color: var(--accent-2);
   font-family: 'Orbitron', 'Rajdhani', sans-serif;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 h1,
@@ -463,13 +464,13 @@ h5,
 h6 {
   color: var(--text);
   font-family: 'Orbitron', 'Rajdhani', sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 h2,
 h3 {
-  text-shadow: 0 0 18px rgba(61, 220, 255, 0.12);
+  text-shadow: 0 0 16px rgba(95, 233, 255, 0.12);
 }
 
 .hero-card h2,
@@ -518,7 +519,7 @@ h3 {
   position: relative;
   overflow: hidden;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   font-family: 'Orbitron', 'Rajdhani', sans-serif;
   box-shadow: 0 10px 24px rgba(118, 221, 255, 0.12);
