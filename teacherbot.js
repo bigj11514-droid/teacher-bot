@@ -6267,43 +6267,46 @@ function nextQuestion() {
         "Explanations are shown here";
     }
     loadQuestion();
-  } else {
-    const summary = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
-    questionEl.textContent = summary;
-    answersEl.innerHTML = "";
-    feedbackEl.textContent = "";
-    const explanationEl = document.getElementById("explanation");
-    if (explanationEl) {
-      explanationEl.textContent = "";
-    }
-    const completedSubject =
-      subjects[getSubjectKey()]?.displayName || "this quiz";
-    saveQuizResult(score, quizQuestions.length, completedSubject);
-    renderReviewForm(completedSubject);
-    const progressEl = document.getElementById("progress");
-    if (progressEl) {
-      progressEl.textContent = "Quiz complete";
-    }
-    const timerEl = document.getElementById("timer");
-    if (timerEl) {
-      timerEl.textContent = "";
-    }
-    const modeBadge = document.getElementById("mode-badge");
-    if (modeBadge) {
-      modeBadge.textContent = "";
-    }
-    const diagramArea = document.getElementById("diagram-area");
-    if (diagramArea) {
-      diagramArea.innerHTML = "";
-    }
-    nextBtn.textContent = "Choose another subject";
-    nextBtn.disabled = false;
-    nextBtn.removeEventListener("click", nextQuestion);
-    nextBtn.addEventListener(
-      "click",
-      () => (window.location.href = "-index.html"),
-    );
+    return;
   }
+
+  const summary = `Score: ${score} / ${quizQuestions.length} • Mistakes: ${mistakes}`;
+  questionEl.textContent = summary;
+  answersEl.innerHTML = "";
+  feedbackEl.textContent = "";
+  const explanationEl = document.getElementById("explanation");
+  if (explanationEl) {
+    explanationEl.textContent = "";
+  }
+  const completedSubject =
+    subjects[getSubjectKey()]?.displayName || "this quiz";
+  saveQuizResult(score, quizQuestions.length, completedSubject);
+  renderReviewForm(completedSubject);
+  const progressEl = document.getElementById("progress");
+  if (progressEl) {
+    progressEl.textContent = "Quiz complete";
+  }
+  const timerEl = document.getElementById("timer");
+  if (timerEl) {
+    timerEl.textContent = "";
+  }
+  const modeBadge = document.getElementById("mode-badge");
+  if (modeBadge) {
+    modeBadge.textContent = "";
+  }
+  const diagramArea = document.getElementById("diagram-area");
+  if (diagramArea) {
+    diagramArea.innerHTML = "";
+  }
+  nextBtn.textContent = "Choose another subject";
+  nextBtn.disabled = false;
+  nextBtn.onclick = () => (window.location.href = "-index.html");
+}
+
+function bindNextQuestionButton() {
+  const nextBtn = document.getElementById("nextbtn");
+  if (!nextBtn) return;
+  nextBtn.onclick = nextQuestion;
 }
 
 function renderReviewForm(subjectLabel) {
@@ -7174,7 +7177,7 @@ if (document.getElementById("administrator-panel")) {
     setupSimpleHamburgerMenu();
     setupEngagementFeatures();
     renderPublicReviews();
-    document.getElementById("nextbtn")?.addEventListener("click", nextQuestion);
+    bindNextQuestionButton();
   });
 } else {
   runWhenPageIsReady(() => {
