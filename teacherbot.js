@@ -3028,10 +3028,17 @@ function setupLearningSpace() {
       ? requestedSyllabus
       : getDefaultSyllabusKey(selectedDepartment, course);
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const requestedSubject = (
+    params.get("subject") ||
+    student.subject ||
+    Object.keys(syllabus.topics)[0]
+  )?.toLowerCase();
+  const availableSubjects = Object.keys(syllabus.topics || {});
+  const selectedSubject = availableSubjects.includes(requestedSubject)
+    ? requestedSubject
+    : availableSubjects[0];
   const selectedYear = params.get("year");
 
-  // Keep class and syllabus selection available on the lesson page. This is
-  // especially useful when students return directly to learning.html.
   const selectionControls = document.createElement("section");
   selectionControls.className =
     "class-picker department-card learning-selection";
@@ -3040,6 +3047,8 @@ function setupLearningSpace() {
     <select id="learning-syllabus-select"></select>
     <label for="learning-class-select">Class</label>
     <select id="learning-class-select"></select>
+    <label for="learning-subject-select">Subject</label>
+    <select id="learning-subject-select"></select>
     <button class="small-btn" id="apply-learning-selection" type="button">Start learning</button>
   `;
 
@@ -3047,6 +3056,9 @@ function setupLearningSpace() {
     "#learning-syllabus-select",
   );
   const classSelect = selectionControls.querySelector("#learning-class-select");
+  const subjectSelect = selectionControls.querySelector(
+    "#learning-subject-select",
+  );
   const allowedSyllabuses = Object.entries(learningCatalog);
   syllabusSelect.innerHTML = allowedSyllabuses
     .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
@@ -3065,13 +3077,34 @@ function setupLearningSpace() {
       : classes.includes(selectedClass)
         ? selectedClass
         : classes[0];
+    updateSubjectChoices();
   };
+
+  const updateSubjectChoices = () => {
+    const currentSyllabus = learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const subjects = Object.keys(currentSyllabus.topics || {});
+    const previousSubject = subjectSelect.value;
+    subjectSelect.innerHTML = subjects
+      .map((key) => `<option value="${key}">${key}</option>`)
+      .join("");
+    const nextSubject = subjects.includes(previousSubject)
+      ? previousSubject
+      : subjects.includes(selectedSubject)
+        ? selectedSubject
+        : subjects[0];
+    subjectSelect.value = nextSubject;
+  };
+
   updateClassChoices();
   syllabusSelect.addEventListener("change", updateClassChoices);
+  subjectSelect.addEventListener("change", () => {
+    renderTopics();
+  });
   selectionControls
     .querySelector("#apply-learning-selection")
     .addEventListener("click", () => {
       const student = getStudentSession();
+      const chosenSubject = subjectSelect.value;
       if (student) {
         localStorage.setItem(
           STUDENT_SESSION_KEY,
@@ -3079,6 +3112,7 @@ function setupLearningSpace() {
             ...student,
             department: getSyllabusDepartment(syllabusSelect.value),
             className: classSelect.value,
+            subject: chosenSubject,
           }),
         );
       }
@@ -3086,6 +3120,7 @@ function setupLearningSpace() {
         syllabus: syllabusSelect.value,
         class: classSelect.value,
         department: getSyllabusDepartment(syllabusSelect.value),
+        subject: chosenSubject,
       });
       window.location.href = `learning.html?${params.toString()}`;
     });
@@ -3096,36 +3131,32 @@ function setupLearningSpace() {
     lessonTimerId = null;
     space.innerHTML = "";
     space.appendChild(selectionControls);
+    const currentSyllabus = learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const visibleSubject = subjectSelect.value || Object.keys(currentSyllabus.topics || {})[0];
+    const visibleTopics = currentSyllabus.topics[visibleSubject] || {};
     const topicsPanel = document.createElement("div");
-    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${syllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Pick a topic to learn</h2><p class="select">Open a topic, choose a subtopic, and read a short guided lesson.</p></div><div class="topic-grid">${Object.entries(
-      syllabus.topics,
+    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a topic and follow the guided lesson for ${visibleSubject}.</p></div><div class="topic-grid">${Object.entries(
+      visibleTopics,
     )
       .map(
-        ([subject, topics]) =>
-          `<article class="topic-card"><h3>${subject}</h3>${Object.entries(
-            topics,
+        ([topic, subtopics]) =>
+          `<article class="topic-card"><h3>${topic}</h3><div class="subtopic-list">${Object.keys(
+            subtopics,
           )
-            .map(
-              ([topic, subtopics]) =>
-                `<details><summary>${topic}</summary><div class="subtopic-list">${Object.keys(
-                  subtopics,
-                )
-                  .map((subtopic) => {
-                    const unlocked = isSubtopicUnlocked(
-                      syllabus,
-                      subject,
-                      topic,
-                      subtopic,
-                    );
-                    const completed =
-                      getLearningProgress()[
-                        getLessonKey(subject, topic, subtopic)
-                      ];
-                    return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${subject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
-                  })
-                  .join("")}</div></details>`,
-            )
-            .join("")}</article>`,
+            .map((subtopic) => {
+              const unlocked = isSubtopicUnlocked(
+                currentSyllabus,
+                visibleSubject,
+                topic,
+                subtopic,
+              );
+              const completed =
+                getLearningProgress()[
+                  getLessonKey(visibleSubject, topic, subtopic)
+                ];
+              return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${visibleSubject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
+            })
+            .join("")}</div></article>`,
       )
       .join("")}</div>`;
     space.appendChild(topicsPanel);
@@ -5768,11 +5799,52 @@ function setupDepartmentPage() {
     shs: ["shs1", "shs2", "shs3"],
   };
 
+  const subjectLabel = document.createElement("label");
+  subjectLabel.setAttribute("for", "subject-select");
+  subjectLabel.textContent = "Subject";
+  const subjectSelect = document.createElement("select");
+  subjectSelect.id = "subject-select";
+
+  const picker = classSelect.closest(".class-picker");
+  if (picker && !document.getElementById("subject-select")) {
+    picker.insertBefore(subjectLabel, continueBtn);
+    picker.insertBefore(subjectSelect, continueBtn);
+  }
+
   function updateCourseVisibility() {
     if (courseSelect && courseLabel) {
       const showCourse = departmentSelect.value === "shs";
       courseSelect.style.display = showCourse ? "inline-block" : "none";
       courseLabel.style.display = showCourse ? "inline-block" : "none";
+    }
+  }
+
+  function updateSubjectOptions() {
+    const selectedDepartment = departmentSelect.value;
+    const currentClass = classSelect.value;
+    const currentCourse = courseSelect?.value || getCourseKey();
+    const subjectOptions = getSubjectCatalogForClass(currentClass, currentCourse);
+    subjectSelect.innerHTML = subjectOptions
+      .map(
+        (subject) =>
+          `<option value="${subject.key}">${subject.label}</option>`,
+      )
+      .join("");
+
+    const savedSubject = getSubjectKey() || getStudentSession()?.subject;
+    if (savedSubject && subjectOptions.some((subject) => subject.key === savedSubject)) {
+      subjectSelect.value = savedSubject;
+    } else if (subjectOptions.length) {
+      subjectSelect.value = subjectOptions[0].key;
+    }
+
+    if (departmentMessage) {
+      departmentMessage.textContent =
+        selectedDepartment === "shs"
+          ? "Senior High students can pick their course first, then choose the subjects they study."
+          : selectedDepartment === "jhs"
+            ? "Junior High students can move to the subject page for JHS questions."
+            : "Basic students can move to the subject page for basic-level questions.";
     }
   }
 
@@ -5791,16 +5863,7 @@ function setupDepartmentPage() {
     });
 
     updateCourseVisibility();
-
-    if (departmentMessage) {
-      departmentMessage.textContent =
-        selectedDepartment === "shs"
-          ? "Senior High students can pick their course first, then choose the subjects they study."
-          : selectedDepartment === "jhs"
-            ? "Junior High students can move to the subject page for JHS questions."
-            : "Basic students can move to the subject page for basic-level questions.";
-    }
-
+    updateSubjectOptions();
     updateDepartmentVisual(selectedDepartment);
   }
 
@@ -5823,13 +5886,17 @@ function setupDepartmentPage() {
   if (courseSelect) {
     courseSelect.value = initialCourse;
   }
+  updateSubjectOptions();
 
   departmentSelect.addEventListener("change", updateClassOptions);
+  classSelect.addEventListener("change", updateSubjectOptions);
+  courseSelect?.addEventListener("change", updateSubjectOptions);
   continueBtn.addEventListener("click", (event) => {
     event.preventDefault();
     const params = new URLSearchParams();
     params.set("class", classSelect.value);
     params.set("department", departmentSelect.value);
+    params.set("subject", subjectSelect.value);
     let syllabus = "ges";
     if (departmentSelect.value === "jhs") syllabus = "jhs";
     if (departmentSelect.value === "shs" && courseSelect) {
@@ -5845,6 +5912,7 @@ function setupDepartmentPage() {
           ...student,
           department: departmentSelect.value,
           className: classSelect.value,
+          subject: subjectSelect.value,
           course: courseSelect?.value || student.course || "general-arts",
         }),
       );
