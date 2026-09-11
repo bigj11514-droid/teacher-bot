@@ -214,12 +214,21 @@ function setupStudentSession() {
       const quizMenu = document.createElement("details");
       quizMenu.className = "department-quiz-nav";
       quizMenu.innerHTML = `
-        <summary>📝 Department quizzes</summary>
+        <summary>📝 Take a Quiz</summary>
         <a href="quiz.html?department=basic">Basic quiz</a>
         <a href="quiz.html?department=jhs">JHS quiz</a>
         <a href="quiz.html?department=shs">SHS quiz</a>
       `;
-      navigation.append(quizMenu);
+
+      const departmentsLink = navigation.querySelector(
+        'a.nav-item[href="department.html"]',
+      );
+
+      if (departmentsLink) {
+        departmentsLink.insertAdjacentElement("afterend", quizMenu);
+      } else {
+        navigation.append(quizMenu);
+      }
     }
     addContributionLink();
     if (
@@ -3081,7 +3090,8 @@ function setupLearningSpace() {
   };
 
   const updateSubjectChoices = () => {
-    const currentSyllabus = learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const currentSyllabus =
+      learningCatalog[syllabusSelect.value] || learningCatalog.ges;
     const subjects = Object.keys(currentSyllabus.topics || {});
     const previousSubject = subjectSelect.value;
     subjectSelect.innerHTML = subjects
@@ -3131,8 +3141,10 @@ function setupLearningSpace() {
     lessonTimerId = null;
     space.innerHTML = "";
     space.appendChild(selectionControls);
-    const currentSyllabus = learningCatalog[syllabusSelect.value] || learningCatalog.ges;
-    const visibleSubject = subjectSelect.value || Object.keys(currentSyllabus.topics || {})[0];
+    const currentSyllabus =
+      learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const visibleSubject =
+      subjectSelect.value || Object.keys(currentSyllabus.topics || {})[0];
     const visibleTopics = currentSyllabus.topics[visibleSubject] || {};
     const topicsPanel = document.createElement("div");
     topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a topic and follow the guided lesson for ${visibleSubject}.</p></div><div class="topic-grid">${Object.entries(
@@ -5823,16 +5835,21 @@ function setupDepartmentPage() {
     const selectedDepartment = departmentSelect.value;
     const currentClass = classSelect.value;
     const currentCourse = courseSelect?.value || getCourseKey();
-    const subjectOptions = getSubjectCatalogForClass(currentClass, currentCourse);
+    const subjectOptions = getSubjectCatalogForClass(
+      currentClass,
+      currentCourse,
+    );
     subjectSelect.innerHTML = subjectOptions
       .map(
-        (subject) =>
-          `<option value="${subject.key}">${subject.label}</option>`,
+        (subject) => `<option value="${subject.key}">${subject.label}</option>`,
       )
       .join("");
 
     const savedSubject = getSubjectKey() || getStudentSession()?.subject;
-    if (savedSubject && subjectOptions.some((subject) => subject.key === savedSubject)) {
+    if (
+      savedSubject &&
+      subjectOptions.some((subject) => subject.key === savedSubject)
+    ) {
       subjectSelect.value = savedSubject;
     } else if (subjectOptions.length) {
       subjectSelect.value = subjectOptions[0].key;
