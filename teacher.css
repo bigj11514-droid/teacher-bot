@@ -714,10 +714,9 @@ h3 {
 }
 
 .setup-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
   width: 100%;
   padding: 18px;
   border-radius: 18px;
@@ -725,8 +724,13 @@ h3 {
   border: 1px solid var(--border);
 }
 
+.setup-card > * {
+  width: 100%;
+}
+
 .setup-summary {
   flex: 1 1 220px;
+  margin-bottom: 4px;
 }
 
 .quiz-active-area {
