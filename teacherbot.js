@@ -2528,6 +2528,18 @@ function getYouTubeEmbedUrl(url) {
   return match ? `https://www.youtube.com/embed/${match[1]}` : url;
 }
 
+function getVideoSourceName(videoUrl, savedSource = "") {
+  if (savedSource) return savedSource;
+  if (!videoUrl) return "Y_Cohde";
+  try {
+    const hostname = new URL(videoUrl).hostname.replace(/^www\./, "");
+    if (hostname.includes("youtube")) return "YouTube";
+    return hostname;
+  } catch {
+    return "Y_Cohde";
+  }
+}
+
 // QUESTION EDITING BY DEPARTMENT/CLASS:
 // - BASIC 1 to BASIC 6: edit the six `basic` entries below.
 // - JHS 1 to JHS 3: edit the three `jhs` entries below.
@@ -3308,10 +3320,21 @@ function setupLearningSpace() {
       )
       .join("");
     const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
+    const videoSource = getVideoSourceName(
+      extras.videoUrl,
+      contentOverride.videoSource,
+    );
+    const uploaderName =
+      contentOverride.videoUploaderName || contentOverride.updatedBy || "Y_Cohde Team";
+    const uploaderOccupation =
+      contentOverride.videoUploaderOccupation || "Teacher / Administrator";
+    const uploaderSchool = contentOverride.videoUploaderSchool || "Y_Cohde";
+    const videoHeader = `<p class="lesson-video-topic"><strong>Subject:</strong> ${subject} <span>•</span> <strong>Subtopic:</strong> ${subtopic}</p>`;
+    const videoCredit = `<div class="lesson-video-credit"><span><strong>Video source:</strong> ${videoSource}</span><span><strong>Uploaded by:</strong> ${uploaderName}</span><span><strong>Role:</strong> ${uploaderOccupation}</span><span><strong>School:</strong> ${uploaderSchool}</span></div>`;
     const video = contentOverride.videoMediaId
-      ? `<div class="lesson-video-box" id="lesson-video-content"><h3>▶ Lesson video</h3><div class="video-wrapper lesson-media-placeholder"></div></div>`
+      ? `<div class="lesson-video-box" id="lesson-video-content"><h3>▶ Lesson video</h3>${videoHeader}<div class="video-wrapper lesson-media-placeholder"></div>${videoCredit}</div>`
       : videoUrl
-        ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3><div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div></div>`
+        ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3>${videoHeader}<div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div>${videoCredit}</div>`
         : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
     space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
     activeLesson._guidedVideo = video;
@@ -3473,7 +3496,7 @@ function showLessonQuestionPopup(
   if (!modal) {
     document.body.insertAdjacentHTML(
       "beforeend",
-      '<div class="understanding-modal" id="lesson-question-modal" aria-hidden="true"><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lesson-question-title"><p class="eyebrow">Lesson check</p><h2 id="lesson-question-title"></h2><div class="answers lesson-question-answers" id="lesson-question-answers"></div><p class="feedback-text" id="lesson-question-feedback" aria-live="polite"></p><div class="modal-actions" id="lesson-question-actions"></div></div></div>',
+      '<div class="understanding-modal" id="lesson-question-modal" aria-hidden="true"><div class="modal-card lesson-question-modal-card" role="dialog" aria-modal="true" aria-labelledby="lesson-question-title"><p class="eyebrow">Lesson check</p><h2 id="lesson-question-title"></h2><div class="answers lesson-question-answers" id="lesson-question-answers"></div><p class="feedback-text" id="lesson-question-feedback" aria-live="polite"></p><div class="modal-actions" id="lesson-question-actions"></div></div></div>',
     );
     modal = document.getElementById("lesson-question-modal");
   }
@@ -6804,6 +6827,13 @@ function setupContentStudio({ administrator = false } = {}) {
   const subtopic = document.getElementById("content-subtopic");
   const lesson = document.getElementById("content-lesson");
   const video = document.getElementById("content-video");
+  if (!document.getElementById("content-video-source")) {
+    const sourceField = document.createElement("label");
+    sourceField.innerHTML =
+      'Video source name<input id="content-video-source" type="text" placeholder="For example: YouTube or Y_Cohde Media">';
+    video.closest("label").insertAdjacentElement("afterend", sourceField);
+  }
+  const videoSource = document.getElementById("content-video-source");
   const imageUpload = document.getElementById("content-image-upload");
   const videoUpload = document.getElementById("content-video-upload");
   const examples = document.getElementById("content-examples");
@@ -6830,6 +6860,10 @@ function setupContentStudio({ administrator = false } = {}) {
     );
     lesson.value = existing.lesson || activeLesson.lesson;
     video.value = existing.videoUrl || "";
+    videoSource.value = getVideoSourceName(
+      existing.videoUrl,
+      existing.videoSource,
+    );
     examples.value = JSON.stringify(
       existing.examples ||
         getLessonExtras(
@@ -6958,13 +6992,23 @@ function setupContentStudio({ administrator = false } = {}) {
       originalTopic,
       originalSubtopic,
     );
+    const contributor = getStudentSession() || {};
     const change = {
       lesson: lesson.value.trim(),
       videoUrl: video.value.trim(),
+      videoSource: videoSource.value.trim() || getVideoSourceName(video.value),
+      videoUploaderName: contributor.name || "Y_Cohde Team",
+      videoUploaderOccupation:
+        contributor.role === "administrator"
+          ? "Administrator"
+          : contributor.role === "teacher"
+            ? "Teacher"
+            : "Content contributor",
+      videoUploaderSchool: contributor.school || "Y_Cohde",
       examples: parsedExamples,
       questions: parsedQuestions,
       updatedAt: new Date().toISOString(),
-      updatedBy: getStudentSession()?.name || "Contributor",
+      updatedBy: contributor.name || "Contributor",
     };
     // Leaving a file field empty preserves the media already attached to this lesson.
     if (imageMediaId || existingMedia.imageMediaId)

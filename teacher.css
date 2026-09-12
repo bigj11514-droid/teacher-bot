@@ -1450,6 +1450,12 @@ body.menu-open::before {
 .modal-card p { margin: 10px 0 20px; color: var(--muted); }
 .lesson-video-modal-card { width: min(100%, 760px); }
 .lesson-video-modal-card .lesson-video-box { margin: 0 0 18px; }
+.lesson-question-modal-card { width: min(100%, 380px); padding: 20px; }
+.lesson-question-modal-card h2 { font-size: 1.12rem; line-height: 1.35; }
+.lesson-question-modal-card .eyebrow,
+.lesson-question-modal-card .feedback-text { font-size: 0.86rem; }
+.lesson-question-modal-card .answers { padding: 12px; gap: 8px; }
+.lesson-question-modal-card .answers button { padding: 10px 12px; font-size: 0.9rem; }
 .modal-actions { display: grid; gap: 10px; }
 
 .simple-site-header { position: fixed; inset: 0 0 auto; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: rgba(4, 15, 28, .96); border-bottom: 1px solid var(--border); }
@@ -1568,6 +1574,20 @@ body.menu-open::before {
   align-items: center;
   gap: 8px;
 }
+.lesson-video-topic {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.lesson-video-topic span { color: var(--accent); margin: 0 5px; }
+.lesson-video-credit {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.lesson-video-credit strong { color: var(--text); }
 .video-wrapper {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 ratio */
