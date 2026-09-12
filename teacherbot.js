@@ -1852,6 +1852,43 @@ const STUDY_ACTIVITY_KEY = "ycohdeStudyActivity";
 const GAMIFICATION_KEY = "ycohdeGamification";
 const LESSON_RESUME_KEY = "ycohdeLessonResume";
 const FREE_LESSON_LIMIT = 3;
+
+// Store a learner's current lesson safely so reopening the page can resume it.
+function saveLessonResume(subject, topic, subtopic) {
+  try {
+    localStorage.setItem(
+      LESSON_RESUME_KEY,
+      JSON.stringify({ subject, topic, subtopic }),
+    );
+  } catch {
+    // The lesson can still be used if storage is unavailable.
+  }
+}
+
+function getLessonResume() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LESSON_RESUME_KEY));
+    return saved && saved.subject && saved.topic && saved.subtopic ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function getAllLessons(syllabus) {
+  const lessons = [];
+  Object.entries(syllabus?.topics || {}).forEach(([subject, topics]) => {
+    Object.entries(topics || {}).forEach(([topic, subtopics]) => {
+      Object.keys(subtopics || {}).forEach((subtopic) => {
+        lessons.push({ subject, topic, subtopic });
+      });
+    });
+  });
+  return lessons;
+}
+
+function getLevel(xp = 0) {
+  return Math.floor(Math.max(0, Number(xp) || 0) / 200) + 1;
+}
 const EXTRA_SUBTOPIC_STEPS = [
   "Key vocabulary",
   "Important ideas",
@@ -6130,6 +6167,9 @@ function setupQuiz() {
   nextBtn.textContent = "Next Question";
   nextBtn.disabled = true;
   nextBtn.style.display = "inline-block";
+  // Reattach the normal handler whenever a quiz starts. This also replaces
+  // the end-of-quiz "choose another subject" handler from a previous attempt.
+  nextBtn.onclick = nextQuestion;
 
   clearInterval(timerId);
   loadQuestion();
@@ -6198,6 +6238,12 @@ function loadQuestion() {
   const nextBtn = document.getElementById("nextbtn");
 
   const current = quizQuestions[currentQuestionIndex];
+  if (!current) {
+    questionEl.textContent = "This quiz has no questions yet. Please choose another subject.";
+    answersEl.innerHTML = "";
+    nextBtn.style.display = "none";
+    return;
+  }
   questionEl.textContent = current.question;
   answersEl.innerHTML = "";
 
@@ -6211,6 +6257,7 @@ function loadQuestion() {
 
   progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
+  nextBtn.onclick = nextQuestion;
   showDiagramForQuestion(current);
   startTimer();
 }
