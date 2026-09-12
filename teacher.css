@@ -1588,6 +1588,17 @@ body.menu-open::before {
   font-size: 0.86rem;
 }
 .lesson-video-credit strong { color: var(--text); }
+.staff-video-preview {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
 .video-wrapper {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 ratio */

@@ -6,6 +6,7 @@ const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 const STAFF_POSTS_KEY = "ycohdeStaffPosts";
 const CATALOG_NAMES_KEY = "ycohdeCatalogNames";
 const PENDING_CONTENT_KEY = "ycohdePendingContent";
+const CONTENT_ACTIVITY_KEY = "ycohdeContentActivity";
 const MEDIA_DATABASE_NAME = "ycohdeLessonMedia";
 const MEDIA_STORE_NAME = "media";
 const MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -6799,9 +6800,71 @@ function populateContentPicker(
   refreshClasses();
 }
 
+function recordContentActivity(activity) {
+  try {
+    const history = JSON.parse(localStorage.getItem(CONTENT_ACTIVITY_KEY)) || [];
+    history.unshift(activity);
+    localStorage.setItem(CONTENT_ACTIVITY_KEY, JSON.stringify(history.slice(0, 100)));
+  } catch {
+    /* Saving content must not fail if browser storage is unavailable. */
+  }
+}
+
+function renderStaffStudentPreview() {
+  const preview = document.getElementById("student-content-preview");
+  if (!preview) return;
+  const value = (id) => document.getElementById(id)?.value?.trim() || "";
+  const subject = value("content-subject") || "Subject";
+  const topic = value("content-topic") || "Topic";
+  const subtopic = value("content-subtopic-name") || value("content-subtopic") || "Subtopic";
+  const lesson = value("content-lesson") || "Your lesson text will appear here for students.";
+  const source = value("content-video-source") || getVideoSourceName(value("content-video"));
+  const videoUrl = getYouTubeEmbedUrl(value("content-video"));
+  const videoPreview = videoUrl
+    ? `<div class="video-wrapper"><iframe src="${videoUrl}" title="Preview video for ${subtopic}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+    : '<div class="staff-video-preview">Add a video link or upload a video to preview it here.</div>';
+  const contributor = getStudentSession() || {};
+  const role = contributor.role === "administrator" ? "Administrator" : "Teacher";
+  preview.innerHTML = `<article class="lesson-card staff-student-preview"><p class="eyebrow">Student view preview</p><p class="eyebrow">${subject} · ${topic}</p><h2>${subtopic}</h2><div class="lesson-copy"><p>${lesson}</p></div><section class="lesson-video-box"><h3>▶ Lesson video</h3><p class="lesson-video-topic"><strong>Subject:</strong> ${subject} <span>•</span> <strong>Subtopic:</strong> ${subtopic}</p>${videoPreview}<div class="lesson-video-credit"><span><strong>Video source:</strong> ${source}</span><span><strong>Uploaded by:</strong> ${contributor.name || "Y_Cohde Team"}</span><span><strong>Role:</strong> ${role}</span><span><strong>School:</strong> ${contributor.school || "Y_Cohde"}</span></div></section></article>`;
+}
+
+function renderContentHistory() {
+  const container = document.getElementById("content-contribution-history");
+  if (!container) return;
+  const user = getStudentSession() || {};
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem(CONTENT_ACTIVITY_KEY)) || [];
+  } catch {
+    /* empty history */
+  }
+  const visible = user.role === "administrator"
+    ? history
+    : history.filter((item) => item.authorEmail && item.authorEmail === user.email);
+  container.innerHTML = visible.length
+    ? visible.map((item) => `<article class="contributor-card"><strong>${item.department} · ${item.className}</strong><span>${item.subject} · ${item.subtopic}</span><small>${item.status} ${new Date(item.postedAt).toLocaleString()}</small><p>${item.lesson}</p></article>`).join("")
+    : '<p class="empty-state">No lesson contributions have been recorded yet.</p>';
+}
+
+function setupStaffWorkspace() {
+  const staffPanel = document.getElementById("administrator-panel") || document.getElementById("teacher-studio");
+  if (!staffPanel || document.getElementById("content-preview")) return;
+  document.querySelector(".search-box")?.remove();
+  const navigation = document.getElementById("site-nav");
+  navigation?.insertAdjacentHTML(
+    "beforeend",
+    '<a href="#content-preview" class="nav-item"><span>Student preview</span></a><a href="#contribution-history" class="nav-item"><span>My contributions</span></a>',
+  );
+  staffPanel.insertAdjacentHTML(
+    "beforeend",
+    '<section class="page-panel" id="content-preview"><p class="eyebrow">Student preview</p><h2>See this lesson as a student</h2><button id="refresh-student-preview" class="small-btn" type="button">Refresh preview</button><div id="student-content-preview"></div></section><section class="page-panel" id="contribution-history"><p class="eyebrow">Contribution history</p><h2>Lessons posted for students</h2><div id="content-contribution-history" class="contributor-list"></div></section>',
+  );
+}
+
 function setupContentStudio({ administrator = false } = {}) {
   const form = document.getElementById("content-studio-form");
   if (!form) return;
+  setupStaffWorkspace();
   // CURRICULUM EDIT: both administrators and teachers can request new names.
   // Teachers' changes remain in the approval queue until an administrator publishes them.
   const addRenameField = (id, label, afterId) => {
@@ -6893,9 +6956,19 @@ function setupContentStudio({ administrator = false } = {}) {
     subtopicName.value = subtopic.value;
   };
   [department, classSelect, subject, topic, subtopic].forEach((select) =>
-    select.addEventListener("change", load),
+    select.addEventListener("change", () => {
+      load();
+      renderStaffStudentPreview();
+    }),
   );
   load();
+  renderStaffStudentPreview();
+  [department, classSelect, subject, topic, subtopic, lesson, video, videoSource].forEach(
+    (field) => field?.addEventListener("input", renderStaffStudentPreview),
+  );
+  document
+    .getElementById("refresh-student-preview")
+    ?.addEventListener("click", renderStaffStudentPreview);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     let parsedExamples;
@@ -7016,6 +7089,17 @@ function setupContentStudio({ administrator = false } = {}) {
     if (videoMediaId || existingMedia.videoMediaId)
       change.videoMediaId = videoMediaId || existingMedia.videoMediaId;
     if (!administrator) {
+      recordContentActivity({
+        authorEmail: contributor.email || "",
+        department: department.value,
+        className: classSelect.value,
+        subject: newSubject,
+        subtopic: newSubtopic,
+        lesson: change.lesson,
+        status: "Submitted for approval on",
+        postedAt: new Date().toISOString(),
+      });
+      renderContentHistory();
       const pending =
         JSON.parse(localStorage.getItem(PENDING_CONTENT_KEY)) || [];
       pending.push({
@@ -7066,6 +7150,17 @@ function setupContentStudio({ administrator = false } = {}) {
     all[getCatalogLessonKey(syllabusKey, newSubject, newTopic, newSubtopic)] =
       change;
     localStorage.setItem(CONTENT_OVERRIDES_KEY, JSON.stringify(all));
+    recordContentActivity({
+      authorEmail: contributor.email || "",
+      department: department.value,
+      className: classSelect.value,
+      subject: newSubject,
+      subtopic: newSubtopic,
+      lesson: change.lesson,
+      status: "Published on",
+      postedAt: new Date().toISOString(),
+    });
+    renderContentHistory();
     addSiteNotification(
       `A ${subject.value} lesson has been updated.`,
       "students",
@@ -7157,6 +7252,7 @@ function setupAdministratorPanel() {
   const teacherList = document.getElementById("contributing-teachers");
   if (!teacherList) return;
   setupContentStudio({ administrator: true });
+  renderContentHistory();
   renderPerformanceReport();
   let teachers = [];
   try {
@@ -7246,6 +7342,7 @@ if (document.getElementById("administrator-panel")) {
     setupMobileMenu();
     setupStudentSession();
     setupContentStudio();
+    renderContentHistory();
     renderPerformanceReport();
   });
 } else if (document.getElementById("department-select")) {
