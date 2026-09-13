@@ -6853,12 +6853,21 @@ function setupStaffWorkspace() {
   const navigation = document.getElementById("site-nav");
   navigation?.insertAdjacentHTML(
     "beforeend",
-    '<a href="#content-preview" class="nav-item"><span>Student preview</span></a><a href="#contribution-history" class="nav-item"><span>My contributions</span></a>',
+    '<a href="#content-preview" class="nav-item" id="student-preview-link"><span>Student preview</span></a><a href="#contribution-history" class="nav-item"><span>My contributions</span></a>',
   );
   staffPanel.insertAdjacentHTML(
     "beforeend",
-    '<section class="page-panel" id="content-preview"><p class="eyebrow">Student preview</p><h2>See this lesson as a student</h2><button id="refresh-student-preview" class="small-btn" type="button">Refresh preview</button><div id="student-content-preview"></div></section><section class="page-panel" id="contribution-history"><p class="eyebrow">Contribution history</p><h2>Lessons posted for students</h2><div id="content-contribution-history" class="contributor-list"></div></section>',
+    '<section class="page-panel" id="content-preview" hidden><p class="eyebrow">Student preview</p><h2>See this lesson as a student</h2><button id="refresh-student-preview" class="small-btn" type="button">Refresh preview</button><div id="student-content-preview"></div></section><section class="page-panel" id="contribution-history"><p class="eyebrow">Contribution history</p><h2>Lessons posted for students</h2><div id="content-contribution-history" class="contributor-list"></div></section>',
   );
+  document
+    .getElementById("student-preview-link")
+    ?.addEventListener("click", (event) => {
+      event.preventDefault();
+      const preview = document.getElementById("content-preview");
+      preview.hidden = false;
+      renderStaffStudentPreview();
+      preview.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 }
 
 function setupContentStudio({ administrator = false } = {}) {
