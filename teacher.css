@@ -35,6 +35,40 @@
   }
 }
 
+@keyframes studentHeroReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(18px) scale(1.02);
+  }
+  18% {
+    opacity: 1;
+    transform: translateX(0) scale(1.18);
+  }
+  48% {
+    opacity: 1;
+    transform: translateX(0) scale(1.12);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(-70px) scale(1.02);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateX(-120px) scale(0.96);
+  }
+}
+
+@keyframes roleChoiceReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(32px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 :root {
   --bg-1: #040b14;
   --bg-2: #071f2d;
@@ -1393,10 +1427,18 @@ body.menu-open::before {
 }
 .role-choice-card h1 { margin: 18px 0 8px; }
 .role-choice-card > p { color: var(--muted); line-height: 1.6; }
-.role-choice-actions { display: grid; gap: 12px; margin-top: 24px; }
+.role-choice-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  overflow: hidden;
+  align-items: stretch;
+}
 .role-choice-btn {
   display: grid;
   gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1409,14 +1451,33 @@ body.menu-open::before {
   animation: roleChoiceSwipe 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   box-shadow: inset 0 0 0 1px rgba(95, 233, 255, 0.04);
 }
-.role-choice-btn:nth-child(2) { animation-delay: 0.12s; }
-.role-choice-btn:nth-child(3) { animation-delay: 0.24s; }
+.role-choice-btn[data-role="student"] {
+  flex: 1.8 1 0;
+  min-width: 220px;
+  padding: 20px 18px;
+  background: linear-gradient(135deg, rgba(95, 233, 255, 0.18), rgba(56, 189, 248, 0.08));
+  border-color: rgba(95, 233, 255, 0.5);
+  box-shadow: 0 0 0 1px rgba(95, 233, 255, 0.16), 0 0 24px rgba(95, 233, 255, 0.12), 0 26px 45px rgba(3, 18, 29, 0.45);
+  animation: studentHeroReveal 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.role-choice-btn[data-role="teacher"],
+.role-choice-btn[data-role="administrator"] {
+  flex: 1 1 0;
+  opacity: 0;
+  animation: roleChoiceReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 2s;
+}
+.role-choice-btn[data-role="teacher"] { animation-delay: 2.1s; }
+.role-choice-btn[data-role="administrator"] { animation-delay: 2.2s; }
 .role-choice-btn:hover, .role-choice-btn:focus-visible {
   border-color: var(--accent);
   background: rgba(127, 231, 255, .14);
   outline: none;
   transform: translateX(6px) scale(1.015);
   box-shadow: 0 0 0 1px rgba(95, 233, 255, 0.16), 0 18px 30px rgba(7, 27, 40, 0.32);
+}
+.role-choice-btn[data-role="student"]:hover, .role-choice-btn[data-role="student"]:focus-visible {
+  transform: translateX(4px) scale(1.02);
 }
 .role-choice-btn span { color: var(--muted); font-size: .9rem; }
 
