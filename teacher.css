@@ -16,6 +16,25 @@
   }
 }
 
+@keyframes roleChoiceSwipe {
+  0% {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.97);
+  }
+  40% {
+    opacity: 1;
+    transform: translateX(10px) scale(1.04);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(18px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 :root {
   --bg-1: #040b14;
   --bg-2: #071f2d;
@@ -1375,8 +1394,28 @@ body.menu-open::before {
 .role-choice-card h1 { margin: 18px 0 8px; }
 .role-choice-card > p { color: var(--muted); line-height: 1.6; }
 .role-choice-actions { display: grid; gap: 12px; margin-top: 24px; }
-.role-choice-btn { display: grid; gap: 5px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(127, 231, 255, .07); color: var(--text); text-align: left; cursor: pointer; }
-.role-choice-btn:hover, .role-choice-btn:focus-visible { border-color: var(--accent); background: rgba(127, 231, 255, .14); outline: none; }
+.role-choice-btn {
+  display: grid;
+  gap: 5px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(127, 231, 255, .07);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transform-origin: left center;
+  will-change: transform, opacity;
+  animation: roleChoiceSwipe 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.role-choice-btn:nth-child(2) { animation-delay: 0.1s; }
+.role-choice-btn:nth-child(3) { animation-delay: 0.2s; }
+.role-choice-btn:hover, .role-choice-btn:focus-visible {
+  border-color: var(--accent);
+  background: rgba(127, 231, 255, .14);
+  outline: none;
+  transform: translateX(4px) scale(1.01);
+}
 .role-choice-btn span { color: var(--muted); font-size: .9rem; }
 
 .syllabus-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; }
