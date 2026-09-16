@@ -1417,11 +1417,6 @@ body.menu-open::before {
   transform: translateX(6px) scale(1.02);
   box-shadow: 0 0 0 1px rgba(95, 233, 255, 0.12), 0 10px 22px rgba(95, 233, 255, 0.1);
 }
-#lesson-quiz-title {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
 .role-choice-btn span { color: var(--muted); font-size: .9rem; }
 
 .syllabus-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; }
@@ -1507,6 +1502,11 @@ body.menu-open::before {
 .modal-card p { margin: 10px 0 20px; color: var(--muted); }
 .lesson-video-modal-card { width: min(100%, 760px); }
 .lesson-video-modal-card .lesson-video-box { margin: 0 0 18px; }
+#lesson-question-title {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .lesson-question-modal-card { width: min(100%, 380px); padding: 20px; }
 .lesson-question-modal-card h2 { font-size: 1.12rem; line-height: 1.35; }
 .lesson-question-modal-card .eyebrow,
