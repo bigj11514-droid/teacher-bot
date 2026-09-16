@@ -337,17 +337,19 @@ a {
 .search-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 0;
   flex: 0 0 auto;
-  width: 52px;
-  max-width: 52px;
-  min-width: 52px;
-  padding: 12px 14px;
+  width: 48px;
+  height: 48px;
+  max-width: 48px;
+  min-width: 48px;
+  padding: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(118, 221, 255, 0.34);
   box-shadow: inset 0 0 0 1px rgba(118, 221, 255, 0.06), 0 0 18px rgba(118, 221, 255, 0.08);
-  transition: width 0.3s ease, max-width 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: width 0.3s ease, max-width 0.3s ease, padding 0.3s ease, gap 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
 }
 
@@ -355,6 +357,8 @@ a {
 .search-box:focus-within {
   width: min(100%, 420px);
   max-width: 420px;
+  padding: 0 16px;
+  gap: 10px;
   border-color: rgba(118, 221, 255, 0.7);
   box-shadow: 0 0 0 3px rgba(118, 221, 255, 0.14), 0 0 24px rgba(118, 221, 255, 0.14);
 }
@@ -1251,6 +1255,11 @@ body.menu-open::before {
   .class-picker select,
   .quiz-controls select {
     min-width: 100%;
+  }
+
+  /* Keep the search control circular on small screens until it is used. */
+  .search-box {
+    min-width: 48px;
   }
 
   .questions,
