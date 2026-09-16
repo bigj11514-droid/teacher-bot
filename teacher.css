@@ -1417,6 +1417,11 @@ body.menu-open::before {
   transform: translateX(6px) scale(1.02);
   box-shadow: 0 0 0 1px rgba(95, 233, 255, 0.12), 0 10px 22px rgba(95, 233, 255, 0.1);
 }
+#lesson-quiz-title {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
 .role-choice-btn span { color: var(--muted); font-size: .9rem; }
 
 .syllabus-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; }
