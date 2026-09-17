@@ -1229,9 +1229,30 @@ body.menu-open::before {
 }
 
 @media (max-width: 640px) {
+  .header-inner {
+    flex-wrap: nowrap;
+  }
+
   .header-actions {
-    width: 100%;
+    width: auto;
+    flex: 1;
     justify-content: space-between;
+  }
+
+  /* When the circular search control is clicked, give it its own row. */
+  .header-inner:has(.search-box:focus-within) {
+    flex-wrap: wrap;
+  }
+
+  .header-inner:has(.search-box:focus-within) .search-box {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .header-inner:has(.search-box:focus-within) .header-actions {
+    width: 100%;
+    flex-basis: 100%;
   }
 
   .profile-pill {
