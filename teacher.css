@@ -1509,6 +1509,13 @@ body.menu-open::before {
   box-shadow: 0 0 20px rgba(95, 233, 255, 0.08);
 }
 
+.lesson-timer.time-warning {
+  color: #ff4d4f;
+  border-color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.12);
+  box-shadow: 0 0 20px rgba(255, 77, 79, 0.2);
+}
+
 .lesson-image {
   width: 100%;
   height: min(300px, 42vw);

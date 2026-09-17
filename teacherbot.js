@@ -2827,6 +2827,7 @@ function startLessonTimer(seconds = 600) {
     const minutes = Math.floor(timeLeft / 60);
     const remainingSeconds = String(timeLeft % 60).padStart(2, "0");
     timerElement.textContent = `Lesson time: ${minutes}:${remainingSeconds}`;
+    timerElement.classList.toggle("time-warning", timeLeft <= 10);
   };
   updateTimer();
   lessonTimerId = setInterval(() => {
