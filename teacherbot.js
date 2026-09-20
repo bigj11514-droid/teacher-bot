@@ -6446,6 +6446,29 @@ function renderReviewForm(subjectLabel) {
   });
 }
 
+// Keep the teacher's public profile visible from every signed-in workspace.
+runWhenPageIsReady(() => {
+  document.querySelectorAll(".site-nav").forEach((navigation) => {
+    if (navigation.querySelector('[data-teacher-profile-link]')) return;
+
+    const profileLink = document.createElement("a");
+    profileLink.href = "-index.html";
+    profileLink.className = "nav-item";
+    profileLink.dataset.teacherProfileLink = "true";
+    profileLink.innerHTML = "<span>★</span><span>Teacher profile</span>";
+    navigation.append(profileLink);
+  });
+
+  document.querySelectorAll(".simple-nav").forEach((navigation) => {
+    if (navigation.querySelector('[data-teacher-profile-link]')) return;
+    const profileLink = document.createElement("a");
+    profileLink.href = "-index.html";
+    profileLink.dataset.teacherProfileLink = "true";
+    profileLink.textContent = "Teacher profile";
+    navigation.append(profileLink);
+  });
+});
+
 function renderPublicReviews() {
   const reviewList = document.getElementById("public-reviews-list");
   if (!reviewList) return;
