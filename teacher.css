@@ -1334,6 +1334,29 @@ body.menu-open::before {
   margin-top: auto;
 }
 
+.site-nav .teacher-profile-nav {
+  border: 1px solid rgba(127, 231, 255, 0.38);
+  border-radius: 16px;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(127, 231, 255, 0.12), rgba(9, 27, 44, 0.78));
+  box-shadow: 0 0 0 1px rgba(127, 231, 255, 0.12), 0 0 22px rgba(127, 231, 255, 0.16), inset 0 0 20px rgba(127, 231, 255, 0.06);
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.site-nav .teacher-profile-nav:hover {
+  transform: translateY(-2px);
+  border-color: rgba(127, 231, 255, 0.7);
+  box-shadow: 0 0 0 1px rgba(127, 231, 255, 0.18), 0 0 28px rgba(127, 231, 255, 0.2), inset 0 0 24px rgba(127, 231, 255, 0.08);
+}
+
+.site-nav .teacher-profile-nav:focus-visible {
+  outline: 2px solid rgba(127, 231, 255, 0.9);
+  outline-offset: 3px;
+}
+
 .department-quiz-nav {
   border: 1px solid rgba(127, 231, 255, 0.38);
   border-radius: 16px;
