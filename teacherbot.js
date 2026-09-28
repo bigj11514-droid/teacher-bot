@@ -2042,7 +2042,9 @@ function createExtraLesson(subject, topic, step, number) {
 }
 
 function addThirtyExtraSubtopics() {
-  Object.entries(learningCatalog).forEach(([, syllabus]) => {
+  Object.entries(learningCatalog).forEach(([syllabusKey, syllabus]) => {
+    // The supplied Basic ICT curriculum has its own exact week sequence.
+    if (/^basic[1-6]-ict$/.test(syllabusKey)) return;
     Object.entries(syllabus.topics).forEach(([subject, topics]) => {
       Object.entries(topics).forEach(([topic, subtopics]) => {
         EXTRA_SUBTOPIC_STEPS.forEach((step, index) => {
@@ -3275,31 +3277,49 @@ function setupLearningSpace() {
     const visibleSubject =
       subjectSelect.value || Object.keys(currentSyllabus.topics || {})[0];
     const visibleTopics = currentSyllabus.topics[visibleSubject] || {};
-    const topicsPanel = document.createElement("div");
-    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a topic and follow the guided lesson for ${visibleSubject}.</p></div><div class="topic-grid">${Object.entries(
-      visibleTopics,
-    )
-      .map(
-        ([topic, subtopics]) =>
-          `<article class="topic-card"><h3>${topic}</h3><div class="subtopic-list">${Object.keys(
-            subtopics,
-          )
-            .map((subtopic) => {
-              const unlocked = isSubtopicUnlocked(
-                currentSyllabus,
-                visibleSubject,
-                topic,
-                subtopic,
-              );
-              const completed =
-                getLearningProgress()[
-                  getLessonKey(visibleSubject, topic, subtopic)
-                ];
-              return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${visibleSubject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
-            })
-            .join("")}</div></article>`,
+    const topicEntries = Object.entries(visibleTopics);
+    const explicitTermTopics = topicEntries.every(([topic]) =>
+      /^(First|Second|Third) Term\s*[·:-]/i.test(topic),
+    );
+    const termNames = ["First Term", "Second Term", "Third Term"];
+    const termGroups = explicitTermTopics
+      ? termNames.map((term) => [
+          term,
+          topicEntries.filter(([topic]) =>
+            topic.toLowerCase().startsWith(term.toLowerCase()),
+          ),
+        ])
+      : termNames.map((term, termIndex) => {
+          const start = Math.floor((topicEntries.length * termIndex) / 3);
+          const end = Math.floor((topicEntries.length * (termIndex + 1)) / 3);
+          return [term, topicEntries.slice(start, end)];
+        });
+    const renderTopicCard = ([topic, subtopics]) =>
+      `<article class="topic-card"><h3>${topic}</h3><div class="subtopic-list">${Object.keys(
+        subtopics,
       )
-      .join("")}</div>`;
+        .map((subtopic) => {
+          const unlocked = isSubtopicUnlocked(
+            currentSyllabus,
+            visibleSubject,
+            topic,
+            subtopic,
+          );
+          const completed =
+            getLearningProgress()[getLessonKey(visibleSubject, topic, subtopic)];
+          return `<button class="subtopic-btn" ${unlocked ? "" : "disabled"} data-subject="${visibleSubject}" data-topic="${topic}" data-subtopic="${subtopic}">${completed ? "✓ " : unlocked ? "" : "🔒 "}${subtopic}</button>`;
+        })
+        .join("")}</div></article>`;
+    const topicsPanel = document.createElement("div");
+    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a term, choose a topic, and follow the guided lessons for ${visibleSubject}.</p></div>${termGroups
+      .filter(([, entries]) => entries.length)
+      .map(
+        ([term, entries]) =>
+          `<section class="subject-term"><h3 class="subject-term-title">${term}</h3><div class="topic-grid">${entries
+            .map(renderTopicCard)
+            .join("")}</div></section>`,
+      )
+      .join("")}`;
     space.appendChild(topicsPanel);
     space
       .querySelectorAll(".subtopic-btn")
@@ -6144,22 +6164,43 @@ function setupQuizPage() {
       setupSubjectLabel.textContent = selected
         ? `${selected.displayName} is ready. Now choose a timer.`
         : "Choose a subject first.";
-    const showIctWeeks = departmentSelect.value === "basic" && subjectSelect.value === "ict";
     [modeSelect, topicSelect, weekSelect].forEach((field) => {
-      if (field) field.closest(".quiz-extra-field").hidden = !showIctWeeks;
+      if (field) field.closest(".quiz-extra-field").hidden = false;
     });
-    if (showIctWeeks) updateIctWeeks();
+    updateCurriculumChoices();
   };
 
-  const updateIctWeeks = () => {
+  const updateCurriculumChoices = () => {
     if (!topicSelect || !weekSelect) return;
-    const catalogue = learningCatalog[`basic${Number(classSelect.value.slice(-1))}-ict`];
-    const topics = catalogue?.topics.ICT || {};
+    const department = departmentSelect.value;
+    const syllabusKey = department === "basic" && subjectSelect.value === "ict"
+      ? `basic${Number(classSelect.value.slice(-1))}-ict`
+      : getDefaultSyllabusKey(department, courseSelect?.value || "general-arts");
+    const syllabus = learningCatalog[syllabusKey];
+    const selectedOption = getSubjectCatalogForClass(classSelect.value, courseSelect?.value)
+      .find((item) => item.key === subjectSelect.value);
+    const wanted = selectedOption?.label || subjectSelect.value;
+    const normalizeSubjectName = (name) => name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]/g, "");
+    const subjectNames = Object.keys(syllabus?.topics || {});
+    const wantedName = normalizeSubjectName(wanted);
+    const subjectName = subjectNames.find((name) => normalizeSubjectName(name) === wantedName)
+      || subjectNames.find((name) => normalizeSubjectName(name).includes(wantedName) || wantedName.includes(normalizeSubjectName(name)))
+      || (wantedName === "english" ? subjectNames.find((name) => normalizeSubjectName(name) === "englishlanguage") : "");
+    const topicMap = syllabus?.topics?.[subjectName] || {};
     const oldTopic = topicSelect.value;
-    topicSelect.innerHTML = Object.keys(topics).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
-    if (topics[oldTopic]) topicSelect.value = oldTopic;
-    const weeks = topics[topicSelect.value] || {};
+    topicSelect.dataset.syllabus = syllabusKey;
+    topicSelect.dataset.subject = subjectName || "";
+    topicSelect.innerHTML = Object.keys(topicMap).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
+    if (topicMap[oldTopic]) topicSelect.value = oldTopic;
+    const weeks = topicMap[topicSelect.value] || {};
+    const oldWeek = weekSelect.value;
     weekSelect.innerHTML = Object.keys(weeks).map((week) => `<option value="${week}">${week}</option>`).join("");
+    if (weeks[oldWeek]) weekSelect.value = oldWeek;
+    if (!Object.keys(topicMap).length) {
+      topicSelect.innerHTML = '<option value="">No topics available</option>';
+      weekSelect.innerHTML = '<option value="">No subtopics available</option>';
+      startBtn.disabled = true;
+    } else startBtn.disabled = false;
   };
 
   const updateCourseVisibility = () => {
@@ -6193,7 +6234,7 @@ function setupQuizPage() {
     updateClasses();
     departmentSelect.addEventListener("change", updateClasses);
     classSelect.addEventListener("change", () => updateSubjects(false));
-    topicSelect?.addEventListener("change", updateIctWeeks);
+    topicSelect?.addEventListener("change", updateCurriculumChoices);
     courseSelect?.addEventListener("change", () => {
       updateSubjects(false);
     });
@@ -6201,10 +6242,9 @@ function setupQuizPage() {
   }
 
   startBtn.addEventListener("click", () => {
-    const isIct = departmentSelect?.value === "basic" && subjectSelect?.value === "ict";
-    if (isIct && modeSelect?.value === "theory") {
-      const syllabus = `basic${Number(classSelect.value.slice(-1))}-ict`;
-      const params = new URLSearchParams({ syllabus, class: classSelect.value, department: "basic", subject: "ICT", topic: topicSelect.value, subtopic: weekSelect.value });
+    const hasCurriculumSelection = Boolean(topicSelect?.dataset.subject && topicSelect.value && weekSelect.value);
+    if (hasCurriculumSelection && modeSelect?.value === "theory") {
+      const params = new URLSearchParams({ syllabus: topicSelect.dataset.syllabus, class: classSelect.value, department: departmentSelect.value, subject: topicSelect.dataset.subject, topic: topicSelect.value, subtopic: weekSelect.value });
       window.location.href = `learning.html?${params.toString()}`;
       return;
     }
@@ -6214,11 +6254,12 @@ function setupQuizPage() {
         class: classSelect.value,
         subject: subjectSelect.value,
       });
-      if (isIct) {
+      if (hasCurriculumSelection) {
         params.set("mode", "questions");
-        params.set("ictSyllabus", `basic${Number(classSelect.value.slice(-1))}-ict`);
+        params.set("catalogSyllabus", topicSelect.dataset.syllabus);
+        params.set("catalogSubject", topicSelect.dataset.subject);
         params.set("topic", topicSelect.value);
-        params.set("week", weekSelect.value);
+        params.set("subtopic", weekSelect.value);
       }
       if (departmentSelect.value === "shs")
         params.set("course", courseSelect?.value || "general-arts");
@@ -6274,7 +6315,12 @@ function setupQuiz() {
     return;
   }
 
-  if (!subjectData) {
+  const catalogSyllabus = learningCatalog[params.get("catalogSyllabus")];
+  const catalogSubject = params.get("catalogSubject");
+  const catalogTopic = params.get("topic");
+  const catalogSubtopic = params.get("subtopic");
+  const catalogLesson = catalogSyllabus?.topics?.[catalogSubject]?.[catalogTopic]?.[catalogSubtopic];
+  if (!subjectData && !catalogLesson) {
     questionEl.textContent = "Subject not found.";
     answersEl.innerHTML = `<p>Please go back and choose a valid subject.</p><p><a href=\"-index.html\" class=\"btn\">Choose subject</a></p>`;
     scoreEl.textContent = "";
@@ -6283,19 +6329,15 @@ function setupQuiz() {
   }
 
   const levelKey = classLevels[classKey] || "early";
-  const ictSyllabus = learningCatalog[params.get("ictSyllabus")];
-  const ictTopic = params.get("topic");
-  const ictWeek = params.get("week");
-  const ictLesson = ictSyllabus?.topics.ICT?.[ictTopic]?.[ictWeek];
-  const baseQuestions = ictLesson
-    ? getFiveQuizQuestions(ictLesson, ictWeek, undefined, { className: classKey, subject: "ICT" }).map(([question, answers, correct]) => ({ question, answers, correct }))
+  const baseQuestions = catalogLesson
+    ? getFiveQuizQuestions(catalogLesson, catalogSubtopic, undefined, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
     : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, ictLesson ? 5 : 20);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, catalogLesson ? 5 : 20);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
   answeredQuestions = [];
-  subjectTitle.textContent = ictLesson ? `${classLabels[classKey]} · ${ictTopic} · ${ictWeek}` : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"}`;
+  subjectTitle.textContent = catalogLesson ? `${classLabels[classKey]} · ${catalogTopic} · ${catalogSubtopic}` : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"}`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
   if (explanationEl) {
