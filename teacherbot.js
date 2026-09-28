@@ -1838,6 +1838,84 @@ const learningCatalog = {
   },
 };
 
+// Basic ICT curriculum, organized by the three terms and the supplied weekly
+// sequence. A single lesson template keeps each week usable in both Learn and Quiz.
+const BASIC_ICT_WEEKS = {
+  "Basic 1": [
+    ["Creative media: Make digital drawings", ["Draw with a computer", "Colour in", "Lines and shapes", "Make changes", "Open and undo", "Move shapes"]],
+    ["Digital literacy: Be safe, be kind", ["Work with a partner", "Say well done", "Make our work better", "Stop and think", "Feeling worried", "Stay safe"]],
+    ["Computational thinking: Catch the mouse", ["Hello Scratch Cat", "Scratch Cat on stage", "Chase the mouse", "Catch the mouse", "The Hedgehog Game", "Inputs and outputs"]],
+    ["Programming: Help Scratch Cat play", ["Green flag means start", "Add a new block", "Go faster", "What Scratch Cat says", "Find a new block", "Hedgehog run"]],
+    ["Analysing data: Toys from the past", ["Computers help you write", "Use a keyboard", "Make a list", "Type numbers", "Correct mistakes", "Write a story"]],
+    ["Understanding technology: Use computers", ["What is a computer?", "Parts of a computer", "Computers are everywhere", "Computers at home", "Computers in school", "Your computing year"]],
+  ],
+  "Basic 2": [
+    ["Creative media: Make mixed media drawings", ["Draw on the canvas", "Draw with lines and shapes", "Start a new art project", "Import images", "Copy an image", "Add words to your drawing"]],
+    ["Digital literacy: Use websites", ["A food website", "Lunchtime", "A fruity challenge", "Keep safe", "Personal information", "User names and passwords"]],
+    ["Computational thinking: Plan ahead", ["What actions to take", "The right order", "An algorithm is a plan", "Algorithms and programs", "Run a program", "Make a change"]],
+    ["Programming: Make programs", ["Frog Hop Game", "Start a new game", "Make a script", "Forever loop", "Fish Swim Game", "Add a second sprite"]],
+    ["Analysing data: Creature factsheet", ["Add a title", "Write sentences", "Correct mistakes", "Add a picture", "Make a list", "Check your work"]],
+    ["Understanding technology: Computers outside school", ["Input devices", "Output devices", "Name the device", "Join devices together", "Computers at work", "Computers in our lives"]],
+  ],
+  "Basic 3": [
+    ["Creative Media: Make a Hobby Poster", ["Use a template", "Add text to your poster", "Format a text", "Add images", "Make changes to images", "Add shapes with text"]],
+    ["Digital Literacy: Stay in Touch", ["Different types of messaging", "Open an email", "Reply to an email", "Send an email", "Be kind", "Keep safe"]],
+    ["Computational thinking: Turn inputs into outputs", ["Inputs and outputs", "Turn inputs into outputs", "All about operators", "Plan and make", "Inputs forever"]],
+    ["Programming: The Drawing Bug", ["Get ready to draw", "Change the program", "Variable values", "Degrees for turning", "Find and fix errors", "Error challenge"]],
+    ["Analysing data: Wildlife park data", ["Spreadsheet labels and values", "Add up totals", "Cell references and ranges", "Add more labels and values", "Add a new formula", "Change values"]],
+    ["Understanding technology: How computers help us", ["Types of computer", "How computers help at work", "Make good choices", "What is a robot?", "How robots are used", "Benefits and limitations of robots"]],
+  ],
+  "Basic 4": [
+    ["Creative media: Write and edit a document", ["Start a new document", "Select and change text", "Add headings and lists", "Help readers find things", "Edit a document together", "Finalize a document"]],
+    ["Digital literacy: Art around the world", ["Search engines and links", "Useful websites", "Good and bad", "Bookmarks and images", "Stay safe, learn well", "Give feedback"]],
+    ["Computational thinking: Number quiz", ["Think of a number", "Think of two numbers", "What's the total?", "Answer the question", "Is your answer correct?", "Is your answer wrong?"]],
+    ["Programming: Space obstacles", ["Control of motion", "Crash test", "Crash points", "Find and fix errors", "Robot motion", "Design your own game"]],
+    ["Analysing data: Create charts", ["Number values and labels", "Spreadsheet functions", "Use a formula", "Pie charts", "Bar charts", "Choose a chart type"]],
+    ["Understanding technology: Computer networks", ["What is a network?", "Network connections", "Network devices", "Internet services", "Working with the internet", "Good internet, bad internet"]],
+  ],
+  "Basic 5": [
+    ["Creative media: Illustrate a recipe", ["Plan a photo shoot", "Take digital photos", "Share your photos", "Improve your photos", "Retouch photos", "Arrange photos"]],
+    ["Digital literacy: Animal facts", ["Search the web", "Search results", "Adverts and meta tags", "Choose web content", "Give credit", "The Internet of Things"]],
+    ["Computational thinking: A test with random questions", ["Ask a number question", "Ask a random question", "Ask ten questions", "Repeat the question", "Repeat an action", "What can robots do?"]],
+    ["Programming: The Hungry Parrot", ["The Parrot Game", "Control with keyboard input", "Control with mouse input", "Visual output", "Sound output", "A robot chases its dinner"]],
+    ["Analysing data: Snack bar", ["Snack bar ingredients", "Calculate your costs", "Calculate your profit", "Make a summary worksheet", "Sales and profit", "Ask What if questions"]],
+    ["Understanding technology: Working together", ["What is the internet?", "What is the world wide web?", "The changing web", "Computers in your community", "People working together", "Benefits of technology"]],
+  ],
+  "Basic 6": [
+    ["Creative media: Make a web page", ["Parts of a web page", "Create a web page", "Create images from 3D models", "Add media to your web page", "Add more pages to a website", "Preview and check web pages"]],
+    ["Digital literacy: Search space", ["How do search engines work?", "Effective search terms", "Fact, opinion or fake?", "Your digital footprint", "Cookies", "Digital advertising"]],
+    ["Computational thinking: Logical reasoning", ["Start simple", "Meet the full requirement", "Reuse and repurpose", "From algorithm to program", "Break a problem into parts", "Fit small programs together"]],
+    ["Programming: Frog games", ["Control movement", "Make and use a module", "The reward", "Visual output", "Control a robot", "Control systems"]],
+    ["Analysing data: Amir's parcels", ["Make a spreadsheet table", "Sort a table", "Filter records", "Add validation", "Add calculations", "Use an If formula"]],
+    ["Understanding technology: Our survey", ["Plan a survey", "Carry out a survey", "Analyse your data", "Create your presentation", "Improve your presentation", "Deliver your presentation"]],
+  ],
+};
+
+function createBasicIctSyllabus(className) {
+  const terms = BASIC_ICT_WEEKS[className];
+  const topics = { ICT: {} };
+  ["First Term", "Second Term", "Third Term"].forEach((term, termIndex) => {
+    for (let topicIndex = 0; topicIndex < 2; topicIndex++) {
+      const [topic, weeks] = terms[termIndex * 2 + topicIndex];
+      const subtopics = {};
+      weeks.forEach((name, weekIndex) => {
+        const week = termIndex === 0 ? topicIndex * 6 + weekIndex + 1 : topicIndex * 6 + weekIndex + 1;
+        const label = `Week ${week}: ${name}`;
+        subtopics[label] = {
+          lesson: `${name} introduces an important idea in ${topic}. Learn the key terms, look at how the idea works, and practise using it in a familiar situation. Remember to work carefully, make safe choices, and check your work.`,
+          questions: [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
+        };
+      });
+      topics.ICT[`${term} · ${topic}`] = subtopics;
+    }
+  });
+  return { name: `${className} ICT curriculum`, years: [className], topics };
+}
+
+for (let grade = 1; grade <= 6; grade++) {
+  learningCatalog[`basic${grade}-ict`] = createBasicIctSyllabus(`Basic ${grade}`);
+}
+
 // Lesson enhancements.  Keep videos in one place: add a YouTube embed URL (or
 // an .mp4 file URL) for any lesson key below when a video is ready.
 const LESSON_VIDEO_URLS = {
