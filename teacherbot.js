@@ -6173,9 +6173,12 @@ function setupQuizPage() {
   const updateCurriculumChoices = () => {
     if (!topicSelect || !weekSelect) return;
     const department = departmentSelect.value;
-    const syllabusKey = department === "basic" && subjectSelect.value === "ict"
-      ? `basic${Number(classSelect.value.slice(-1))}-ict`
-      : getDefaultSyllabusKey(department, courseSelect?.value || "general-arts");
+    // Use the same default syllabus that the learning page opens for this
+    // department, so quiz topics and lessons always come from one catalogue.
+    const syllabusKey = getDefaultSyllabusKey(
+      department,
+      courseSelect?.value || "general-arts",
+    );
     const syllabus = learningCatalog[syllabusKey];
     const selectedOption = getSubjectCatalogForClass(classSelect.value, courseSelect?.value)
       .find((item) => item.key === subjectSelect.value);
