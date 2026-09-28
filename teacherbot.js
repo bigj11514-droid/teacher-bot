@@ -3170,10 +3170,10 @@ function setupLearningSpace() {
     params.get("subject") ||
     student.subject ||
     Object.keys(syllabus.topics)[0]
-  )?.toLowerCase();
+  );
   const availableSubjects = Object.keys(syllabus.topics || {});
-  const selectedSubject = availableSubjects.includes(requestedSubject)
-    ? requestedSubject
+  const selectedSubject = availableSubjects.find((name) => name.toLowerCase() === String(requestedSubject).toLowerCase())
+    ? availableSubjects.find((name) => name.toLowerCase() === String(requestedSubject).toLowerCase())
     : availableSubjects[0];
   const selectedYear = params.get("year");
 
@@ -3549,7 +3549,14 @@ function setupLearningSpace() {
       );
   });
   const savedLesson = getLessonResume();
+  const requestedTopic = params.get("topic");
+  const requestedSubtopic = params.get("subtopic");
   if (
+    requestedTopic && requestedSubtopic &&
+    syllabus.topics[selectedSubject]?.[requestedTopic]?.[requestedSubtopic]
+  ) {
+    renderLesson(selectedSubject, requestedTopic, requestedSubtopic);
+  } else if (
     savedLesson &&
     syllabus.topics[savedLesson.subject]?.[savedLesson.topic]?.[
       savedLesson.subtopic
@@ -5708,6 +5715,7 @@ const shsCourseCatalog = {
 const subjectCatalog = {
   basic: [
     { key: "maths", label: "Mathematics" },
+    { key: "ict", label: "ICT" },
     { key: "science", label: "Science" },
     { key: "owop", label: "Our World Our People" },
     { key: "history", label: "History" },
@@ -6094,6 +6102,9 @@ function setupQuizPage() {
     getStudentSession()?.department,
     "",
   );
+  const modeSelect = document.getElementById("quiz-mode-select");
+  const topicSelect = document.getElementById("quiz-topic-select");
+  const weekSelect = document.getElementById("quiz-week-select");
 
   if (!quizSetup || !startBtn || !timerSelect) {
     return;
@@ -6133,6 +6144,22 @@ function setupQuizPage() {
       setupSubjectLabel.textContent = selected
         ? `${selected.displayName} is ready. Now choose a timer.`
         : "Choose a subject first.";
+    const showIctWeeks = departmentSelect.value === "basic" && subjectSelect.value === "ict";
+    [modeSelect, topicSelect, weekSelect].forEach((field) => {
+      if (field) field.closest(".quiz-extra-field").hidden = !showIctWeeks;
+    });
+    if (showIctWeeks) updateIctWeeks();
+  };
+
+  const updateIctWeeks = () => {
+    if (!topicSelect || !weekSelect) return;
+    const catalogue = learningCatalog[`basic${Number(classSelect.value.slice(-1))}-ict`];
+    const topics = catalogue?.topics.ICT || {};
+    const oldTopic = topicSelect.value;
+    topicSelect.innerHTML = Object.keys(topics).map((topic) => `<option value="${topic}">${topic}</option>`).join("");
+    if (topics[oldTopic]) topicSelect.value = oldTopic;
+    const weeks = topics[topicSelect.value] || {};
+    weekSelect.innerHTML = Object.keys(weeks).map((week) => `<option value="${week}">${week}</option>`).join("");
   };
 
   const updateCourseVisibility = () => {
@@ -6166,6 +6193,7 @@ function setupQuizPage() {
     updateClasses();
     departmentSelect.addEventListener("change", updateClasses);
     classSelect.addEventListener("change", () => updateSubjects(false));
+    topicSelect?.addEventListener("change", updateIctWeeks);
     courseSelect?.addEventListener("change", () => {
       updateSubjects(false);
     });
@@ -6173,12 +6201,25 @@ function setupQuizPage() {
   }
 
   startBtn.addEventListener("click", () => {
+    const isIct = departmentSelect?.value === "basic" && subjectSelect?.value === "ict";
+    if (isIct && modeSelect?.value === "theory") {
+      const syllabus = `basic${Number(classSelect.value.slice(-1))}-ict`;
+      const params = new URLSearchParams({ syllabus, class: classSelect.value, department: "basic", subject: "ICT", topic: topicSelect.value, subtopic: weekSelect.value });
+      window.location.href = `learning.html?${params.toString()}`;
+      return;
+    }
     if (departmentSelect && classSelect && subjectSelect) {
       const params = new URLSearchParams({
         department: departmentSelect.value,
         class: classSelect.value,
         subject: subjectSelect.value,
       });
+      if (isIct) {
+        params.set("mode", "questions");
+        params.set("ictSyllabus", `basic${Number(classSelect.value.slice(-1))}-ict`);
+        params.set("topic", topicSelect.value);
+        params.set("week", weekSelect.value);
+      }
       if (departmentSelect.value === "shs")
         params.set("course", courseSelect?.value || "general-arts");
       window.history.replaceState({}, "", `quiz.html?${params.toString()}`);
@@ -6242,13 +6283,19 @@ function setupQuiz() {
   }
 
   const levelKey = classLevels[classKey] || "early";
-  const baseQuestions = subjectData[levelKey] || subjectData.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, 20);
+  const ictSyllabus = learningCatalog[params.get("ictSyllabus")];
+  const ictTopic = params.get("topic");
+  const ictWeek = params.get("week");
+  const ictLesson = ictSyllabus?.topics.ICT?.[ictTopic]?.[ictWeek];
+  const baseQuestions = ictLesson
+    ? getFiveQuizQuestions(ictLesson, ictWeek, undefined, { className: classKey, subject: "ICT" }).map(([question, answers, correct]) => ({ question, answers, correct }))
+    : subjectData?.[levelKey] || subjectData?.early;
+  quizQuestions = buildQuizQuestionSet(baseQuestions, ictLesson ? 5 : 20);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
   answeredQuestions = [];
-  subjectTitle.textContent = `${subjectData.displayName} • ${classLabels[classKey] || "Class"}`;
+  subjectTitle.textContent = ictLesson ? `${classLabels[classKey]} · ${ictTopic} · ${ictWeek}` : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"}`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
   if (explanationEl) {
