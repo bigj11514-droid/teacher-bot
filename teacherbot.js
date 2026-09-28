@@ -3204,6 +3204,13 @@ function setupLearningSpace() {
     .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
     .join("");
   syllabusSelect.value = syllabusKey;
+  if (
+    selectedDepartment === "basic" &&
+    requestedSubject.toLowerCase() === "ict" &&
+    learningCatalog[`${selectedClass}-ict`]
+  ) {
+    syllabusSelect.value = `${selectedClass}-ict`;
+  }
 
   const updateClassChoices = () => {
     const department = getSyllabusDepartment(syllabusSelect.value);
@@ -3239,6 +3246,16 @@ function setupLearningSpace() {
   updateClassChoices();
   syllabusSelect.addEventListener("change", updateClassChoices);
   subjectSelect.addEventListener("change", () => {
+    if (
+      getSyllabusDepartment(syllabusSelect.value) === "basic" &&
+      subjectSelect.value.toLowerCase() === "ict"
+    ) {
+      const ictSyllabusKey = `${classSelect.value}-ict`;
+      if (learningCatalog[ictSyllabusKey]) {
+        syllabusSelect.value = ictSyllabusKey;
+        updateClassChoices();
+      }
+    }
     renderTopics();
   });
   selectionControls
@@ -6173,12 +6190,13 @@ function setupQuizPage() {
   const updateCurriculumChoices = () => {
     if (!topicSelect || !weekSelect) return;
     const department = departmentSelect.value;
-    // Use the same default syllabus that the learning page opens for this
-    // department, so quiz topics and lessons always come from one catalogue.
-    const syllabusKey = getDefaultSyllabusKey(
-      department,
-      courseSelect?.value || "general-arts",
-    );
+    const syllabusKey =
+      department === "basic" && subjectSelect.value === "ict"
+        ? `basic${Number(classSelect.value.slice(-1))}-ict`
+        : getDefaultSyllabusKey(
+            department,
+            courseSelect?.value || "general-arts",
+          );
     const syllabus = learningCatalog[syllabusKey];
     const selectedOption = getSubjectCatalogForClass(classSelect.value, courseSelect?.value)
       .find((item) => item.key === subjectSelect.value);
