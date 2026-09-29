@@ -1916,6 +1916,34 @@ for (let grade = 1; grade <= 6; grade++) {
   learningCatalog[`basic${grade}-ict`] = createBasicIctSyllabus(`Basic ${grade}`);
 }
 
+const basic2CanvasLesson =
+  learningCatalog["basic2-ict"].topics.ICT["First Term · Creative media: Make mixed media drawings"]["Week 1: Draw on the canvas"];
+basic2CanvasLesson.lesson =
+  "The canvas is the big blank area in a drawing program. It is like a piece of paper where you can draw and paint. The toolbar is the menu at the top or side of the screen. It is like a pencil case because it holds drawing tools and colours. You can choose a brush, paintbrush, pen, pencil, marker, crayon, or spray can. Use a mouse or touchscreen to choose a tool and colour, then click and drag or move your finger across the canvas to draw lines, shapes, and pictures. Save your drawing so you can find it and use it again. Give every saved file its own name, and choose Save as to save a drawing with a new name. Pictures can use file types such as .jpg, .png, and .gif. Sound files can use .mp3 and .wav. Text documents can use .doc and .pdf.";
+basic2CanvasLesson._hasManagedQuestions = true;
+basic2CanvasLesson.questions = [
+  ["What is the main blank area where you draw on a computer screen called?", ["The Desk", "The Canvas", "The Toolbar", "The File"], 1],
+  ["What is the canvas on a computer similar to?", ["A piece of paper", "A ruler", "An eraser", "A mouse"], 0],
+  ["Which part of the drawing app acts like a digital pencil case?", ["The Canvas", "The Screen", "The Toolbar", "The Folder"], 2],
+  ["What do you find inside the toolbar?", ["Only games", "Drawing tools and colors", "Videos", "Music players"], 1],
+  ["Which of these is a freehand tool used for drawing on the canvas?", ["Keyboard", "Brush", "Speaker", "Monitor"], 1],
+  ["Name two tools you can use to draw on the canvas.", ["Monitor and Keyboard", "Pencil and Spray Can", "Mouse and Cable", "File and Folder"], 1],
+  ["Which computer tool looks like a tin that sprays paint on the canvas?", ["Crayon", "Spray Can", "Pen", "Eraser"], 1],
+  ["What hardware can you use to select a tool and draw on the screen?", ["Mouse or Touchscreen", "Printer", "Speaker", "Power Cable"], 0],
+  ["Why do we save our work on a computer?", ["To delete it forever", "To find and use it again later", "To turn off the screen", "To change the computer color"], 1],
+  ["Which option do students click to save their drawing with a new name?", ["Open", "Delete", "Save as", "Exit"], 2],
+  ["What must every saved file on a computer have?", ["A unique name", "A password", "A red circle", "A picture of a fish"], 0],
+  ["Which file type is used for saving pictures and drawings?", [".mp3", ".png", ".doc", ".wav"], 1],
+  ["Which of the following is an image file extension?", [".jpg", ".pdf", ".mp3", ".wav"], 0],
+  ["If you save a sound or music file, which file extension might it use?", [".gif", ".mp3", ".png", ".doc"], 1],
+  ["Which file extension is used for text documents?", [".gif", ".jpg", ".doc", ".wav"], 2],
+  ["What type of file ends in .gif?", ["An image file", "A sound file", "A text document", "A video game"], 0],
+  ["What type of file ends in .pdf?", ["A picture file", "A text/document file", "A music file", "A drawing tool"], 1],
+  ["What type of file ends in .wav?", ["A sound file", "An image file", "A text file", "A drawing app"], 0],
+  ["What tool would you select if you wanted to draw with smooth, colorful wax strokes?", ["Spray can", "Crayon", "Eraser", "Text tool"], 1],
+  ["What should you do before closing your drawing app so you don't lose your work?", ["Turn off the screen", "Save your file with a name", "Erase the canvas", "Unplug the mouse"], 1],
+];
+
 // Lesson enhancements.  Keep videos in one place: add a YouTube embed URL (or
 // an .mp4 file URL) for any lesson key below when a video is ready.
 const LESSON_VIDEO_URLS = {
@@ -2748,9 +2776,9 @@ function getFiveQuizQuestions(
     ],
     0,
   ]);
-  while (questions.length < 5)
+  while (questions.length < (lesson._hasManagedQuestions ? 20 : 5))
     questions.push(fillers[questions.length % fillers.length]);
-  return questions.slice(0, 5);
+  return questions.slice(0, lesson._hasManagedQuestions ? 20 : 5);
 }
 
 function getTenExerciseQuestions(lesson, subtopic, context = {}) {
@@ -3685,7 +3713,7 @@ function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
     score = 0;
   const showQuestion = () => {
     const [question, answers, correct] = quizQuestions[index];
-    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of 5</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><div id="correct-emoji" class="correct-emoji" aria-live="polite" aria-hidden="true"></div><p id="topic-feedback" class="feedback-text"></p></article>`;
+    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${quizQuestions.length}</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><div id="correct-emoji" class="correct-emoji" aria-live="polite" aria-hidden="true"></div><p id="topic-feedback" class="feedback-text"></p></article>`;
     space.querySelectorAll("[data-answer]").forEach((button) =>
       button.addEventListener("click", () => {
         const selected = Number(button.dataset.answer);
@@ -6073,8 +6101,10 @@ function setupDepartmentPage() {
     getStudentSession()?.department,
     "",
   );
-  const initialDepartment =
-    accountDepartment || normalizeDepartmentKey(getDepartmentKey(), "basic");
+  const initialDepartment = normalizeDepartmentKey(
+    getDepartmentKey(),
+    accountDepartment || "basic",
+  );
   const initialClass = getClassKey();
   const initialCourse = getCourseKey();
   departmentSelect.value = initialDepartment;
@@ -6560,7 +6590,19 @@ function nextQuestion() {
   }
   nextBtn.textContent = "Choose another subject";
   nextBtn.disabled = false;
-  nextBtn.onclick = () => (window.location.href = "-index.html");
+  nextBtn.onclick = () => {
+    const params = new URLSearchParams(window.location.search);
+    const student = getStudentSession() || {};
+    const className = params.get("class") || student.className || "basic1";
+    const department = normalizeDepartmentKey(
+      params.get("department") || student.department,
+      getDepartmentFromClass(className),
+    );
+    const course = params.get("course") || student.course || "general-arts";
+    const destination = new URLSearchParams({ department, class: className });
+    if (department === "shs") destination.set("course", course);
+    window.location.href = `department.html?${destination.toString()}`;
+  };
 }
 
 function bindNextQuestionButton() {
