@@ -2092,7 +2092,7 @@ function addThirtyExtraSubtopics() {
 
 function createDepartmentLesson(subject, topic, subtopic) {
   // DEPARTMENT GENERATOR: JHS and SHS lessons begin with no shared questions.
-  // getFiveQuizQuestions creates five class-level checks when a student opens one.
+  // getFiveQuizQuestions creates the lesson's class-level question bank.
   return {
     lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`,
     questions: [],
@@ -2781,6 +2781,13 @@ function getFiveQuizQuestions(
   return questions.slice(0, lesson._hasManagedQuestions ? 20 : 5);
 }
 
+function getTwentyQuizQuestions(lesson, subtopic, context = {}) {
+  const questions = getFiveQuizQuestions(lesson, subtopic, undefined, context);
+  return Array.from({ length: 20 }, (_, index) =>
+    questions[index % questions.length],
+  );
+}
+
 function getTenExerciseQuestions(lesson, subtopic, context = {}) {
   const base = getFiveQuizQuestions(lesson, subtopic, undefined, context);
   return Array.from({ length: 10 }, (_, index) => {
@@ -3188,22 +3195,26 @@ function setupLearningSpace() {
     ? requestedClass
     : availableClasses[0];
   const course = params.get("course") || student.course || "general-arts";
+  const requestedSubject =
+    params.get("subject") || student.subject || "";
   const requestedSyllabus = params.get("syllabus");
-  const syllabusKey =
-    requestedSyllabus &&
-    learningCatalog[requestedSyllabus] &&
-    getSyllabusDepartment(requestedSyllabus) === selectedDepartment
+  const requestedIct =
+    selectedDepartment === "basic" &&
+    requestedSubject.toLowerCase() === "ict" &&
+    Boolean(learningCatalog[`${selectedClass}-ict`]);
+  const syllabusKey = requestedIct
+    ? `${selectedClass}-ict`
+    : requestedSyllabus &&
+        learningCatalog[requestedSyllabus] &&
+        getSyllabusDepartment(requestedSyllabus) === selectedDepartment
       ? requestedSyllabus
       : getDefaultSyllabusKey(selectedDepartment, course);
   const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
-  const requestedSubject = (
-    params.get("subject") ||
-    student.subject ||
-    Object.keys(syllabus.topics)[0]
-  );
+  const requestedLearningSubject =
+    requestedSubject || Object.keys(syllabus.topics)[0];
   const availableSubjects = Object.keys(syllabus.topics || {});
-  const selectedSubject = availableSubjects.find((name) => name.toLowerCase() === String(requestedSubject).toLowerCase())
-    ? availableSubjects.find((name) => name.toLowerCase() === String(requestedSubject).toLowerCase())
+  const selectedSubject = availableSubjects.find((name) => name.toLowerCase() === String(requestedLearningSubject).toLowerCase())
+    ? availableSubjects.find((name) => name.toLowerCase() === String(requestedLearningSubject).toLowerCase())
     : availableSubjects[0];
   const selectedYear = params.get("year");
 
@@ -3234,7 +3245,7 @@ function setupLearningSpace() {
   syllabusSelect.value = syllabusKey;
   if (
     selectedDepartment === "basic" &&
-    requestedSubject.toLowerCase() === "ict" &&
+    requestedLearningSubject.toLowerCase() === "ict" &&
     learningCatalog[`${selectedClass}-ict`]
   ) {
     syllabusSelect.value = `${selectedClass}-ict`;
@@ -3487,7 +3498,9 @@ function setupLearningSpace() {
     // CONTENT-STUDIO QUESTIONS: exact five-question sets saved by an admin or
     // approved teacher are intentionally kept word-for-word for every class.
     // Built-in lesson questions use the department/class wording above instead.
-    activeLesson._hasManagedQuestions = Boolean(contentOverride.questions);
+    activeLesson._hasManagedQuestions =
+      Boolean(contentOverride.questions) ||
+      Boolean(activeLesson._hasManagedQuestions);
     startLessonTimer();
     document
       .getElementById("back-to-topics")
@@ -3703,10 +3716,9 @@ function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
   clearInterval(lessonTimerId);
   lessonTimerId = null;
   const space = document.getElementById("learning-space");
-  const quizQuestions = getFiveQuizQuestions(
+  const quizQuestions = getTwentyQuizQuestions(
     lesson,
     subtopic,
-    undefined,
     metadata,
   );
   let index = 0,
@@ -3749,14 +3761,14 @@ function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
           new URLSearchParams(window.location.search).get("syllabus") || "ges",
       });
     if (score === quizQuestions.length) {
-      space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>Excellent work—you can move to the next lesson.</p><button class="btn" id="choose-another-topic">Next lesson</button></article>`;
+      space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${quizQuestions.length}</h2><p>Excellent work—you can move to the next lesson.</p><button class="btn" id="choose-another-topic">Next lesson</button></article>`;
       document
         .getElementById("choose-another-topic")
         .addEventListener("click", onPassed || (() => setupLearningSpace()));
       return;
     }
 
-    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of 5</h2><p>Review the lesson and examples, then try the five questions again.</p><button class="soft-btn" id="choose-another-topic">Go back to lesson</button></article>`;
+    space.innerHTML = `<article class="lesson-card"><p class="eyebrow">Topic check complete</p><h2>You scored ${score} out of ${quizQuestions.length}</h2><p>Review the lesson and examples, then try the ${quizQuestions.length} questions again.</p><button class="soft-btn" id="choose-another-topic">Go back to lesson</button></article>`;
     document
       .getElementById("choose-another-topic")
       .addEventListener("click", onRetry || (() => setupLearningSpace()));
@@ -6131,6 +6143,12 @@ function setupDepartmentPage() {
     params.set("subject", subjectSelect.value);
     let syllabus = "ges";
     if (departmentSelect.value === "jhs") syllabus = "jhs";
+    if (
+      departmentSelect.value === "basic" &&
+      subjectSelect.value.toLowerCase() === "ict"
+    ) {
+      syllabus = `${classSelect.value}-ict`;
+    }
     if (departmentSelect.value === "shs" && courseSelect) {
       params.set("course", courseSelect.value);
       syllabus = `shs-${courseSelect.value}`;
@@ -6381,9 +6399,9 @@ function setupQuiz() {
 
   const levelKey = classLevels[classKey] || "early";
   const baseQuestions = catalogLesson
-    ? getFiveQuizQuestions(catalogLesson, catalogSubtopic, undefined, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
+    ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
     : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, catalogLesson ? 5 : 20);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, 20);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
