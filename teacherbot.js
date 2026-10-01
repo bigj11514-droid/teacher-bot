@@ -2776,14 +2776,14 @@ function getFiveQuizQuestions(
     ],
     0,
   ]);
-  while (questions.length < (lesson._hasManagedQuestions ? 20 : 5))
+  while (questions.length < 10)
     questions.push(fillers[questions.length % fillers.length]);
-  return questions.slice(0, lesson._hasManagedQuestions ? 20 : 5);
+  return questions.slice(0, 10);
 }
 
 function getTwentyQuizQuestions(lesson, subtopic, context = {}) {
   const questions = getFiveQuizQuestions(lesson, subtopic, undefined, context);
-  return Array.from({ length: 20 }, (_, index) =>
+  return Array.from({ length: 10 }, (_, index) =>
     questions[index % questions.length],
   );
 }
@@ -5917,7 +5917,7 @@ function buildShuffledQuestion(question) {
   };
 }
 
-function buildQuizQuestionSet(baseQuestions, total = 20) {
+function buildQuizQuestionSet(baseQuestions, total = 10) {
   if (!Array.isArray(baseQuestions) || baseQuestions.length === 0) return [];
 
   const questions = [];
@@ -6401,7 +6401,7 @@ function setupQuiz() {
   const baseQuestions = catalogLesson
     ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
     : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, 20);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, 10);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
@@ -7266,7 +7266,8 @@ function setupContentStudio({ administrator = false } = {}) {
       parsedQuestions = JSON.parse(questions.value);
       if (
         !Array.isArray(parsedQuestions) ||
-        parsedQuestions.length !== 5 ||
+        parsedQuestions.length < 1 ||
+        parsedQuestions.length > 10 ||
         !parsedQuestions.every(
           (item) =>
             Array.isArray(item) && item.length === 3 && Array.isArray(item[1]),
@@ -7275,7 +7276,7 @@ function setupContentStudio({ administrator = false } = {}) {
         throw new Error();
     } catch {
       status.textContent =
-        "Questions must be exactly five JSON entries: [question, [answers], correctAnswerIndex].";
+        "Questions must be 1 to 10 JSON entries: [question, [answers], correctAnswerIndex].";
       return;
     }
     const originalTopic = topic.value;
