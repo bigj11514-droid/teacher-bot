@@ -888,7 +888,8 @@ h3 {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.answers button {
+.answers button,
+.answers .short-answer-input {
   width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
@@ -897,6 +898,22 @@ h3 {
   color: var(--text);
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.answers .short-answer-input {
+  box-sizing: border-box;
+  cursor: text;
+  outline: 2px solid transparent;
+}
+
+.answers .short-answer-input:focus {
+  border-color: var(--accent);
+  outline-color: rgba(95, 233, 255, 0.2);
+}
+
+.answers .short-answer-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .answers button:disabled {

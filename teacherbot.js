@@ -1946,15 +1946,25 @@ basic2CanvasLesson.questions = [
 
 const selectAndChangeTextQuestions = [
   { type: "multiple-choice", question: "Which action lets a student select text in a document using a mouse?", answers: ["Click and drag across the text", "Press the power button", "Close the document", "Change the screen resolution"], correct: 0, explanation: "Select the text by clicking at the beginning and dragging across it." },
-  { type: "multiple-choice", question: "Which keyboard shortcut can select a word?", answers: ["Ctrl + A", "Ctrl + B", "Alt + Tab", "F12"], correct: 0, explanation: "Ctrl + A selects all text in the current document." },
-  { type: "multiple-choice", question: "Which keyboard shortcut selects the whole document?", answers: ["Ctrl + C", "Ctrl + A", "Ctrl + V", "Ctrl + S"], correct: 1, explanation: "Ctrl + A selects all text in the current document." },
+  { type: "multiple-choice", question: "Which action selects a word with a keyboard?", answers: ["Press Ctrl + A", "Move the cursor to the word and press Ctrl + Shift + Arrow", "Press F12", "Press Alt + Tab"], correct: 1, explanation: "A keyboard can select a word by moving to it and using the Shift and arrow keys." },
+  { type: "multiple-choice", question: "Which action selects a line of text using a keyboard?", answers: ["Press Ctrl + C", "Press Ctrl + End", "Press Ctrl + A", "Press Ctrl + V"], correct: 1, explanation: "Ctrl + End moves to the end of the document, while the Shift key can select a line." },
+  { type: "multiple-choice", question: "Which action selects a paragraph using a keyboard?", answers: ["Press Ctrl + P", "Press Ctrl + Shift + End", "Press Ctrl + A", "Press Ctrl + S"], correct: 1, explanation: "Ctrl + Shift + End can select from the cursor to the end of the document." },
   { type: "multiple-choice", question: "What is the main purpose of selecting text before changing its font?", answers: ["To hide the text", "To apply the change only to the selected text", "To move the page", "To save the file"], correct: 1, explanation: "Formatting controls affect only the text that is selected." },
-  { type: "multiple-choice", question: "Which control is used to change the appearance of selected text?", answers: ["Font controls", "File controls", "Audio controls", "Print controls"], correct: 0, explanation: "Font controls change the selected text's typeface and size." },
+  { type: "multiple-choice", question: "Which control is used to change the appearance of selected text?", answers: ["Font controls", "File controls", "Audio controls", "Print controls"], correct: 0, explanation: "Font controls change the selected text's typeface, size, and emphasis." },
+  { type: "multiple-choice", question: "Which font control is used to make selected text bold?", answers: ["Italic control", "Bold control", "Underline control", "Font-size control"], correct: 1, explanation: "The bold control makes selected text bold." },
+  { type: "multiple-choice", question: "Which font control adds a line below selected text?", answers: ["Bold control", "Italic control", "Underline control", "Font-size control"], correct: 2, explanation: "The underline control adds a line below selected text." },
+  { type: "multiple-choice", question: "Which font control makes selected text lean to the right?", answers: ["Bold control", "Italic control", "Underline control", "Font-size control"], correct: 1, explanation: "The italic control makes text lean to the right." },
+  { type: "multiple-choice", question: "What should students do to make a heading more visible?", answers: ["Use a smaller font", "Change its font and font size", "Delete the heading", "Change the page background"], correct: 1, explanation: "A heading can be made more visible by changing its font and font size." },
   { type: "true-false", question: "A selected heading can be made more noticeable by changing its font and font size.", answers: ["True", "False"], correct: 0, explanation: "Changing the heading's font and size makes it more noticeable." },
   { type: "true-false", question: "Font controls change the entire document rather than only selected text.", answers: ["True", "False"], correct: 1, explanation: "Font controls affect only the selected text." },
   { type: "true-false", question: "Serif fonts have small details at the ends of letters.", answers: ["True", "False"], correct: 0, explanation: "Serif fonts have small decorative details at the ends of letter strokes." },
   { type: "true-false", question: "Sans-serif fonts are usually chosen for clear, modern text.", answers: ["True", "False"], correct: 0, explanation: "Sans-serif fonts are commonly used for clear, modern text." },
   { type: "true-false", question: "A decorative display font is always suitable for body text.", answers: ["True", "False"], correct: 1, explanation: "Display fonts should be used carefully because they may reduce readability." },
+  { type: "true-false", question: "A readable and accessible document should use fonts that are easy to distinguish.", answers: ["True", "False"], correct: 0, explanation: "Readability and accessibility should guide font choices." },
+  { type: "true-false", question: "Students should choose a heading font based only on its appearance.", answers: ["True", "False"], correct: 1, explanation: "Students should consider both appearance and readability." },
+  { type: "true-false", question: "A student should save the document after changing the selected text.", answers: ["True", "False"], correct: 0, explanation: "Saving preserves the completed document changes." },
+  { type: "true-false", question: "A display font is the best choice for every heading in a document.", answers: ["True", "False"], correct: 1, explanation: "Highly stylized display fonts should be used carefully for readability." },
+  { type: "true-false", question: "Text selection can be performed with mouse presses, gestures, or keyboard shortcuts.", answers: ["True", "False"], correct: 0, explanation: "Students can select text with mouse, touchscreen, or keyboard methods." },
   { type: "short-answer", question: "What is the name of the font style that has small details at the ends of letters?", answers: ["Serif"], correct: 0, answerKey: "Serif", explanation: "Serif fonts have small details at the ends of letter strokes." },
   { type: "short-answer", question: "What is the name of a font style without those small end details?", answers: ["Sans-serif"], correct: 0, answerKey: "Sans-serif", explanation: "Sans-serif fonts do not use the small end details found in serif fonts." },
   { type: "short-answer", question: "Name one font that is commonly used as a sans-serif font.", answers: ["Arial", "Calibri", "Verdana", "Tahoma"], correct: 0, answerKey: "Arial, Calibri, Verdana, or Tahoma", explanation: "Arial and Calibri are examples of common sans-serif fonts." },
@@ -5973,7 +5983,7 @@ function buildQuizQuestionSet(baseQuestions, total = 10) {
       if (question?.type) {
         return {
           ...question,
-          answers: question.answers.map((answer, index) => ({ answer, index })),
+          answers: [...question.answers],
           correct: question.correct,
           type: question.type,
         };
@@ -6458,7 +6468,7 @@ function setupQuiz() {
   const baseQuestions = catalogLesson
     ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject })
     : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, catalogLesson?. _quizQuestionCount || 10);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, catalogLesson?._quizQuestionCount || 10);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
@@ -6571,17 +6581,29 @@ function loadQuestion() {
   questionEl.textContent = current.question;
   answersEl.innerHTML = "";
 
-  current.answers.forEach((answer, index) => {
-    const btn = document.createElement("button");
-    btn.textContent = answer;
-    btn.className = "answer-btn";
-    btn.addEventListener("click", () => selectAnswer(btn, index));
-    answersEl.appendChild(btn);
-  });
+  if (current.type === "short-answer") {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "short-answer-input";
+    input.placeholder = "Type your answer";
+    input.setAttribute("aria-label", "Your short answer");
+    answersEl.appendChild(input);
+  } else {
+    const answerItems = current.type === "true-false"
+      ? current.answers
+      : current.answers;
+    answerItems.forEach((answer, index) => {
+      const btn = document.createElement("button");
+      btn.textContent = answer;
+      btn.className = "answer-btn";
+      btn.addEventListener("click", () => selectAnswer(btn, index));
+      answersEl.appendChild(btn);
+    });
+  }
 
   progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
-  nextBtn.onclick = nextQuestion;
+  nextBtn.onclick = current.type === "short-answer" ? submitShortAnswer : nextQuestion;
   showDiagramForQuestion(current);
   startTimer();
 }
@@ -6622,6 +6644,39 @@ function selectAnswer(button, selectedIndex) {
 
   updateScoreDisplay();
   nextBtn.disabled = false;
+}
+
+function submitShortAnswer() {
+  const answersEl = document.getElementById("answers");
+  const feedbackEl = document.getElementById("feedback");
+  const explanationEl = document.getElementById("explanation");
+  const scoreEl = document.getElementById("score");
+  const nextBtn = document.getElementById("nextbtn");
+  const current = quizQuestions[currentQuestionIndex];
+  const input = answersEl.querySelector("input");
+  const acceptedAnswers = current.answerKey
+    ? current.answerKey.split(",").map((answer) => answer.trim().toLowerCase())
+    : current.answers.map((answer) => answer.toLowerCase());
+  const submittedAnswer = input?.value.trim().toLowerCase() || "";
+  const accepted = acceptedAnswers.includes(submittedAnswer);
+
+  clearInterval(timerId);
+  if (accepted) {
+    score++;
+    playFeedbackSound("correct");
+    feedbackEl.textContent = "😉 Correct!";
+    explanationEl.textContent = "";
+  } else {
+    mistakes++;
+    playFeedbackSound("wrong");
+    feedbackEl.textContent = `😡 Not quite. The correct answer is: ${getCorrectAnswer(current)}.`;
+    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
+  }
+
+  input?.setAttribute("disabled", "");
+  updateScoreDisplay();
+  nextBtn.disabled = false;
+  nextBtn.onclick = nextQuestion;
 }
 
 function nextQuestion() {
