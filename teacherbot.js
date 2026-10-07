@@ -6412,7 +6412,6 @@ function setupQuiz() {
   const answersEl = document.getElementById("answers");
   const scoreEl = document.getElementById("score");
   const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
   const nextBtn = document.getElementById("nextbtn");
   const subjectTitle = document.getElementById("subject-title");
   const modeBadge = document.getElementById("mode-badge");
@@ -6455,9 +6454,6 @@ function setupQuiz() {
   subjectTitle.textContent = catalogLesson ? `${classLabels[classKey]} · ${catalogTopic} · ${catalogSubtopic}` : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"}`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
-  if (explanationEl) {
-    explanationEl.textContent = "Explanations are shown here";
-  }
   showDiagramForQuestion(quizQuestions[0]);
   if (timerEl) {
     timerEl.textContent = `Time left: ${quizTimerSeconds}s`;
@@ -6469,7 +6465,7 @@ function setupQuiz() {
     modeBadge.textContent =
       mode === "exam"
         ? "Exam Mode • no hints after wrong answers"
-        : "Practice Mode • explanations are shown";
+        : "Practice Mode";
   }
   nextBtn.textContent = "Next Question";
   nextBtn.disabled = true;
@@ -6521,7 +6517,6 @@ function startTimer() {
 function handleTimeout() {
   const answersEl = document.getElementById("answers");
   const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
   const nextBtn = document.getElementById("nextbtn");
   const current = quizQuestions[currentQuestionIndex];
 
@@ -6533,7 +6528,6 @@ function handleTimeout() {
 
   mistakes += 1;
   feedbackEl.textContent = "⏰ Time is up! You did not answer in time.";
-  explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   updateScoreDisplay();
   nextBtn.disabled = false;
 }
@@ -6572,9 +6566,9 @@ function loadQuestion() {
 function selectAnswer(button, selectedIndex) {
   const answersEl = document.getElementById("answers");
   const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
   const scoreEl = document.getElementById("score");
   const nextBtn = document.getElementById("nextbtn");
+  const correctEmoji = document.getElementById("correct-emoji");
 
   clearInterval(timerId);
 
@@ -6587,7 +6581,10 @@ function selectAnswer(button, selectedIndex) {
     playFeedbackSound("correct");
     button.style.background = "#4CAF50";
     feedbackEl.textContent = "😉 Correct!";
-    explanationEl.textContent = "";
+    if (correctEmoji) {
+      correctEmoji.textContent = "🎉";
+      correctEmoji.setAttribute("aria-hidden", "false");
+    }
   } else {
     mistakes += 1;
     playFeedbackSound("wrong");
@@ -6596,7 +6593,6 @@ function selectAnswer(button, selectedIndex) {
     if (correctButton) correctButton.style.background = "#4CAF50";
     feedbackEl.textContent =
       "😡 Wrong. The correct answer is highlighted in green.";
-    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
   }
 
   Array.from(answersEl.children).forEach((btn) => {
@@ -6616,9 +6612,10 @@ function nextQuestion() {
   if (currentQuestionIndex + 1 < quizQuestions.length) {
     currentQuestionIndex++;
     feedbackEl.textContent = "";
-    if (document.getElementById("explanation")) {
-      document.getElementById("explanation").textContent =
-        "Explanations are shown here";
+    const correctEmoji = document.getElementById("correct-emoji");
+    if (correctEmoji) {
+      correctEmoji.textContent = "";
+      correctEmoji.setAttribute("aria-hidden", "true");
     }
     loadQuestion();
     return;
@@ -6628,10 +6625,6 @@ function nextQuestion() {
   questionEl.textContent = summary;
   answersEl.innerHTML = "";
   feedbackEl.textContent = "";
-  const explanationEl = document.getElementById("explanation");
-  if (explanationEl) {
-    explanationEl.textContent = "";
-  }
   const completedSubject =
     subjects[getSubjectKey()]?.displayName || "this quiz";
   saveQuizResult(score, quizQuestions.length, completedSubject);
