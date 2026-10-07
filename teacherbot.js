@@ -1944,52 +1944,6 @@ basic2CanvasLesson.questions = [
   ["What should you do before closing your drawing app so you don't lose your work?", ["Turn off the screen", "Save your file with a name", "Erase the canvas", "Unplug the mouse"], 1],
 ];
 
-const selectAndChangeTextQuestions = [
-  { type: "multiple-choice", question: "Which action lets a student select text in a document using a mouse?", answers: ["Click and drag across the text", "Press the power button", "Close the document", "Change the screen resolution"], correct: 0, explanation: "Select the text by clicking at the beginning and dragging across it." },
-  { type: "multiple-choice", question: "Which action selects a word with a keyboard?", answers: ["Press Ctrl + A", "Move the cursor to the word and press Ctrl + Shift + Arrow", "Press F12", "Press Alt + Tab"], correct: 1, explanation: "A keyboard can select a word by moving to it and using the Shift and arrow keys." },
-  { type: "multiple-choice", question: "Which action selects a line of text using a keyboard?", answers: ["Press Ctrl + C", "Press Ctrl + End", "Press Ctrl + A", "Press Ctrl + V"], correct: 1, explanation: "Ctrl + End moves to the end of the document, while the Shift key can select a line." },
-  { type: "multiple-choice", question: "Which action selects a paragraph using a keyboard?", answers: ["Press Ctrl + P", "Press Ctrl + Shift + End", "Press Ctrl + A", "Press Ctrl + S"], correct: 1, explanation: "Ctrl + Shift + End can select from the cursor to the end of the document." },
-  { type: "multiple-choice", question: "What is the main purpose of selecting text before changing its font?", answers: ["To hide the text", "To apply the change only to the selected text", "To move the page", "To save the file"], correct: 1, explanation: "Formatting controls affect only the text that is selected." },
-  { type: "multiple-choice", question: "Which control is used to change the appearance of selected text?", answers: ["Font controls", "File controls", "Audio controls", "Print controls"], correct: 0, explanation: "Font controls change the selected text's typeface, size, and emphasis." },
-  { type: "multiple-choice", question: "Which font control is used to make selected text bold?", answers: ["Italic control", "Bold control", "Underline control", "Font-size control"], correct: 1, explanation: "The bold control makes selected text bold." },
-  { type: "multiple-choice", question: "Which font control adds a line below selected text?", answers: ["Bold control", "Italic control", "Underline control", "Font-size control"], correct: 2, explanation: "The underline control adds a line below selected text." },
-  { type: "multiple-choice", question: "Which font control makes selected text lean to the right?", answers: ["Bold control", "Italic control", "Underline control", "Font-size control"], correct: 1, explanation: "The italic control makes text lean to the right." },
-  { type: "multiple-choice", question: "What should students do to make a heading more visible?", answers: ["Use a smaller font", "Change its font and font size", "Delete the heading", "Change the page background"], correct: 1, explanation: "A heading can be made more visible by changing its font and font size." },
-  { type: "true-false", question: "A selected heading can be made more noticeable by changing its font and font size.", answers: ["True", "False"], correct: 0, explanation: "Changing the heading's font and size makes it more noticeable." },
-  { type: "true-false", question: "Font controls change the entire document rather than only selected text.", answers: ["True", "False"], correct: 1, explanation: "Font controls affect only the selected text." },
-  { type: "true-false", question: "Serif fonts have small details at the ends of letters.", answers: ["True", "False"], correct: 0, explanation: "Serif fonts have small decorative details at the ends of letter strokes." },
-  { type: "true-false", question: "Sans-serif fonts are usually chosen for clear, modern text.", answers: ["True", "False"], correct: 0, explanation: "Sans-serif fonts are commonly used for clear, modern text." },
-  { type: "true-false", question: "A decorative display font is always suitable for body text.", answers: ["True", "False"], correct: 1, explanation: "Display fonts should be used carefully because they may reduce readability." },
-  { type: "true-false", question: "A readable and accessible document should use fonts that are easy to distinguish.", answers: ["True", "False"], correct: 0, explanation: "Readability and accessibility should guide font choices." },
-  { type: "true-false", question: "Students should choose a heading font based only on its appearance.", answers: ["True", "False"], correct: 1, explanation: "Students should consider both appearance and readability." },
-  { type: "true-false", question: "A student should save the document after changing the selected text.", answers: ["True", "False"], correct: 0, explanation: "Saving preserves the completed document changes." },
-  { type: "true-false", question: "A display font is the best choice for every heading in a document.", answers: ["True", "False"], correct: 1, explanation: "Highly stylized display fonts should be used carefully for readability." },
-  { type: "true-false", question: "Text selection can be performed with mouse presses, gestures, or keyboard shortcuts.", answers: ["True", "False"], correct: 0, explanation: "Students can select text with mouse, touchscreen, or keyboard methods." },
-  { type: "short-answer", question: "What is the name of the font style that has small details at the ends of letters?", answers: ["Serif"], correct: 0, answerKey: "Serif", explanation: "Serif fonts have small details at the ends of letter strokes." },
-  { type: "short-answer", question: "What is the name of a font style without those small end details?", answers: ["Sans-serif"], correct: 0, answerKey: "Sans-serif", explanation: "Sans-serif fonts do not use the small end details found in serif fonts." },
-  { type: "short-answer", question: "Name one font that is commonly used as a sans-serif font.", answers: ["Arial", "Calibri", "Verdana", "Tahoma"], correct: 0, answerKey: "Arial, Calibri, Verdana, or Tahoma", explanation: "Arial and Calibri are examples of common sans-serif fonts." },
-  { type: "short-answer", question: "Name one serif font commonly used in documents.", answers: ["Times New Roman", "Georgia", "Cambria"], correct: 0, answerKey: "Times New Roman, Georgia, or Cambria", explanation: "Times New Roman is a common serif font." },
-  { type: "short-answer", question: "What should be the first aim when choosing a font for a document?", answers: ["Readability", "Attractiveness", "Simplicity", "Cost"], correct: 0, answerKey: "Readability", explanation: "A font should first make the document readable and accessible." },
-  { type: "short-answer", question: "What is the main purpose of changing the font size of a heading?", answers: ["To make the heading stand out", "To make the page longer", "To remove punctuation", "To save the file"], correct: 0, answerKey: "To make the heading stand out", explanation: "A larger font can make a heading more visible and clear." },
-  { type: "short-answer", question: "Which font controls can make selected text bold, italic, or underlined?", answers: ["Font controls", "Page controls", "Sound controls", "File controls"], correct: 0, answerKey: "Font controls", explanation: "Font controls include bold, italic, underline, and font-size options." },
-  { type: "short-answer", question: "What should students compare before choosing a heading font?", answers: ["Appearance and readability", "Only the number of letters", "The file size", "The computer speed"], correct: 0, answerKey: "Appearance and readability", explanation: "Students should consider how the font looks and how easy it is to read." },
-  { type: "short-answer", question: "Why is it useful to compare a display font with a serif or sans-serif font?", answers: ["To assess readability and suitability", "To make the file larger", "To remove the heading", "To change the page number"], correct: 0, answerKey: "To assess readability and suitability", explanation: "Comparing fonts helps students choose a readable and suitable style." },
-  { type: "short-answer", question: "What should students do after changing selected text?", answers: ["Save the document", "Delete the document", "Close the application", "Turn off the computer"], correct: 0, answerKey: "Save the document", explanation: "Students should save their document after completing the changes." },
-];
-
-const basic4SelectAndChangeTextLesson = learningCatalog["basic4-ict"].topics.ICT["First Term · Creative media: Write and edit a document"]["Week 1: Select and change text"];
-basic4SelectAndChangeTextLesson.lesson = "Select and change text in a document using a mouse or keyboard shortcuts. Open your saved project file, add a heading, select the heading, and use font controls to change its appearance. Readability and accessibility should guide your choice. Compare serif and sans-serif fonts, and make sure the heading and body text work well together. Save the document when you finish.";
-basic4SelectAndChangeTextLesson.examples = [
-  { title: "Select text", problem: "Select a heading, a word, a line, or a paragraph.", steps: ["Click with the mouse or use a keyboard shortcut.", "Notice the highlighted text.", "Use the toolbar buttons to format only the selection."], result: "The selected text is highlighted and ready to change." },
-  { title: "Choose a font", problem: "Choose a font that is easy to read.", steps: ["Compare the font's appearance.", "Check the heading and body text together.", "Choose the option that is clear and accessible."], result: "The document looks balanced and readable." },
-  { title: "Change font size", problem: "Make a heading stand out without making the whole document difficult to read.", steps: ["Select the heading.", "Open the font-size control.", "Choose a suitable size and review the result."], result: "The heading is clear and easy to identify." },
-  { title: "Compare font styles", problem: "Compare a serif font with a sans-serif font.", steps: ["Show the same letter in different fonts.", "Notice the end details and spacing.", "Choose the style that fits the purpose."], result: "Students can explain the difference between font styles." },
-  { title: "Apply emphasis", problem: "Use bold, italic, or underline for selected text.", steps: ["Select part of the text.", "Open the font controls.", "Apply one option and check readability."], result: "The selected text is formatted without changing the rest of the document." },
-];
-basic4SelectAndChangeTextLesson.questions = selectAndChangeTextQuestions;
-basic4SelectAndChangeTextLesson._hasManagedQuestions = true;
-basic4SelectAndChangeTextLesson._quizQuestionCount = 30;
-
 // Lesson enhancements.  Keep videos in one place: add a YouTube embed URL (or
 // an .mp4 file URL) for any lesson key below when a video is ready.
 const LESSON_VIDEO_URLS = {
@@ -2828,17 +2782,6 @@ function getFiveQuizQuestions(
 }
 
 function getTwentyQuizQuestions(lesson, subtopic, context = {}) {
-  const questionCount = Number(lesson._quizQuestionCount) || 10;
-  if (questionCount === 30 && lesson._hasManagedQuestions) {
-    return lesson.questions.map((question) => ({
-      ...question,
-      question: question.question,
-      answers: question.answers,
-      correct: question.correct,
-      type: question.type,
-      explanation: question.explanation,
-    }));
-  }
   const questions = getFiveQuizQuestions(lesson, subtopic, undefined, context);
   return Array.from({ length: 10 }, (_, index) =>
     questions[index % questions.length],
@@ -5979,17 +5922,7 @@ function buildQuizQuestionSet(baseQuestions, total = 10) {
 
   const questions = [];
   while (questions.length < total) {
-    questions.push(...shuffleArray(baseQuestions).map((question) => {
-      if (question?.type) {
-        return {
-          ...question,
-          answers: [...question.answers],
-          correct: question.correct,
-          type: question.type,
-        };
-      }
-      return buildShuffledQuestion(question);
-    }));
+    questions.push(...shuffleArray(baseQuestions).map(buildShuffledQuestion));
   }
   return questions.slice(0, total);
 }
@@ -6466,9 +6399,9 @@ function setupQuiz() {
 
   const levelKey = classLevels[classKey] || "early";
   const baseQuestions = catalogLesson
-    ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject })
+    ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
     : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, catalogLesson?._quizQuestionCount || 10);
+  quizQuestions = buildQuizQuestionSet(baseQuestions, 10);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
@@ -6516,12 +6449,6 @@ function getExplanationForCurrentQuestion(current) {
   }
   const correctAnswer = current.answers[current.correct];
   return `The correct answer is "${correctAnswer}". ${current.question} is answered correctly when you choose ${correctAnswer} because it matches the idea being tested. Review the lesson note again and remember the reason behind it.`;
-}
-
-function getCorrectAnswer(current) {
-  if (current.type === "true-false") return current.answers[current.correct];
-  if (current.type === "short-answer") return current.answerKey || current.answers[0];
-  return current.answers[current.correct];
 }
 
 function startTimer() {
@@ -6581,29 +6508,17 @@ function loadQuestion() {
   questionEl.textContent = current.question;
   answersEl.innerHTML = "";
 
-  if (current.type === "short-answer") {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "short-answer-input";
-    input.placeholder = "Type your answer";
-    input.setAttribute("aria-label", "Your short answer");
-    answersEl.appendChild(input);
-  } else {
-    const answerItems = current.type === "true-false"
-      ? current.answers
-      : current.answers;
-    answerItems.forEach((answer, index) => {
-      const btn = document.createElement("button");
-      btn.textContent = answer;
-      btn.className = "answer-btn";
-      btn.addEventListener("click", () => selectAnswer(btn, index));
-      answersEl.appendChild(btn);
-    });
-  }
+  current.answers.forEach((answer, index) => {
+    const btn = document.createElement("button");
+    btn.textContent = answer;
+    btn.className = "answer-btn";
+    btn.addEventListener("click", () => selectAnswer(btn, index));
+    answersEl.appendChild(btn);
+  });
 
   progressEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   nextBtn.disabled = true;
-  nextBtn.onclick = current.type === "short-answer" ? submitShortAnswer : nextQuestion;
+  nextBtn.onclick = nextQuestion;
   showDiagramForQuestion(current);
   startTimer();
 }
@@ -6644,39 +6559,6 @@ function selectAnswer(button, selectedIndex) {
 
   updateScoreDisplay();
   nextBtn.disabled = false;
-}
-
-function submitShortAnswer() {
-  const answersEl = document.getElementById("answers");
-  const feedbackEl = document.getElementById("feedback");
-  const explanationEl = document.getElementById("explanation");
-  const scoreEl = document.getElementById("score");
-  const nextBtn = document.getElementById("nextbtn");
-  const current = quizQuestions[currentQuestionIndex];
-  const input = answersEl.querySelector("input");
-  const acceptedAnswers = current.answerKey
-    ? current.answerKey.split(",").map((answer) => answer.trim().toLowerCase())
-    : current.answers.map((answer) => answer.toLowerCase());
-  const submittedAnswer = input?.value.trim().toLowerCase() || "";
-  const accepted = acceptedAnswers.includes(submittedAnswer);
-
-  clearInterval(timerId);
-  if (accepted) {
-    score++;
-    playFeedbackSound("correct");
-    feedbackEl.textContent = "😉 Correct!";
-    explanationEl.textContent = "";
-  } else {
-    mistakes++;
-    playFeedbackSound("wrong");
-    feedbackEl.textContent = `😡 Not quite. The correct answer is: ${getCorrectAnswer(current)}.`;
-    explanationEl.textContent = `Explanation: ${getExplanationForCurrentQuestion(current)}`;
-  }
-
-  input?.setAttribute("disabled", "");
-  updateScoreDisplay();
-  nextBtn.disabled = false;
-  nextBtn.onclick = nextQuestion;
 }
 
 function nextQuestion() {
