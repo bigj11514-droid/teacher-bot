@@ -1916,6 +1916,50 @@ for (let grade = 1; grade <= 6; grade++) {
   learningCatalog[`basic${grade}-ict`] = createBasicIctSyllabus(`Basic ${grade}`);
 }
 
+const basic4SelectTextLesson =
+  learningCatalog["basic4-ict"].topics.ICT[
+    "First Term · Creative media: Write and edit a document"
+  ]["Week 2: Select and change text"];
+basic4SelectTextLesson.lesson =
+  "Open the document you saved in the previous lesson. If you do not have it, use the provided Fonts and Sizes activity file. Add a heading, select it with the mouse or keyboard shortcuts, and use the font menu to change its font or size. You can select a word, line, or paragraph; selected text is highlighted, and toolbar changes apply to that selection. Serif fonts such as Times New Roman have small finishing strokes on letters. Sans serif fonts such as Arial and Calibri do not. A decorative display font can be fun, but choose readable, accessible fonts and consider how the whole document looks. On a touchscreen, use presses and gestures to select text. Try font controls such as bold, italic, and underline, then save your document.";
+basic4SelectTextLesson._hasManagedQuestions = true;
+basic4SelectTextLesson._randomizeQuestionBank = true;
+basic4SelectTextLesson.questions = [
+  // Multiple choice
+  ["What should you do first with the document saved in the previous lesson?", ["Open it in a word-processing application", "Delete it", "Print it without opening it", "Turn off the computer"], 0],
+  ["What can students use to select text?", ["A mouse or keyboard shortcuts", "A printer or speaker", "A camera only", "A folder"], 0],
+  ["What happens when text is selected and you use a font control?", ["The change applies to the selected text", "The whole computer changes font", "The document closes", "The text is automatically deleted"], 0],
+  ["Which is a serif font named in the lesson?", ["Times New Roman", "Arial", "Calibri", "Display Font"], 0],
+  ["Which pair contains sans serif fonts named in the lesson?", ["Arial and Calibri", "Times New Roman and Arial", "Times New Roman and Calibri", "Bold and Italic"], 0],
+  ["What should be the first aim when choosing a font?", ["Make the document readable and accessible", "Use the most decorative font", "Make every word a different size", "Choose the first font listed"], 0],
+  ["What should students add to their document in the activity?", ["A heading", "A new computer", "A printer", "A sound file"], 0],
+  ["Which set contains font controls students can explore?", ["Bold, italic, and underline", "Open, close, and restart", "Copy, print, and scan", "Search, bookmark, and download"], 0],
+  ["How can students select text on a touchscreen?", ["With presses and gestures", "With a mouse wheel only", "By turning off the screen", "By opening a folder"], 0],
+  ["When choosing a heading font, what else should students consider?", ["How it looks with the whole document", "Only the selected letters", "The computer's brand", "The number of folders"], 0],
+  // True or false
+  ["Students should have access to notes about their project theme from the previous lesson.", ["True", "False"], 0],
+  ["A downloaded activity file can help students who do not have their previous project file.", ["True", "False"], 0],
+  ["The lesson teaches students to select text using only the mouse.", ["True", "False"], 1],
+  ["Selected text is highlighted on screen.", ["True", "False"], 0],
+  ["A highly stylized font is always easier to read than a standard font.", ["True", "False"], 1],
+  ["Students can use font controls to emphasize a heading.", ["True", "False"], 0],
+  ["Students should save the document after editing it.", ["True", "False"], 0],
+  ["Students may compare fonts by their appearance and readability.", ["True", "False"], 0],
+  ["The Stretch zone encourages students to explore more font controls.", ["True", "False"], 0],
+  ["The lesson says to choose fonts without thinking about the document as a whole.", ["True", "False"], 1],
+  // Fill in the blank (presented as selectable answers in the existing quiz)
+  ["Students open the project in a ____ application.", ["word-processing", "drawing", "music-playing", "calculator"], 0],
+  ["Students add a ____ and use font controls to emphasize it.", ["heading", "password", "web link", "spreadsheet"], 0],
+  ["Times New Roman is an example of a ____ font.", ["serif", "sans serif", "display only", "sound"], 0],
+  ["Arial and Calibri are examples of ____ serif fonts.", ["sans", "double", "curved", "script"], 0],
+  ["A document should be readable and ____.", ["accessible", "hidden", "decorative", "locked"], 0],
+  ["Students can select text with keyboard ____.", ["shortcuts", "speakers", "folders", "screenshots"], 0],
+  ["On touchscreen devices, text can be selected using presses and ____.", ["gestures", "printers", "passwords", "downloads"], 0],
+  ["Toolbar buttons affect the ____ text after it is selected.", ["selected", "unrelated", "printed", "deleted"], 0],
+  ["One font control students can try is ____.", ["bold", "save as", "search", "download"], 0],
+  ["Students should think about the document as a ____.", ["whole", "single letter", "font menu", "file name"], 0],
+];
+
 const basic2CanvasLesson =
   learningCatalog["basic2-ict"].topics.ICT["First Term · Creative media: Make mixed media drawings"]["Week 1: Draw on the canvas"];
 basic2CanvasLesson.lesson =
@@ -2778,7 +2822,9 @@ function getFiveQuizQuestions(
   ]);
   while (questions.length < 10)
     questions.push(fillers[questions.length % fillers.length]);
-  return questions.slice(0, 10);
+  return lesson._randomizeQuestionBank
+    ? shuffleArray(questions).slice(0, 10)
+    : questions.slice(0, 10);
 }
 
 function getTwentyQuizQuestions(lesson, subtopic, context = {}) {
