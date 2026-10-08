@@ -67,12 +67,17 @@
       <div class="main-panel">
         <header class="site-header">
           <div class="header-inner">
-            <div class="search-box">
+            <div class="search-box" role="search">
               <span>🔎</span>
               <input
                 type="text"
+                id="site-search"
+                aria-label="Search this website"
+                aria-controls="site-search-results"
+                autocomplete="off"
                 placeholder="Search subjects, classes, or topics"
               />
+              <div id="site-search-results" class="site-search-results" role="status" aria-live="polite" hidden></div>
             </div>
             <div class="header-actions">
               <div class="profile-pill">
