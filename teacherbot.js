@@ -6953,7 +6953,101 @@ function showDiagramForQuestion(current) {
   }
 }
 
+function setupSiteSearch() {
+  const input = document.getElementById("site-search");
+  const results = document.getElementById("site-search-results");
+  if (!input || !results) return;
+
+  const pageIndex = new Map();
+  const cleanText = (value) => value.replace(/\s+/g, " ").trim();
+  const addPage = (url, title, text) => {
+    const normalizedUrl = new URL(url, window.location.href);
+    if (normalizedUrl.origin !== window.location.origin) return;
+    pageIndex.set(normalizedUrl.pathname + normalizedUrl.hash, {
+      url: normalizedUrl.pathname + normalizedUrl.hash,
+      title: cleanText(title) || normalizedUrl.pathname,
+      text: cleanText(text),
+    });
+  };
+  addPage(window.location.href, document.title, document.body.innerText);
+
+  // Build a small local index from this page's internal links and sitemap.
+  const urls = new Set(
+    [...document.querySelectorAll('a[href]')]
+      .map((link) => new URL(link.href, window.location.href))
+      .filter((url) => url.origin === window.location.origin && url.pathname.endsWith(".html"))
+      .map((url) => url.pathname),
+  );
+  fetch("sitemap.xml")
+    .then((response) => response.ok ? response.text() : "")
+    .then((xml) => {
+      if (!xml) return;
+      const doc = new DOMParser().parseFromString(xml, "application/xml");
+      doc.querySelectorAll("loc").forEach((node) => {
+        try {
+          const url = new URL(node.textContent, window.location.href);
+          if (url.origin === window.location.origin && url.pathname.endsWith(".html")) urls.add(url.pathname);
+        } catch { /* ignore malformed sitemap entries */ }
+      });
+    })
+    .catch(() => {})
+    .finally(() => {
+      urls.forEach((path) => {
+        if (path === window.location.pathname || pageIndex.has(path)) return;
+        fetch(path).then((response) => response.ok ? response.text() : "")
+          .then((html) => {
+            if (!html) return;
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            doc.querySelectorAll("script, style, noscript").forEach((node) => node.remove());
+            addPage(path, doc.title, doc.body?.textContent || "");
+          }).catch(() => {});
+      });
+    });
+
+  const renderResults = () => {
+    const query = cleanText(input.value).toLocaleLowerCase();
+    results.replaceChildren();
+    if (query.length < 2) {
+      results.hidden = true;
+      return;
+    }
+    const terms = query.split(/\s+/).filter(Boolean);
+    const matches = [...pageIndex.values()].map((page) => {
+      const haystack = `${page.title} ${page.text}`.toLocaleLowerCase();
+      const position = Math.min(...terms.map((term) => haystack.indexOf(term)));
+      return terms.every((term) => haystack.includes(term))
+        ? { ...page, position }
+        : null;
+    }).filter(Boolean).slice(0, 8);
+    if (!matches.length) {
+      results.textContent = "No matches yet. Try another word or wait for more pages to load.";
+    } else {
+      matches.forEach((match) => {
+        const link = document.createElement("a");
+        link.href = match.url;
+        const snippetStart = Math.max(0, match.position - match.title.length - 35);
+        link.innerHTML = `<strong></strong><span></span>`;
+        link.querySelector("strong").textContent = match.title;
+        link.querySelector("span").textContent = match.text.slice(snippetStart, snippetStart + 130);
+        results.append(link);
+      });
+    }
+    results.hidden = false;
+  };
+  input.addEventListener("input", renderResults);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      results.hidden = true;
+      input.blur();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".search-box")) results.hidden = true;
+  });
+}
+
 function setupMobileMenu() {
+  setupSiteSearch();
   const menuToggles = Array.from(document.querySelectorAll(".menu-toggle"));
   const siteNav = document.getElementById("site-nav");
   const sidebar = document.querySelector(".sidebar");
