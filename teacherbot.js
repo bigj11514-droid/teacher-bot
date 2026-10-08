@@ -1916,6 +1916,42 @@ for (let grade = 1; grade <= 6; grade++) {
   learningCatalog[`basic${grade}-ict`] = createBasicIctSyllabus(`Basic ${grade}`);
 }
 
+// Additional Basic 5 ICT lesson supplied for the Week 1 web page unit.
+const week1Questions = [
+  { id: 1, question: "What is the main topic of Lesson 1.1?", options: ["Building a Website", "Parts of a web page", "Coding in HTML", "Internet Basics"], answer: "Parts of a web page", explanation: "Lesson 1.1 introduces the core structure and components of a web page." },
+  { id: 2, question: "What do students learn to identify in this lesson?", options: ["How to buy a domain", "Basic structure of a web page and the terms used", "How to repair computers", "Typing speed"], answer: "Basic structure of a web page and the terms used", explanation: "Students focus on understanding web page layouts and key terminology." },
+  { id: 3, question: "What digital activity file template is provided for students?", options: ["6:1.1 Wireframe Template", "1.1 CSS Stylesheet", "JavaScript Script File", "Website Setup Guide"], answer: "6:1.1 Wireframe Template", explanation: "The pre-lesson setup mentions downloading 6:1.1 Wireframe Template." },
+  { id: 4, question: "What visual layout model do students draw in the activity?", options: ["Flowchart", "Wireframe model of a web page", "Network diagram", "Bar chart"], answer: "Wireframe model of a web page", explanation: "A wireframe is a visual guide that represents the skeletal framework of a web page." },
+  { id: 5, question: "Which component is commonly placed in the header of a school web page wireframe?", options: ["Database table", "School logo", "Computer processor", "USB cable"], answer: "School logo", explanation: "The school logo identifies the institution at the top of the page." },
+  { id: 6, question: "What navigation element is placed near the top of a web page layout?", options: ["Menu buttons", "Footer credits", "Scrollbars", "Sound effects"], answer: "Menu buttons", explanation: "Menu buttons allow users to easily navigate to different sections." },
+  { id: 7, question: "What primary text element displays the main title on a web page?", options: ["Small footnote", "Large heading", "URL link", "Alt text"], answer: "Large heading", explanation: "Headings grab attention and state the main topic of the page section." },
+  { id: 8, question: "In the 'Check it' task, what familiar web page do students look at?", options: ["Game store", "School website", "Bank account", "Video player"], answer: "School website", explanation: "Students review their school website to identify real-world components." },
+  { id: 9, question: "Which of these is a clickable navigation component on a web page?", options: ["Hyperlinks", "Keyboard keys", "Battery indicator", "Speaker volume"], answer: "Hyperlinks", explanation: "Hyperlinks connect web pages and allow seamless navigation." },
+  { id: 10, question: "In a wireframe diagram, layout blocks for paragraphs are marked as:", options: ["Code", "Text", "Sound", "Script"], answer: "Text", explanation: "Text blocks represent body paragraphs in a wireframe." },
+  { id: 11, question: "In the lesson wireframe example, what specific photo block is included?", options: ["Photo of sports hall", "Video game clip", "Audio file icon", "System error icon"], answer: "Photo of sports hall", explanation: "The sample wireframe uses a 'Photo of sports hall' placeholder image block." },
+  { id: 12, question: "What is the primary purpose of constructing a wireframe?", options: ["To plan and outline the layout/structure of a web page", "To write backend Python scripts", "To connect to Wi-Fi", "To print paper documents"], answer: "To plan and outline the layout/structure of a web page", explanation: "Wireframing plans visual hierarchy before writing actual web code." },
+  { id: 13, question: "What allows visitors to jump to other pages when clicked?", options: ["Links / Hyperlinks", "Scroll bar", "Power button", "Window title"], answer: "Links / Hyperlinks", explanation: "Links/hyperlinks enable jumping between different pages or resources." },
+  { id: 14, question: "In the 'Stretch zone' task, students create a wireframe with:", options: ["A new wireframe with additional requested elements", "A database schema", "A mobile operating system", "A spreadsheet table"], answer: "A new wireframe with additional requested elements", explanation: "Stretch zone challenges students to add more elements to their layout." },
+  { id: 15, question: "In the 'Be creative' section, what creative task are students assigned?", options: ["A logo that represents themselves or a hobby", "A computer keyboard", "A web browser window", "A server rack"], answer: "A logo that represents themselves or a hobby", explanation: "Students design a personal or hobby logo as part of their creative exercise." },
+  { id: 16, question: "Which software tool can be used to draw the logo on a computer?", options: ["Microsoft Paint", "Python IDLE", "Visual Studio Code", "Command Prompt"], answer: "Microsoft Paint", explanation: "Microsoft Paint is highlighted as an accessible digital drawing tool for Basic 5." },
+  { id: 17, question: "What essential step must students take so their digital logo can be used in future lessons?", options: ["Save their work", "Delete their files", "Restart the computer", "Turn off the router"], answer: "Save their work", explanation: "Saving files ensures work is retained for the following week." },
+  { id: 18, question: "Where is the 'Name of school' block located on the sample wireframe header?", options: ["Top corner / header area", "Very bottom footer only", "Outside the web page", "Hidden inside a scrollbar"], answer: "Top corner / header area", explanation: "Site names and logos typically occupy the top header block." },
+  { id: 19, question: "Why do web pages include logos and visual branding?", options: ["Identify the website or organization", "Change screen brightness", "Increase internet speed", "Close the web browser"], answer: "Identify the website or organization", explanation: "Branding elements establish identity and trust for visitors." },
+  { id: 20, question: "Planning a web page design visually before writing web code is known as:", options: ["Wireframe model", "Database table", "Server log", "Compiler"], answer: "Wireframe model", explanation: "A wireframe model is the standard structural blueprint for web design." },
+];
+
+const basic5WebPageLesson = {
+  lesson: "Identify the main parts of a web page, including its header, school name or logo, navigation menu, headings, text, images, and hyperlinks. Plan a page layout by drawing a wireframe before writing web code. Create a logo for yourself or a hobby and save it for future lessons.",
+  questions: week1Questions.map(({ question, options, answer }) => [question, options, options.indexOf(answer)]),
+  _hasManagedQuestions: true,
+  week1Questions,
+};
+learningCatalog["basic5-ict"].topics.ICT[
+  "First Term · Web design: Parts of a Web Page"
+] = {
+  "Week 1: Parts of a Web Page": basic5WebPageLesson,
+};
+
 const basic4SelectTextLesson =
   learningCatalog["basic4-ict"].topics.ICT[
     "First Term · Creative media: Write and edit a document"
@@ -6443,8 +6479,15 @@ function setupQuiz() {
   }
 
   const levelKey = classLevels[classKey] || "early";
-  const baseQuestions = catalogLesson
-    ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
+  const baseQuestions = catalogLesson?.week1Questions
+    ? catalogLesson.week1Questions.map(({ question, options, answer, explanation }) => ({
+        question,
+        answers: options,
+        correct: options.indexOf(answer),
+        explanation,
+      }))
+    : catalogLesson
+      ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
     : subjectData?.[levelKey] || subjectData?.early;
   quizQuestions = buildQuizQuestionSet(baseQuestions, 10);
   currentQuestionIndex = 0;
