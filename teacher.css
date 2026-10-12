@@ -388,8 +388,38 @@ a {
   position: relative;
 }
 
+.search-box::before {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 36%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #7fe7ff, transparent);
+  content: "";
+  pointer-events: none;
+  animation: search-border-light 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes search-border-light {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(278%);
+  }
+}
+
 .search-box:focus-within {
   overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-box::before {
+    animation: none;
+  }
 }
 
 .site-search-results {
