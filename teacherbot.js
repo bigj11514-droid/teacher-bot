@@ -1916,7 +1916,7 @@ for (let grade = 1; grade <= 6; grade++) {
   learningCatalog[`basic${grade}-ict`] = createBasicIctSyllabus(`Basic ${grade}`);
 }
 
-// Additional Basic 5 ICT lesson supplied for the Week 1 web page unit.
+// Basic 6 ICT Week 1 questions for the existing "Make a web page" unit.
 const week1Questions = [
   { id: 1, question: "What is the main topic of Lesson 1.1?", options: ["Building a Website", "Parts of a web page", "Coding in HTML", "Internet Basics"], answer: "Parts of a web page", explanation: "Lesson 1.1 introduces the core structure and components of a web page." },
   { id: 2, question: "What do students learn to identify in this lesson?", options: ["How to buy a domain", "Basic structure of a web page and the terms used", "How to repair computers", "Typing speed"], answer: "Basic structure of a web page and the terms used", explanation: "Students focus on understanding web page layouts and key terminology." },
@@ -1940,17 +1940,15 @@ const week1Questions = [
   { id: 20, question: "Planning a web page design visually before writing web code is known as:", options: ["Wireframe model", "Database table", "Server log", "Compiler"], answer: "Wireframe model", explanation: "A wireframe model is the standard structural blueprint for web design." },
 ];
 
-const basic5WebPageLesson = {
+const basic6WebPageLesson = {
   lesson: "Identify the main parts of a web page, including its header, school name or logo, navigation menu, headings, text, images, and hyperlinks. Plan a page layout by drawing a wireframe before writing web code. Create a logo for yourself or a hobby and save it for future lessons.",
   questions: week1Questions.map(({ question, options, answer }) => [question, options, options.indexOf(answer)]),
   _hasManagedQuestions: true,
   week1Questions,
 };
-learningCatalog["basic5-ict"].topics.ICT[
-  "First Term · Web design: Parts of a Web Page"
-] = {
-  "Week 1: Parts of a Web Page": basic5WebPageLesson,
-};
+learningCatalog["basic6-ict"].topics.ICT[
+  "First Term · Creative media: Make a web page"
+]["Week 1: Parts of a web page"] = basic6WebPageLesson;
 
 const basic4SelectTextLesson =
   learningCatalog["basic4-ict"].topics.ICT[
