@@ -1891,6 +1891,29 @@ const BASIC_ICT_WEEKS = {
   ],
 };
 
+const DIGITAL_DRAWING_MAKE_CHANGES_QUIZ = [
+  ["What is the title of the topic covered in this lesson?", ["A) 1.1 Drawing shapes", "B) 1.2 Adding colour", "C) 1.3 Saving work", "D) 1.4 Make changes"], 3],
+  ["According to the textbook, what can you use an eraser for?", ["A) To turn off the computer", "B) To rub out a mistake on paper or your drawing application", "C) To start a new drawing", "D) To change the screen brightness"], 1],
+  ["What does your drawing application have that helps you correct mistakes?", ["A) A magic wand", "B) An eraser", "C) A paint bucket", "D) A crop tool"], 1],
+  ["Which of the following is listed as a key word on the page?", ["A) Brush", "B) Eraser", "C) Crop", "D) Stamp"], 1],
+  ["Which of these is also listed as a key word on the page alongside 'eraser'?", ["A) Transparent", "B) Pixel", "C) Vector", "D) Gradient"], 0],
+  ["In Step 1 of using the eraser, what do you need to click on?", ["A) The save button", "B) The eraser", "C) The color palette", "D) The zoom tool"], 1],
+  ["In Step 2 of using the eraser, what action do you take with the mouse?", ["A) Double click to delete the whole file", "B) Right click to change colors", "C) Drag the mouse to erase part of the drawing", "D) Scroll down to zoom out"], 2],
+  ["In some drawing apps, what might you see in the pattern where you have erased?", ["A) Bright rainbow colors", "B) A grey pattern", "C) Black and white stripes", "D) A solid white background"], 1],
+  ["Why do drawing apps show a grey pattern where you have erased?", ["A) Because the app is lagging", "B) Because the background is locked", "C) This is because your app uses layers", "D) Because the file is corrupted"], 2],
+  ["What are layers compared to in the text?", ["A) Transparent sheets on top of each other", "B) Pages in a physical book", "C) Bricks in a wall", "D) Tiles on a floor"], 0],
+  ["What can you do on each sheet or layer without changing others?", ["A) Rename and delete them", "B) Draw and erase", "C) Print and scan", "D) Export and share"], 1],
+  ["How do layers make drawing easier?", ["A) They make files smaller", "B) They help you make changes more easily", "C) They make the computer run faster", "D) They automatically color your work"], 1],
+  ["In the practical exercise example (Funny Faces), what tool do you use to colour in the circles?", ["A) The Brush tool", "B) The Fill tool", "C) The Pencil tool", "D) The Line tool"], 1],
+  ["How do you add a new transparent layer in the drawing app?", ["A) Click on the plus button (+)", "B) Press the Enter key", "C) Click the minus button (-)", "D) Close the application"], 0],
+  ["Where should you draw the eyes, noses, and mouths on the faces?", ["A) On the bottom layer", "B) On the background layer", "C) On the top layer", "D) Outside the canvas"], 2],
+  ["According to the diagram, which layer is at the bottom?", ["A) The layer with the facial features (eyes, nose, mouth)", "B) The layer with the face outline and filled circles", "C) The layer with glasses", "D) The text layer"], 1],
+  ["According to the diagram, which layer is at the top?", ["A) The face background layer", "B) The layer containing the eyes, nose, and mouths", "C) The color palette layer", "D) The grid layer"], 1],
+  ["What should you do after finishing your digital drawing work?", ["A) Turn off the monitor without saving", "B) Save your work", "C) Delete the application", "D) Uninstall the software"], 1],
+  ["In the 'Stretch zone', what challenge is given to add to your drawing?", ["A) Add a background landscape", "B) Add some glasses on top of the faces", "C) Add a hat and a scarf", "D) Change the hair color"], 1],
+  ["What specific action do you need to take for the Stretch zone challenge?", ["A) Delete the existing face", "B) Add another new layer to your drawing", "C) Merge all layers together", "D) Print the drawing on paper"], 1],
+];
+
 function createBasicIctSyllabus(className) {
   const terms = BASIC_ICT_WEEKS[className];
   const topics = { ICT: {} };
@@ -1900,10 +1923,22 @@ function createBasicIctSyllabus(className) {
       const subtopics = {};
       weeks.forEach((name, weekIndex) => {
         const week = termIndex === 0 ? topicIndex * 6 + weekIndex + 1 : topicIndex * 6 + weekIndex + 1;
-        const label = `Week ${week}: ${name}`;
+        const isMakeChangesQuiz =
+          className === "Basic 1" &&
+          termIndex === 0 &&
+          topicIndex === 0 &&
+          weekIndex === 3;
+        const label = isMakeChangesQuiz
+          ? "1.4 Make changes"
+          : `Week ${week}: ${name}`;
         subtopics[label] = {
-          lesson: `${name} introduces an important idea in ${topic}. Learn the key terms, look at how the idea works, and practise using it in a familiar situation. Remember to work carefully, make safe choices, and check your work.`,
-          questions: [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
+          lesson: isMakeChangesQuiz
+            ? "Use the eraser to correct mistakes in a drawing. Layers work like transparent sheets, letting you draw and erase one part without changing the others. Add facial features on a new top layer, then save your work."
+            : `${name} introduces an important idea in ${topic}. Learn the key terms, look at how the idea works, and practise using it in a familiar situation. Remember to work carefully, make safe choices, and check your work.`,
+          questions: isMakeChangesQuiz
+            ? DIGITAL_DRAWING_MAKE_CHANGES_QUIZ
+            : [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
+          ...(isMakeChangesQuiz ? { _hasManagedQuestions: true } : {}),
         };
       });
       topics.ICT[`${term} · ${topic}`] = subtopics;
@@ -2862,6 +2897,12 @@ function getFiveQuizQuestions(
 }
 
 function getTwentyQuizQuestions(lesson, subtopic, context = {}) {
+  const configuredQuestions =
+    lesson._guidedQuestions ||
+    (lesson.generated ? [] : lesson.questions) ||
+    [];
+  if (lesson._hasManagedQuestions && configuredQuestions.length >= 20)
+    return configuredQuestions.slice(0, 20);
   const questions = getFiveQuizQuestions(lesson, subtopic, undefined, context);
   return Array.from({ length: 10 }, (_, index) =>
     questions[index % questions.length],
@@ -3805,26 +3846,33 @@ function renderTopicQuiz(lesson, subtopic, onRetry, onPassed, metadata = {}) {
     score = 0;
   const showQuestion = () => {
     const [question, answers, correct] = quizQuestions[index];
-    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${quizQuestions.length}</p><h2>${question}</h2><div class="answers">${answers.map((answer, answerIndex) => `<button data-answer="${answerIndex}">${answer}</button>`).join("")}</div><div id="correct-emoji" class="correct-emoji" aria-live="polite" aria-hidden="true"></div><p id="topic-feedback" class="feedback-text"></p></article>`;
+    space.innerHTML = `<article class="lesson-card topic-quiz"><p class="eyebrow">Topic check · Question ${index + 1} of ${quizQuestions.length}</p><h2>${question}</h2><div class="answers" role="group" aria-label="Answer choices">${answers.map((answer, answerIndex) => `<button type="button" data-answer="${answerIndex}">${answer}</button>`).join("")}</div><div id="correct-emoji" class="correct-emoji" aria-live="polite" aria-hidden="true"></div><p id="topic-feedback" class="feedback-text topic-feedback" aria-live="polite"></p></article>`;
     space.querySelectorAll("[data-answer]").forEach((button) =>
       button.addEventListener("click", () => {
         const selected = Number(button.dataset.answer);
-        space
-          .querySelectorAll("[data-answer]")
-          .forEach((item) => (item.disabled = true));
+        const answerButtons = space.querySelectorAll("[data-answer]");
+        answerButtons.forEach((item, answerIndex) => {
+          item.disabled = true;
+          if (answerIndex === correct) item.classList.add("is-correct");
+          if (answerIndex === selected && selected !== correct)
+            item.classList.add("is-incorrect");
+        });
         if (selected === correct) {
           score++;
           const emoji = document.getElementById("correct-emoji");
           emoji.textContent = "🎉";
           emoji.setAttribute("aria-hidden", "false");
-          document.getElementById("topic-feedback").textContent =
-            "Correct! Great learning.";
+          const feedback = document.getElementById("topic-feedback");
+          feedback.textContent = "Correct! Great learning.";
+          feedback.classList.add("correct");
         } else {
           const emoji = document.getElementById("correct-emoji");
           emoji.textContent = "❌";
           emoji.setAttribute("aria-hidden", "false");
-          document.getElementById("topic-feedback").textContent =
-            `Not quite. The correct answer is ${answers[correct]}.`;
+          const feedback = document.getElementById("topic-feedback");
+          feedback.textContent =
+            `Incorrect. The correct answer is ${answers[correct]}.`;
+          feedback.classList.add("incorrect");
         }
         setTimeout(() => {
           index++;
