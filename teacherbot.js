@@ -1914,6 +1914,29 @@ const DIGITAL_DRAWING_MAKE_CHANGES_QUIZ = [
   ["What specific action do you need to take for the Stretch zone challenge?", ["A) Delete the existing face", "B) Add another new layer to your drawing", "C) Merge all layers together", "D) Print the drawing on paper"], 1],
 ];
 
+const BASIC6_3D_MODELS_QUIZ = [
+  ["What is the title of the topic covered on these pages?", ["A) 1.1 Create web pages", "B) 1.2 Add text to web pages", "C) 1.3 Create images from 3D models", "D) 1.4 Make changes"], 2],
+  ["What does a 2D picture or photo show you about an object?", ["A) All sides of the object simultaneously", "B) What objects look like from one direction only", "C) The internal mechanics of the object", "D) The 3D coordinates in space"], 1],
+  ["What can you do with a 3D model that you cannot do with a 2D picture?", ["A) Print it on paper instantly", "B) Turn and move it to view it from any direction", "C) Send it via email without conversion", "D) Change its file format automatically"], 1],
+  ["What does a 3D model contain information about?", ["A) Only the color and texture", "B) Only the front view of an object", "C) All parts of an object", "D) The creator's personal details"], 2],
+  ["What does the acronym CAD stand for in computer-aided design?", ["A) Computer Animation Design", "B) Computer-Aided Design", "C) Creative Application Development", "D) Core Architectural Data"], 1],
+  ["What does CAM stand for alongside CAD in manufacturing?", ["A) Computer-Aided Manufacturing", "B) Creative Automated Media", "C) Centralized Asset Management", "D) Common Algorithm Method"], 0],
+  ["Why do designers use 3D modeling software?", ["A) To make phone calls to clients", "B) To design and make new products", "C) To write text documents", "D) To browse web pages faster"], 1],
+  ["Compared to making models from real-life materials, 3D modeling is usually:", ["A) More expensive and slower", "B) Quicker and cheaper", "C) Harder to share online", "D) Impossible to modify once created"], 1],
+  ["When 3D models are real, what can they be used for?", ["A) To print to 3D printers or any other document", "B) Only for viewing on mobile phones", "C) To delete physical files", "D) To generate text-based code"], 0],
+  ["What type of video games use 3D models of spaces and objects to let you walk around them?", ["A) Text-based adventure games", "B) Virtual reality (VR) and first-person view (PV) games", "C) 2D retro arcade games", "D) Spreadsheet simulation games"], 1],
+  ["What tool can you use on your web page or 3D viewer app to find a model you like?", ["A) A text editor", "B) A 3D viewer application / 3D library", "C) A spreadsheet calculator", "D) A sound recorder"], 1],
+  ["What action can you perform using a mouse or touch screen in a 3D viewer app?", ["A) Rotate the model and zoom in", "B) Change the font size of the web page", "C) Edit source code text", "D) Crop a physical photograph"], 0],
+  ["What can you change regarding the lighting in a 3D model viewer?", ["A) The direction of the lighting on the model", "B) The battery level of the lighting", "C) The sound volume of the light bulbs", "D) The color temperature of the room"], 0],
+  ["How do you find your favourite way of showing a 3D model?", ["A) By deleting the model and starting over", "B) By rotating and resizing the model until you find it", "C) By converting it into a plain text file", "D) By printing it out on paper first"], 1],
+  ["Why would you export a 3D model as a 2D image?", ["A) To use the image in your projects, documents, or web pages", "B) To make the file impossible to open", "C) Because 3D files are no longer supported anywhere", "D) To permanently delete the original 3D data"], 0],
+  ["What must you do after choosing the best file type and size for your 2D exported image?", ["A) Turn off your computer immediately", "B) Write down the folder where the image is saved so you can find it later", "C) Send it to the national archives", "D) Print one hundred copies"], 1],
+  ["According to the 'Think maths' section, what kind of world do we live in regarding dimensions?", ["A) A 1-dimensional world (lines only)", "B) A 2-dimensional world (flat surfaces only)", "C) A 3-dimensional world (height, width, and depth)", "D) A 4-dimensional world (time travel)"], 2],
+  ["In 3D space, how can positions be identified?", ["A) By color codes", "B) By coordinate numbers representing position in each dimension", "C) By alphabetical letters from A to Z", "D) By musical notes"], 1],
+  ["In the 'Stretch zone' activity, what feature can you use to make your model move?", ["A) The Quick animations feature", "B) The Spell checker feature", "C) The Background eraser tool", "D) The Page border feature"], 0],
+  ["What are you instructed to watch while using the quick animations feature in the stretch zone?", ["A) Watch your model from different angles", "B) Watch the file size decrease", "C) Watch the internet connection speed", "D) Watch the computer screen turn off"], 0],
+];
+
 function createBasicIctSyllabus(className) {
   const terms = BASIC_ICT_WEEKS[className];
   const topics = { ICT: {} };
@@ -1928,17 +1951,30 @@ function createBasicIctSyllabus(className) {
           termIndex === 0 &&
           topicIndex === 0 &&
           weekIndex === 3;
+        const is3DModelsQuiz =
+          className === "Basic 6" &&
+          termIndex === 0 &&
+          topicIndex === 0 &&
+          weekIndex === 2;
         const label = isMakeChangesQuiz
           ? "1.4 Make changes"
-          : `Week ${week}: ${name}`;
+          : is3DModelsQuiz
+            ? "1.3 Create images from 3D models"
+            : `Week ${week}: ${name}`;
         subtopics[label] = {
           lesson: isMakeChangesQuiz
             ? "Use the eraser to correct mistakes in a drawing. Layers work like transparent sheets, letting you draw and erase one part without changing the others. Add facial features on a new top layer, then save your work."
+            : is3DModelsQuiz
+              ? "A 2D picture shows an object from one direction, while a 3D model contains information about all its parts and can be turned to view it from different directions. Designers use CAD and CAM tools to create products, explore models, and export 2D images for projects and web pages."
             : `${name} introduces an important idea in ${topic}. Learn the key terms, look at how the idea works, and practise using it in a familiar situation. Remember to work carefully, make safe choices, and check your work.`,
           questions: isMakeChangesQuiz
             ? DIGITAL_DRAWING_MAKE_CHANGES_QUIZ
-            : [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
-          ...(isMakeChangesQuiz ? { _hasManagedQuestions: true } : {}),
+            : is3DModelsQuiz
+              ? BASIC6_3D_MODELS_QUIZ
+              : [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
+          ...(isMakeChangesQuiz || is3DModelsQuiz
+            ? { _hasManagedQuestions: true }
+            : {}),
         };
       });
       topics.ICT[`${term} · ${topic}`] = subtopics;
