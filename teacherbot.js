@@ -1937,6 +1937,14 @@ const BASIC6_3D_MODELS_QUIZ = [
   ["What are you instructed to watch while using the quick animations feature in the stretch zone?", ["A) Watch your model from different angles", "B) Watch the file size decrease", "C) Watch the internet connection speed", "D) Watch the computer screen turn off"], 0],
 ];
 
+// Oxford can be selected in the student flow. Its catalogue starts with the
+// available shared subject map until Oxford-specific lesson content is added.
+learningCatalog.oxford = {
+  ...learningCatalog.ges,
+  name: "Oxford Curriculum (shared lesson map)",
+  topics: JSON.parse(JSON.stringify(learningCatalog.ges.topics)),
+};
+
 function createBasicIctSyllabus(className) {
   const terms = BASIC_ICT_WEEKS[className];
   const topics = { ICT: {} };
@@ -2452,7 +2460,6 @@ function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges") {
   recordStudyActivity();
   if (isNewCompletion) awardXp(50);
   localStorage.removeItem(LESSON_RESUME_KEY);
-  showFeatureRequestPopup("lesson-completed");
 }
 
 function showWeeklyRevisionPopup(syllabusKey, onClose) {
@@ -3453,7 +3460,7 @@ function setupLearningSpace() {
   selectionControls.className =
     "class-picker department-card learning-selection";
   selectionControls.innerHTML = `
-    <label for="learning-syllabus-select">Syllabus</label>
+    <label for="learning-syllabus-select">Curriculum</label>
     <select id="learning-syllabus-select"></select>
     <label for="learning-class-select">Class</label>
     <select id="learning-class-select"></select>
@@ -3469,7 +3476,11 @@ function setupLearningSpace() {
   const subjectSelect = selectionControls.querySelector(
     "#learning-subject-select",
   );
-  const allowedSyllabuses = Object.entries(learningCatalog);
+  const syllabusChoices = ["ges", "oxford", "cambridge"];
+  if (syllabusKey.endsWith("-ict")) syllabusChoices.push(syllabusKey);
+  const allowedSyllabuses = syllabusChoices
+    .filter((key) => learningCatalog[key])
+    .map((key) => [key, learningCatalog[key]]);
   syllabusSelect.innerHTML = allowedSyllabuses
     .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
     .join("");
