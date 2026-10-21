@@ -2438,8 +2438,16 @@ function getLearningProgress() {
 
 function saveCompletedSubtopic(subject, topic, subtopic) {
   const progress = getLearningProgress();
-  const isNewCompletion = !progress[getLessonKey(subject, topic, subtopic)];
-  progress[getLessonKey(subject, topic, subtopic)] = true;
+  const lessonKey = getLessonKey(subject, topic, subtopic);
+  const previous = progress[lessonKey];
+  const isNewCompletion = !previous;
+  progress[lessonKey] = {
+    completedAt: new Date().toISOString(),
+    syllabus: activeLearningContext?.syllabus || "ges",
+    subject,
+    topic,
+    subtopic,
+  };
   localStorage.setItem(LEARNING_PROGRESS_KEY, JSON.stringify(progress));
   recordStudyActivity();
   if (isNewCompletion) awardXp(50);
