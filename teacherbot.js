@@ -2555,7 +2555,7 @@ function showWeeklyRevisionPopup(syllabusKey, onClose) {
   );
   if (!lessons.length) { onClose(); return; }
 
-  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const syllabus = getLearningSyllabus(syllabusKey, selectedClass);
   const questionSet = lessons.map(([key, item]) => {
     const lesson = syllabus.topics?.[item.subject]?.[item.topic]?.[item.subtopic];
     const [question, answers, correct] = getFiveQuizQuestions(
@@ -3546,8 +3546,11 @@ function setupLearningSpace() {
     <select id="learning-syllabus-select"></select>
     <label for="learning-class-select">Class</label>
     <select id="learning-class-select"></select>
+    <div class="learning-class-tabs" id="oxford-class-tabs" role="group" aria-label="Oxford Computing class" hidden></div>
     <label for="learning-subject-select">Subject</label>
     <select id="learning-subject-select"></select>
+    <label for="learning-topic-search">Search topics and key words</label>
+    <input id="learning-topic-search" type="search" placeholder="Search topics, lesson words, and definitions" autocomplete="off" />
     <button class="small-btn" id="apply-learning-selection" type="button">Start learning</button>
   `;
 
@@ -3558,10 +3561,15 @@ function setupLearningSpace() {
   const subjectSelect = selectionControls.querySelector(
     "#learning-subject-select",
   );
-  const syllabusChoices = ["ges", "oxford", "cambridge"];
-  if (syllabusKey.endsWith("-ict")) syllabusChoices.push(syllabusKey);
+  const topicSearch = selectionControls.querySelector("#learning-topic-search");
+  const classTabs = selectionControls.querySelector("#oxford-class-tabs");
+  const syllabusChoices = Object.keys(learningCatalog).filter((key) =>
+    !key.startsWith("oxford-basic") &&
+    (["ges", "oxford", "cambridge", "jhs"].includes(key) || key.startsWith("shs-")),
+  );
+  if (syllabusKey.endsWith("-ict") && !syllabusChoices.includes(syllabusKey)) syllabusChoices.push(syllabusKey);
   const allowedSyllabuses = syllabusChoices
-    .filter((key) => learningCatalog[key])
+    .filter((key) => getSyllabusDepartment(key) === selectedDepartment)
     .map((key) => [key, learningCatalog[key]]);
   syllabusSelect.innerHTML = allowedSyllabuses
     .map(([key, item]) => `<option value="${key}">${item.name}</option>`)
@@ -3588,11 +3596,28 @@ function setupLearningSpace() {
         ? selectedClass
         : classes[0];
     updateSubjectChoices();
+    updateOxfordClassTabs();
+  };
+
+  const updateOxfordClassTabs = () => {
+    const isOxfordBasic = syllabusSelect.value === "oxford" && getDepartmentFromClass(classSelect.value) === "basic";
+    classTabs.hidden = !isOxfordBasic;
+    classTabs.innerHTML = isOxfordBasic
+      ? ["basic3", "basic4", "basic6"].map((key) => `<button type="button" class="small-btn ${classSelect.value === key ? "active" : "soft-btn"}" data-oxford-class="${key}" aria-pressed="${classSelect.value === key}">${classLabels[key] || key.toUpperCase()}</button>`).join("")
+      : "";
+    classTabs.querySelectorAll("[data-oxford-class]").forEach((button) => button.addEventListener("click", () => {
+      classSelect.value = button.dataset.oxfordClass;
+      updateSubjectChoices();
+      renderTopics();
+      updateOxfordClassTabs();
+    }));
   };
 
   const updateSubjectChoices = () => {
-    const currentSyllabus =
-      learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const currentSyllabus = getLearningSyllabus(
+      syllabusSelect.value,
+      classSelect.value,
+    );
     const subjects = Object.keys(currentSyllabus.topics || {});
     const previousSubject = subjectSelect.value;
     subjectSelect.innerHTML = subjects
@@ -3608,6 +3633,7 @@ function setupLearningSpace() {
 
   updateClassChoices();
   syllabusSelect.addEventListener("change", updateClassChoices);
+  topicSearch.addEventListener("input", renderTopics);
   subjectSelect.addEventListener("change", () => {
     if (
       getSyllabusDepartment(syllabusSelect.value) === "basic" &&
@@ -3653,12 +3679,23 @@ function setupLearningSpace() {
     lessonTimerId = null;
     space.innerHTML = "";
     space.appendChild(selectionControls);
-    const currentSyllabus =
-      learningCatalog[syllabusSelect.value] || learningCatalog.ges;
+    const currentSyllabus = getLearningSyllabus(
+      syllabusSelect.value,
+      classSelect.value,
+    );
     const visibleSubject =
       subjectSelect.value || Object.keys(currentSyllabus.topics || {})[0];
     const visibleTopics = currentSyllabus.topics[visibleSubject] || {};
-    const topicEntries = Object.entries(visibleTopics);
+    const searchTerm = topicSearch.value.trim().toLowerCase();
+    const topicEntries = Object.entries(visibleTopics).filter(([topic, subtopics]) => {
+      if (!searchTerm) return true;
+      const searchableText = [topic, ...Object.entries(subtopics).flatMap(([subtopic, lesson]) => [
+        subtopic,
+        lesson.lesson,
+        JSON.stringify(lesson.vocabulary || {}),
+      ])].join(" ").toLowerCase();
+      return searchableText.includes(searchTerm);
+    });
     const explicitTermTopics = topicEntries.every(([topic]) =>
       /^(First|Second|Third) Term\s*[·:-]/i.test(topic),
     );
@@ -3692,7 +3729,7 @@ function setupLearningSpace() {
         })
         .join("")}</div></article>`;
     const topicsPanel = document.createElement("div");
-    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a term, choose a topic, and follow the guided lessons for ${visibleSubject}.</p></div>${termGroups
+    topicsPanel.innerHTML = `<div class="panel-header"><p class="eyebrow">${currentSyllabus.name}${selectedYear ? ` · ${selectedYear}` : ""}</p><h2>Learn ${visibleSubject}</h2><p class="select">Open a term, choose a topic, and follow the guided lessons for ${visibleSubject}.</p></div>${topicEntries.length ? "" : '<p class="empty-state">No topics match that search. Try another word.</p>'}${termGroups
       .filter(([, entries]) => entries.length)
       .map(
         ([term, entries]) =>
