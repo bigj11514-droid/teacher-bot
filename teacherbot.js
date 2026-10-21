@@ -1,6 +1,7 @@
 ﻿﻿console.log("Teacher Bot loaded");
 
 const STUDENT_SESSION_KEY = "ycohdeStudentSession";
+const LEARNING_SELECTION_KEY = "ycohdeLearningSelection";
 const CONTENT_OVERRIDES_KEY = "ycohdeContentOverrides";
 const CONTRIBUTING_TEACHERS_KEY = "ycohdeContributingTeachers";
 const STAFF_POSTS_KEY = "ycohdeStaffPosts";
@@ -23,6 +24,25 @@ function getStudentSession() {
   } catch {
     return null;
   }
+}
+
+function getLearningSelection() {
+  const student = getStudentSession();
+  const key = `${LEARNING_SELECTION_KEY}:${student?.email || student?.id || "default"}`;
+  try {
+    return JSON.parse(localStorage.getItem(key)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLearningSelection(selection) {
+  const student = getStudentSession();
+  const key = `${LEARNING_SELECTION_KEY}:${student?.email || student?.id || "default"}`;
+  localStorage.setItem(
+    key,
+    JSON.stringify({ ...getLearningSelection(), ...selection }),
+  );
 }
 
 // Uploaded files live in IndexedDB, which is suitable for media unlike localStorage.
@@ -1941,7 +1961,7 @@ const BASIC6_3D_MODELS_QUIZ = [
 // available shared subject map until Oxford-specific lesson content is added.
 learningCatalog.oxford = {
   ...learningCatalog.ges,
-  name: "Oxford International Computing",
+  name: "Oxford Curriculum (general learning map)",
   topics: JSON.parse(JSON.stringify(learningCatalog.ges.topics)),
 };
 
@@ -2587,8 +2607,10 @@ function showWeeklyRevisionPopup(syllabusKey, className, onClose) {
   const answerBox = modal.querySelector("#weekly-revision-answers");
   const feedback = modal.querySelector("#weekly-revision-feedback");
   const nextButton = modal.querySelector("#weekly-revision-next");
+  const skipButton = modal.querySelector("#weekly-revision-skip");
   const render = () => {
     const current = questionSet[index];
+    skipButton.hidden = false;
     title.textContent = `Question ${index + 1} of ${questionSet.length}`;
     topic.textContent = `${current.item.subject} · ${current.item.topic} · ${current.item.subtopic}`;
     feedback.textContent = "Choose the best answer.";
@@ -2604,8 +2626,24 @@ function showWeeklyRevisionPopup(syllabusKey, className, onClose) {
       nextButton.disabled = false;
     }));
   };
-  modal.querySelector("#weekly-revision-skip").onclick = close;
-  nextButton.onclick = () => { index += 1; if (index < questionSet.length) render(); else close(true); };
+  skipButton.onclick = close;
+  nextButton.onclick = () => {
+    if (index < questionSet.length - 1) {
+      index += 1;
+      render();
+      return;
+    }
+    title.textContent = "Weekly revision complete";
+    topic.textContent = `You scored ${score} out of ${questionSet.length}.`;
+    answerBox.innerHTML = "";
+    feedback.textContent = score === questionSet.length
+      ? "Excellent work! You remembered every topic."
+      : "Good practice. Review any topic you want to strengthen.";
+    skipButton.hidden = true;
+    nextButton.textContent = "Continue learning";
+    nextButton.disabled = false;
+    nextButton.onclick = () => close(true);
+  };
   modal.classList.add("visible");
   modal.setAttribute("aria-hidden", "false");
   render();
@@ -2942,6 +2980,34 @@ function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
   };
 }
 
+function tailorLessonLanguage(value, className) {
+  const classKey = String(className || getClassKey()).toLowerCase();
+  const early = /^(basic1|basic2|basic3)$/.test(classKey);
+  const developing = /^(basic4|basic5|basic6|jhs1)$/.test(classKey);
+  const replacements = early
+    ? { demonstrate: "show", calculate: "work out", identify: "find", construct: "make", obtain: "get", require: "need", approximately: "about", method: "way", procedure: "steps", select: "choose", transfer: "move", prior: "before", subsequent: "next", modify: "change", component: "part", indicate: "show", predict: "guess", observe: "look at", communicate: "share", locate: "find", assist: "help" }
+    : developing
+      ? { utilize: "use", commence: "start", terminate: "finish", determine: "find out", consequence: "result", illustrate: "show", require: "need", substitute: "replace", extract: "take out", observe: "look at", modify: "change" }
+      : {};
+  const holder = document.createElement("div");
+  holder.innerHTML = String(value || "");
+  const walker = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.parentElement?.closest("code, pre")) continue;
+    let text = node.nodeValue;
+    Object.entries(replacements).forEach(([formal, simpler]) => {
+      text = text.replace(new RegExp(`\\b${formal}\\b`, "gi"), (match) =>
+        match[0] === match[0].toUpperCase()
+          ? simpler[0].toUpperCase() + simpler.slice(1)
+          : simpler,
+      );
+    });
+    node.nodeValue = text;
+  }
+  return holder.innerHTML;
+}
+
 function escapeLearningText(value) {
   return String(value || "").replace(/[&<>"']/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -2977,12 +3043,14 @@ function getLevelFriendlyVocabulary(lesson, contextText, className) {
     "computer-aided design": ["Computer software used to plan a design.", "Software that helps people create and edit designs.", "Software used to create, modify, and test design models."],
   };
   const text = String(contextText || "").toLowerCase();
+  const normalizedText = ` ${text.replace(/[^a-z0-9]+/g, " ").trim()} `;
   const provided = lesson?.vocabulary && typeof lesson.vocabulary === "object"
     ? Object.entries(lesson.vocabulary)
     : [];
   const knownTerms = new Set(provided.map(([term]) => term.toLowerCase()));
   Object.keys(glossary).forEach((term) => {
-    if (text.includes(term) && !knownTerms.has(term)) {
+    const normalizedTerm = ` ${term.replace(/[^a-z0-9]+/g, " ").trim()} `;
+    if (normalizedText.includes(normalizedTerm) && !knownTerms.has(term)) {
       const definitionIndex = early ? 0 : middle ? 1 : 2;
       provided.push([term.replace(/\b\w/g, (letter) => letter.toUpperCase()), glossary[term][definitionIndex]]);
     }
@@ -3553,13 +3621,15 @@ function setupLearningSpace() {
     '<div class="panel-header"><p class="eyebrow">Your lessons</p><h2>Loading your lessons...</h2><p class="select">Preparing topics and activities for you.</p></div>';
   const params = new URLSearchParams(window.location.search);
   const student = getStudentSession() || {};
+  const savedSelection = getLearningSelection();
   const classesByDepartment = {
     basic: ["basic1", "basic2", "basic3", "basic4", "basic5", "basic6"],
     jhs: ["jhs1", "jhs2", "jhs3"],
     shs: ["shs1", "shs2", "shs3"],
   };
   const requestedClass = (
-    params.get("class") ||
+    (params.get("syllabus") === "oxford" ? savedSelection.className : params.get("class")) ||
+    savedSelection.className ||
     student.className ||
     "basic1"
   ).toLowerCase();
@@ -3575,7 +3645,7 @@ function setupLearningSpace() {
   const course = params.get("course") || student.course || "general-arts";
   const requestedSubject =
     params.get("subject") || student.subject || "";
-  const requestedSyllabus = params.get("syllabus") || student.syllabus;
+  const requestedSyllabus = params.get("syllabus") || savedSelection.syllabus || student.syllabus;
   const requestedIct =
     selectedDepartment === "basic" &&
     requestedSubject.toLowerCase() === "ict" &&
@@ -3666,22 +3736,12 @@ function setupLearningSpace() {
       : "";
     classTabs.querySelectorAll("[data-oxford-class]").forEach((button) => button.addEventListener("click", () => {
       classSelect.value = button.dataset.oxfordClass;
-      const student = getStudentSession();
-      if (student) {
-        localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({
-          ...student,
-          department: "basic",
-          className: classSelect.value,
-          subject: "Computing",
-          syllabus: "oxford",
-        }));
-      }
-      const nextParams = new URLSearchParams(window.location.search);
-      nextParams.set("syllabus", "oxford");
-      nextParams.set("class", classSelect.value);
-      nextParams.set("department", "basic");
-      nextParams.set("subject", "Computing");
-      window.history.replaceState({}, "", `${window.location.pathname}?${nextParams.toString()}`);
+      saveLearningSelection({
+        department: "basic",
+        className: classSelect.value,
+        subject: "Computing",
+        syllabus: "oxford",
+      });
       updateSubjectChoices();
       renderTopics();
       updateOxfordClassTabs();
@@ -3708,6 +3768,11 @@ function setupLearningSpace() {
 
   updateClassChoices();
   syllabusSelect.addEventListener("change", updateClassChoices);
+  classSelect.addEventListener("change", () => {
+    updateSubjectChoices();
+    updateOxfordClassTabs();
+    renderTopics();
+  });
   topicSearch.addEventListener("input", () => renderTopics());
   subjectSelect.addEventListener("change", () => {
     if (
@@ -3725,20 +3790,13 @@ function setupLearningSpace() {
   selectionControls
     .querySelector("#apply-learning-selection")
     .addEventListener("click", () => {
-      const student = getStudentSession();
       const chosenSubject = subjectSelect.value;
-      if (student) {
-        localStorage.setItem(
-          STUDENT_SESSION_KEY,
-          JSON.stringify({
-            ...student,
-            department: getSyllabusDepartment(syllabusSelect.value),
-            className: classSelect.value,
-            subject: chosenSubject,
-            syllabus: syllabusSelect.value,
-          }),
-        );
-      }
+      saveLearningSelection({
+        department: getSyllabusDepartment(syllabusSelect.value),
+        className: classSelect.value,
+        subject: chosenSubject,
+        syllabus: syllabusSelect.value,
+      });
       const params = new URLSearchParams({
         syllabus: syllabusSelect.value,
         class: classSelect.value,
@@ -3749,6 +3807,8 @@ function setupLearningSpace() {
     });
   let activeLesson;
   let activeLessonMeta = { subject: null, topic: null, subtopic: null };
+  const getCurrentLearningSyllabus = () =>
+    getLearningSyllabus(syllabusSelect.value, classSelect.value);
   const renderTopics = () => {
     clearInterval(lessonTimerId);
     lessonTimerId = null;
@@ -3876,7 +3936,8 @@ function setupLearningSpace() {
       department: selectedDepartment,
       className: classSelect.value,
     };
-    activeLesson = syllabus.topics[subject][topic][subtopic];
+    const activeSyllabus = getCurrentLearningSyllabus();
+    activeLesson = activeSyllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
     const contentOverride = getLessonOverride(
       syllabusKey,
@@ -3896,6 +3957,10 @@ function setupLearningSpace() {
       subtopic,
       activeLesson,
     );
+    const lessonText = tailorLessonLanguage(
+      contentOverride.lesson || activeLesson.lesson,
+      classSelect.value,
+    );
     const lessonExamples = extras.examples.length
       ? extras.examples
       : [
@@ -3912,7 +3977,7 @@ function setupLearningSpace() {
         ];
     const vocabularyHtml = getLevelFriendlyVocabulary(
       activeLesson,
-      `${subject} ${topic} ${subtopic} ${contentOverride.lesson || activeLesson.lesson}`,
+      `${subject} ${topic} ${subtopic} ${lessonText}`,
       classSelect.value,
     );
     const diagramHtml = activeLesson.diagram || "";
@@ -3922,7 +3987,7 @@ function setupLearningSpace() {
     )
       .map(
         (example) =>
-          `<div class="example-card"><p class="example-title">${example.title}</p><p class="example-problem">${example.problem}</p><ol class="example-steps">${example.steps.map((step) => `<li>${step}</li>`).join("")}</ol><span class="example-result">${example.result}</span></div>`,
+          `<div class="example-card"><p class="example-title">${tailorLessonLanguage(example.title, classSelect.value)}</p><p class="example-problem">${tailorLessonLanguage(example.problem, classSelect.value)}</p><ol class="example-steps">${example.steps.map((step) => `<li>${tailorLessonLanguage(step, classSelect.value)}</li>`).join("")}</ol><span class="example-result">${tailorLessonLanguage(example.result, classSelect.value)}</span></div>`,
       )
       .join("");
     const videoUrl = getYouTubeEmbedUrl(extras.videoUrl);
@@ -3942,7 +4007,7 @@ function setupLearningSpace() {
       : videoUrl
         ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3>${videoHeader}<div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div>${videoCredit}</div>`
         : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div>${vocabularyHtml}${diagramHtml}<section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${lessonText}</p></div>${vocabularyHtml}${diagramHtml}<section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
     activeLesson._guidedVideo = video;
     activeLesson._guidedQuestions = extras.questions;
     // CONTENT-STUDIO QUESTIONS: exact five-question sets saved by an admin or
@@ -4024,7 +4089,7 @@ function setupLearningSpace() {
   }
   const continueAfterExercise = () => {
     const nextLesson = getNextLessonTarget(
-      syllabus,
+      getCurrentLearningSyllabus(),
       activeLessonMeta.subject,
       activeLessonMeta.topic,
       activeLessonMeta.subtopic,
@@ -4084,12 +4149,12 @@ function setupLearningSpace() {
   const requestedSubtopic = params.get("subtopic");
   if (
     requestedTopic && requestedSubtopic &&
-    syllabus.topics[selectedSubject]?.[requestedTopic]?.[requestedSubtopic]
+    getCurrentLearningSyllabus().topics[selectedSubject]?.[requestedTopic]?.[requestedSubtopic]
   ) {
     renderLesson(selectedSubject, requestedTopic, requestedSubtopic);
   } else if (
     savedLesson &&
-    syllabus.topics[savedLesson.subject]?.[savedLesson.topic]?.[
+    getCurrentLearningSyllabus().topics[savedLesson.subject]?.[savedLesson.topic]?.[
       savedLesson.subtopic
     ]
   ) {
