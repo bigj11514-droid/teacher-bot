@@ -2436,14 +2436,14 @@ function getLearningProgress() {
   }
 }
 
-function saveCompletedSubtopic(subject, topic, subtopic) {
+function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges") {
   const progress = getLearningProgress();
   const lessonKey = getLessonKey(subject, topic, subtopic);
   const previous = progress[lessonKey];
   const isNewCompletion = !previous;
   progress[lessonKey] = {
     completedAt: new Date().toISOString(),
-    syllabus: activeLearningContext?.syllabus || "ges",
+    syllabus,
     subject,
     topic,
     subtopic,
@@ -2453,6 +2453,72 @@ function saveCompletedSubtopic(subject, topic, subtopic) {
   if (isNewCompletion) awardXp(50);
   localStorage.removeItem(LESSON_RESUME_KEY);
   showFeatureRequestPopup("lesson-completed");
+}
+
+function showWeeklyRevisionPopup(syllabusKey, onClose) {
+  const progress = getLearningProgress();
+  const now = Date.now();
+  const monday = new Date();
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const weekKey = monday.toISOString().slice(0, 10);
+  const reviewedKey = `ycohdeWeeklyRevision:${weekKey}`;
+  let reviewed = [];
+  try { reviewed = JSON.parse(localStorage.getItem(reviewedKey)) || []; } catch { reviewed = []; }
+  const lessons = Object.entries(progress).filter(([, item]) =>
+    item && typeof item === "object" && item.completedAt &&
+    now - new Date(item.completedAt).getTime() <= 7 * 24 * 60 * 60 * 1000 &&
+    item.syllabus === syllabusKey && !reviewed.includes(item.subtopicKey || `${item.subject}|${item.topic}|${item.subtopic}`),
+  );
+  if (!lessons.length) { onClose(); return; }
+
+  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const questionSet = lessons.map(([key, item]) => {
+    const lesson = syllabus.topics?.[item.subject]?.[item.topic]?.[item.subtopic];
+    const [question, answers, correct] = getFiveQuizQuestions(
+      lesson || { lesson: "Review the key idea from this topic." }, item.subtopic, undefined,
+      { subject: item.subject, topic: item.topic, subtopic: item.subtopic, syllabus: syllabusKey, className: getClassKey() },
+    )[0];
+    return { key, item, question, answers, correct };
+  });
+  let index = 0;
+  let modal = document.getElementById("weekly-revision-modal");
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="weekly-revision-modal" aria-hidden="true"><div class="modal-card lesson-question-modal-card" role="dialog" aria-modal="true" aria-labelledby="weekly-revision-title"><p class="eyebrow">Weekly revision</p><h2 id="weekly-revision-title"></h2><p id="weekly-revision-topic"></p><div class="answers" id="weekly-revision-answers"></div><p class="feedback-text" id="weekly-revision-feedback" aria-live="polite"></p><div class="modal-actions"><button class="soft-btn" id="weekly-revision-skip" type="button">Skip for now</button><button class="btn" id="weekly-revision-next" type="button" disabled>Next question</button></div></div></div>');
+    modal = document.getElementById("weekly-revision-modal");
+  }
+  const close = () => {
+    modal.classList.remove("visible");
+    modal.setAttribute("aria-hidden", "true");
+    localStorage.setItem(reviewedKey, JSON.stringify(reviewed));
+    onClose();
+  };
+  const title = modal.querySelector("#weekly-revision-title");
+  const topic = modal.querySelector("#weekly-revision-topic");
+  const answerBox = modal.querySelector("#weekly-revision-answers");
+  const feedback = modal.querySelector("#weekly-revision-feedback");
+  const nextButton = modal.querySelector("#weekly-revision-next");
+  const render = () => {
+    const current = questionSet[index];
+    title.textContent = `Question ${index + 1} of ${questionSet.length}`;
+    topic.textContent = `${current.item.subject} · ${current.item.topic} · ${current.item.subtopic}`;
+    feedback.textContent = "Choose the best answer.";
+    nextButton.disabled = true;
+    nextButton.textContent = index === questionSet.length - 1 ? "Finish revision" : "Next question";
+    answerBox.innerHTML = current.answers.map((answer, answerIndex) => `<button type="button" data-weekly-answer="${answerIndex}">${answer}</button>`).join("");
+    answerBox.querySelectorAll("[data-weekly-answer]").forEach((button) => button.addEventListener("click", () => {
+      answerBox.querySelectorAll("button").forEach((item) => item.disabled = true);
+      const isCorrect = Number(button.dataset.weeklyAnswer) === current.correct;
+      feedback.textContent = isCorrect ? "Correct! Great revision." : `Good try. The correct answer is ${current.answers[current.correct]}.`;
+      reviewed.push(`${current.item.subject}|${current.item.topic}|${current.item.subtopic}`);
+      nextButton.disabled = false;
+    }));
+  };
+  modal.querySelector("#weekly-revision-skip").onclick = close;
+  nextButton.onclick = () => { index += 1; if (index < questionSet.length) render(); else close(); };
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+  render();
 }
 
 function showFeatureRequestPopup(trigger) {
@@ -3362,7 +3428,7 @@ function setupLearningSpace() {
   const course = params.get("course") || student.course || "general-arts";
   const requestedSubject =
     params.get("subject") || student.subject || "";
-  const requestedSyllabus = params.get("syllabus");
+  const requestedSyllabus = params.get("syllabus") || student.syllabus;
   const requestedIct =
     selectedDepartment === "basic" &&
     requestedSubject.toLowerCase() === "ict" &&
@@ -3475,6 +3541,7 @@ function setupLearningSpace() {
             department: getSyllabusDepartment(syllabusSelect.value),
             className: classSelect.value,
             subject: chosenSubject,
+            syllabus: syllabusSelect.value,
           }),
         );
       }
@@ -3744,18 +3811,19 @@ function setupLearningSpace() {
       activeLessonMeta.topic,
       activeLessonMeta.subtopic,
     );
-    saveCompletedSubtopic(
-      activeLessonMeta.subject,
-      activeLessonMeta.topic,
-      activeLessonMeta.subtopic,
-    );
-    if (!nextLesson) {
-      renderTopics();
-      return;
-    }
-    // NEXT LESSON: completion always opens the next subtopic. The learner has
-    // already completed the prerequisite, so the modal must never block here.
-    renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
+      saveCompletedSubtopic(
+        activeLessonMeta.subject,
+        activeLessonMeta.topic,
+        activeLessonMeta.subtopic,
+        syllabusKey,
+      );
+    showWeeklyRevisionPopup(syllabusKey, () => {
+      if (!nextLesson) {
+        renderTopics();
+        return;
+      }
+      renderLesson(nextLesson.subject, nextLesson.topic, nextLesson.subtopic);
+    });
   };
   ["enjoyed-yes", "enjoyed-no"].forEach((id) => {
     document.getElementById(id).addEventListener("click", () => {
