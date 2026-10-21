@@ -2475,7 +2475,7 @@ function showWeeklyRevisionPopup(syllabusKey, onClose) {
   const lessons = Object.entries(progress).filter(([, item]) =>
     item && typeof item === "object" && item.completedAt &&
     now - new Date(item.completedAt).getTime() <= 7 * 24 * 60 * 60 * 1000 &&
-    item.syllabus === syllabusKey && !reviewed.includes(item.subtopicKey || `${item.subject}|${item.topic}|${item.subtopic}`),
+    item.syllabus === syllabusKey && !reviewed.includes(item.subtopicKey || `${syllabusKey}|${item.subject}|${item.topic}|${item.subtopic}`),
   );
   if (!lessons.length) { onClose(); return; }
 
@@ -2489,15 +2489,20 @@ function showWeeklyRevisionPopup(syllabusKey, onClose) {
     return { key, item, question, answers, correct };
   });
   let index = 0;
+  let score = 0;
   let modal = document.getElementById("weekly-revision-modal");
   if (!modal) {
     document.body.insertAdjacentHTML("beforeend", '<div class="understanding-modal" id="weekly-revision-modal" aria-hidden="true"><div class="modal-card lesson-question-modal-card" role="dialog" aria-modal="true" aria-labelledby="weekly-revision-title"><p class="eyebrow">Weekly revision</p><h2 id="weekly-revision-title"></h2><p id="weekly-revision-topic"></p><div class="answers" id="weekly-revision-answers"></div><p class="feedback-text" id="weekly-revision-feedback" aria-live="polite"></p><div class="modal-actions"><button class="soft-btn" id="weekly-revision-skip" type="button">Skip for now</button><button class="btn" id="weekly-revision-next" type="button" disabled>Next question</button></div></div></div>');
     modal = document.getElementById("weekly-revision-modal");
   }
-  const close = () => {
+  const close = (completed = false) => {
     modal.classList.remove("visible");
     modal.setAttribute("aria-hidden", "true");
     localStorage.setItem(reviewedKey, JSON.stringify(reviewed));
+    if (completed) {
+      const subjects = [...new Set(questionSet.map(({ item }) => item.subject))];
+      saveQuizResult(score, questionSet.length, `Weekly revision · ${subjects.join(", ")}`);
+    }
     onClose();
   };
   const title = modal.querySelector("#weekly-revision-title");
@@ -2517,12 +2522,13 @@ function showWeeklyRevisionPopup(syllabusKey, onClose) {
       answerBox.querySelectorAll("button").forEach((item) => item.disabled = true);
       const isCorrect = Number(button.dataset.weeklyAnswer) === current.correct;
       feedback.textContent = isCorrect ? "Correct! Great revision." : `Good try. The correct answer is ${current.answers[current.correct]}.`;
-      reviewed.push(`${current.item.subject}|${current.item.topic}|${current.item.subtopic}`);
+      if (isCorrect) score += 1;
+      reviewed.push(`${syllabusKey}|${current.item.subject}|${current.item.topic}|${current.item.subtopic}`);
       nextButton.disabled = false;
     }));
   };
   modal.querySelector("#weekly-revision-skip").onclick = close;
-  nextButton.onclick = () => { index += 1; if (index < questionSet.length) render(); else close(); };
+  nextButton.onclick = () => { index += 1; if (index < questionSet.length) render(); else close(true); };
   modal.classList.add("visible");
   modal.setAttribute("aria-hidden", "false");
   render();
