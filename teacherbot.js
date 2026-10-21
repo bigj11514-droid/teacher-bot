@@ -1981,7 +1981,7 @@ const oxfordComputingLessons = {
       "Web page parts and wireframes": {
         lesson: "A header is the top of a web page. It can hold a logo, title, and menu. The body is the main area for words and pictures. A footer is at the bottom. Headings introduce sections. A hyperlink is something you can click to open another page. A wireframe is a simple plan that shows where things will go before you build the page. It can use placeholder text. Web pages include static information pages, interactive landing pages, menu pages, registration pages, contact pages, and online shop or gallery pages.",
         vocabulary: { Header: "The top part of a web page.", Logo: "A picture or symbol for a school, group, or business.", "Navigation Menu": "Links or buttons that help people move to other pages.", Wireframe: "A simple plan showing where page parts will go.", Hyperlink: "Words or a picture you can click to open another page.", Footer: "The bottom part of a web page." },
-        diagram: "<div class=\"learning-diagram wireframe-diagram\" role=\"img\" aria-label=\"Simple web page wireframe\"><strong>HEADER · logo · title · menu</strong><div class=\"wireframe-body\"><span>HEADING</span><span>TEXT</span><span>IMAGE</span></div><strong>FOOTER · links</strong></div>",
+        diagram: "<div class=\"learning-diagram wireframe-diagram\" role=\"img\" aria-label=\"Simple web page wireframe\"><strong>HEADER · logo · title · menu</strong><div class=\"wireframe-body\"><span>HEADING</span><span>TEXT</span><span>IMAGE</span></div><strong>FOOTER · links</strong></div><section class=\"webpage-type-cards\" aria-label=\"Six types of web pages\"><h3>Six types of web pages</h3><div class=\"webpage-type-grid\"><article><strong>Static</strong><span>Fixed information</span></article><article><strong>Landing</strong><span>Front page with updates</span></article><article><strong>Menu</strong><span>Links by category</span></article><article><strong>Registration</strong><span>Sign-up form</span></article><article><strong>Contact</strong><span>Send a message</span></article><article><strong>Shop or gallery</strong><span>Pictures and products</span></article></div></section>",
         examples: [{ title: "Plan a school page", problem: "Choose where the school name and picture should go.", steps: ["Put the logo and menu in the header.", "Put the heading, words, and image in the body.", "Put extra links in the footer."], result: "The wireframe shows a clear page plan." }],
         questions: [["What does a wireframe show?", ["A plan for where parts of a page go", "A finished password", "A computer's battery level", "A list of spelling mistakes"], 0]],
       },
@@ -2520,7 +2520,7 @@ function getLearningProgress() {
   }
 }
 
-function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges") {
+function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges", className = "") {
   const progress = getLearningProgress();
   const lessonKey = getLessonKey(subject, topic, subtopic);
   const previous = progress[lessonKey];
@@ -2528,6 +2528,7 @@ function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges") {
   progress[lessonKey] = {
     completedAt: new Date().toISOString(),
     syllabus,
+    className,
     subject,
     topic,
     subtopic,
@@ -2538,7 +2539,7 @@ function saveCompletedSubtopic(subject, topic, subtopic, syllabus = "ges") {
   localStorage.removeItem(LESSON_RESUME_KEY);
 }
 
-function showWeeklyRevisionPopup(syllabusKey, onClose) {
+function showWeeklyRevisionPopup(syllabusKey, className, onClose) {
   const progress = getLearningProgress();
   const now = Date.now();
   const monday = new Date();
@@ -2555,12 +2556,12 @@ function showWeeklyRevisionPopup(syllabusKey, onClose) {
   );
   if (!lessons.length) { onClose(); return; }
 
-  const syllabus = getLearningSyllabus(syllabusKey, selectedClass);
   const questionSet = lessons.map(([key, item]) => {
+    const syllabus = getLearningSyllabus(syllabusKey, item.className || className);
     const lesson = syllabus.topics?.[item.subject]?.[item.topic]?.[item.subtopic];
     const [question, answers, correct] = getFiveQuizQuestions(
       lesson || { lesson: "Review the key idea from this topic." }, item.subtopic, undefined,
-      { subject: item.subject, topic: item.topic, subtopic: item.subtopic, syllabus: syllabusKey, className: getClassKey() },
+      { subject: item.subject, topic: item.topic, subtopic: item.subtopic, syllabus: syllabusKey, className: item.className || className },
     )[0];
     return { key, item, question, answers, correct };
   });
@@ -2986,8 +2987,15 @@ function getLevelFriendlyVocabulary(lesson, contextText, className) {
       provided.push([term.replace(/\b\w/g, (letter) => letter.toUpperCase()), glossary[term][definitionIndex]]);
     }
   });
-  if (!provided.length) return "";
   const levelLabel = early ? "Short and simple" : middle ? "Step-by-step" : "Subject vocabulary";
+  if (!provided.length) {
+    const guidance = early
+      ? "Read one idea at a time, then try the example step by step."
+      : middle
+        ? "Connect the key idea to an example and explain what each step does."
+        : "Focus on the subject terms and explain why the example's method works.";
+    return `<aside class="learning-vocabulary"><h3>Learning support <span>${levelLabel}</span></h3><p>${guidance}</p></aside>`;
+  }
   return `<section class="learning-vocabulary"><h3>Words for your level <span>${levelLabel}</span></h3><dl>${provided.map(([term, definition]) => `<div><dt>${escapeLearningText(term)}</dt><dd>${escapeLearningText(definition)}</dd></div>`).join("")}</dl></section>`;
 }
 
@@ -3571,6 +3579,7 @@ function setupLearningSpace() {
   const requestedIct =
     selectedDepartment === "basic" &&
     requestedSubject.toLowerCase() === "ict" &&
+    !["ges", "oxford", "cambridge"].includes(requestedSyllabus) &&
     Boolean(learningCatalog[`${selectedClass}-ict`]);
   const syllabusKey = requestedIct
     ? `${selectedClass}-ict`
@@ -3579,7 +3588,7 @@ function setupLearningSpace() {
         getSyllabusDepartment(requestedSyllabus) === selectedDepartment
       ? requestedSyllabus
       : getDefaultSyllabusKey(selectedDepartment, course);
-  const syllabus = learningCatalog[syllabusKey] || learningCatalog.ges;
+  const syllabus = getLearningSyllabus(syllabusKey, selectedClass);
   const requestedLearningSubject =
     requestedSubject || Object.keys(syllabus.topics)[0];
   const availableSubjects = Object.keys(syllabus.topics || {});
@@ -3657,6 +3666,22 @@ function setupLearningSpace() {
       : "";
     classTabs.querySelectorAll("[data-oxford-class]").forEach((button) => button.addEventListener("click", () => {
       classSelect.value = button.dataset.oxfordClass;
+      const student = getStudentSession();
+      if (student) {
+        localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({
+          ...student,
+          department: "basic",
+          className: classSelect.value,
+          subject: "Computing",
+          syllabus: "oxford",
+        }));
+      }
+      const nextParams = new URLSearchParams(window.location.search);
+      nextParams.set("syllabus", "oxford");
+      nextParams.set("class", classSelect.value);
+      nextParams.set("department", "basic");
+      nextParams.set("subject", "Computing");
+      window.history.replaceState({}, "", `${window.location.pathname}?${nextParams.toString()}`);
       updateSubjectChoices();
       renderTopics();
       updateOxfordClassTabs();
@@ -4009,8 +4034,10 @@ function setupLearningSpace() {
         activeLessonMeta.topic,
         activeLessonMeta.subtopic,
         syllabusKey,
+        classSelect.value,
       );
-    showWeeklyRevisionPopup(syllabusKey, () => {
+    showWeeklyRevisionPopup(syllabusKey, classSelect.value, () => {
+      showFeatureRequestPopup("lesson-completed");
       if (!nextLesson) {
         renderTopics();
         return;
