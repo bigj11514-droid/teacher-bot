@@ -1998,7 +1998,7 @@ const oxfordComputingLessons = {
       "Explore and export a 3D model": {
         lesson: "A 2D image is flat and is seen from one view. A 3D model has height, width, and depth, so you can turn it to see different sides. CAD means Computer-Aided Design: software used to plan models on a computer. CAM can use a design to help make a real object, including by 3D printing it layer by layer. Virtual Reality can let you explore a 3D place. In a 3D Viewer, turn and zoom the model, set the light, then export a picture as PNG or JPG.",
         vocabulary: { "2D image": "A flat picture with height and width.", "3D model": "A digital object with height, width, and depth.", CAD: "Computer software used to design objects.", CAM: "Using a computer design to help make an object.", "Virtual Reality": "A computer-made place you can look around in." },
-        diagram: "<div class=\"learning-diagram model-diagram\"><div><strong>2D</strong><span>Flat · one view</span></div><span aria-hidden=\"true\">→</span><div><strong>3D</strong><span>Depth · turn to see sides</span></div></div>",
+        diagram: "<div class=\"learning-diagram model-diagram\"><div><strong>2D</strong><span>Flat · one view</span></div><span aria-hidden=\"true\">→</span><div><strong>3D</strong><span>Depth · turn to see sides</span></div></div><div class=\"learning-diagram camera-grid\" role=\"img\" aria-label=\"Rule of thirds camera framing guide\"><span class=\"camera-subject\">Place the main subject near a grid crossing</span></div><p class=\"diagram-caption\">Camera tip: use the rule of thirds. Imagine two lines across and two down, then place the main subject near a crossing point.</p>",
         examples: [{ title: "Export a model picture", problem: "Save a view of a 3D model as an image.", steps: ["Open the model in 3D Viewer.", "Rotate and zoom to choose a view.", "Set the lighting and export a snapshot."], result: "You have a PNG or JPG picture of the model." }],
         questions: [["What can you do with a 3D model that you cannot do with a flat 2D image?", ["Turn it to see different sides", "Give it a file name", "Save it", "Look at it on a screen"], 0]],
       },
@@ -2941,6 +2941,56 @@ function getLessonExtras(syllabusKey, subject, topic, subtopic, lesson) {
   };
 }
 
+function escapeLearningText(value) {
+  return String(value || "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[character]);
+}
+
+function getLevelFriendlyVocabulary(lesson, contextText, className) {
+  const classKey = String(className || getClassKey()).toLowerCase();
+  const early = /^(basic1|basic2|basic3)$/.test(classKey);
+  const middle = /^(basic4|basic5|basic6|jhs1)$/.test(classKey);
+  const glossary = {
+    algorithm: ["A list of steps for solving a problem.", "A set of ordered instructions that solves a task.", "A finite, ordered procedure for solving a problem."],
+    evidence: ["A clue that helps show what is true.", "Information that supports an answer.", "Information used to support a claim or conclusion."],
+    data: ["Facts or numbers we collect.", "Information collected so we can answer a question.", "Recorded facts or measurements used for analysis."],
+    variable: ["A letter or box that can stand for a number.", "A symbol whose value can change or be unknown.", "A quantity represented by a symbol that may vary."],
+    fraction: ["A number that shows part of a whole.", "A way to show equal parts of a whole.", "A ratio comparing a part with a whole."],
+    numerator: ["The top number in a fraction; it tells how many parts.", "The number above the line showing selected parts.", "The term above the fraction bar, indicating the counted parts."],
+    denominator: ["The bottom number in a fraction; it tells how many equal parts.", "The number below the line showing total equal parts.", "The term below the fraction bar, indicating equal divisions."],
+    estimate: ["A close answer we find by thinking.", "A near answer that helps us check our work.", "An approximate value used to check whether an answer is reasonable."],
+    equation: ["A maths sentence that says two sides are equal.", "A statement that two expressions have the same value.", "A mathematical statement asserting equality between expressions."],
+    compare: ["Look at two things and say how they are alike or different.", "Identify similarities and differences between two items.", "Examine similarities and differences using relevant features."],
+    analyse: ["Look closely at parts to understand something.", "Break information into parts and see how they connect.", "Examine components and relationships to draw a conclusion."],
+    analyze: ["Look closely at parts to understand something.", "Break information into parts and see how they connect.", "Examine components and relationships to draw a conclusion."],
+    hypothesis: ["A smart guess we can check.", "A possible answer that can be tested.", "A testable proposed explanation for an observation."],
+    ecosystem: ["Living things and the place where they live.", "Living things interacting with one another and their environment.", "A community of organisms interacting with their physical environment."],
+    energy: ["What helps things move or change.", "The ability to cause movement or change.", "The capacity to do work or cause change."],
+    force: ["A push or a pull.", "A push or pull that can change an object's motion.", "An interaction that changes or tends to change motion."],
+    hyperlink: ["Words or a picture you can click to open another page.", "A clickable link that opens another page or file.", "A link that connects a document to another resource."],
+    collaborate: ["Work together with someone.", "Share ideas and work with other people.", "Coordinate work with others toward a shared outcome."],
+    proofing: ["Check writing for mistakes.", "Review writing to find and correct errors.", "Review text for spelling, grammar, and clarity."],
+    "shared drive": ["A shared folder on a school's computer network.", "A network folder that a group can use together.", "A shared network location for storing and accessing files."],
+    "virtual reality": ["A computer-made place you can look around in.", "A computer-created environment that you can explore.", "A simulated environment designed for interactive exploration."],
+    "computer-aided design": ["Computer software used to plan a design.", "Software that helps people create and edit designs.", "Software used to create, modify, and test design models."],
+  };
+  const text = String(contextText || "").toLowerCase();
+  const provided = lesson?.vocabulary && typeof lesson.vocabulary === "object"
+    ? Object.entries(lesson.vocabulary)
+    : [];
+  const knownTerms = new Set(provided.map(([term]) => term.toLowerCase()));
+  Object.keys(glossary).forEach((term) => {
+    if (text.includes(term) && !knownTerms.has(term)) {
+      const definitionIndex = early ? 0 : middle ? 1 : 2;
+      provided.push([term.replace(/\b\w/g, (letter) => letter.toUpperCase()), glossary[term][definitionIndex]]);
+    }
+  });
+  if (!provided.length) return "";
+  const levelLabel = early ? "Short and simple" : middle ? "Step-by-step" : "Subject vocabulary";
+  return `<section class="learning-vocabulary"><h3>Words for your level <span>${levelLabel}</span></h3><dl>${provided.map(([term, definition]) => `<div><dt>${escapeLearningText(term)}</dt><dd>${escapeLearningText(definition)}</dd></div>`).join("")}</dl></section>`;
+}
+
 function getYouTubeEmbedUrl(url) {
   if (!url) return "";
   const match = url.match(
@@ -3633,7 +3683,7 @@ function setupLearningSpace() {
 
   updateClassChoices();
   syllabusSelect.addEventListener("change", updateClassChoices);
-  topicSearch.addEventListener("input", renderTopics);
+  topicSearch.addEventListener("input", () => renderTopics());
   subjectSelect.addEventListener("change", () => {
     if (
       getSyllabusDepartment(syllabusSelect.value) === "basic" &&
@@ -3793,7 +3843,14 @@ function setupLearningSpace() {
     subtopic,
     { showVideo = true } = {},
   ) => {
-    activeLessonMeta = { subject, topic, subtopic };
+    activeLessonMeta = {
+      subject,
+      topic,
+      subtopic,
+      syllabus: syllabusKey,
+      department: selectedDepartment,
+      className: classSelect.value,
+    };
     activeLesson = syllabus.topics[subject][topic][subtopic];
     saveLessonResume(subject, topic, subtopic);
     const contentOverride = getLessonOverride(
@@ -3828,6 +3885,12 @@ function setupLearningSpace() {
             result: "You are ready to practise.",
           },
         ];
+    const vocabularyHtml = getLevelFriendlyVocabulary(
+      activeLesson,
+      `${subject} ${topic} ${subtopic} ${contentOverride.lesson || activeLesson.lesson}`,
+      classSelect.value,
+    );
+    const diagramHtml = activeLesson.diagram || "";
     const examples = Array.from(
       { length: 5 },
       (_, index) => lessonExamples[index % lessonExamples.length],
@@ -3854,7 +3917,7 @@ function setupLearningSpace() {
       : videoUrl
         ? `<div class="lesson-video-box"><h3>▶ Lesson video</h3>${videoHeader}<div class="video-wrapper">${/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl) ? `<video controls src="${videoUrl}">Your browser cannot play this video.</video>` : `<iframe src="${videoUrl}" title="${subtopic} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`}</div>${videoCredit}</div>`
         : `<div class="lesson-video-box"><h3>▶ Lesson video</h3><p>No video has been added for this lesson yet. Add its URL in <code>LESSON_VIDEO_URLS</code> in teacherbot.js.</p></div>`;
-    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div><section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
+    space.innerHTML = `<button class="back-link" id="back-to-topics">← All topics</button><article class="lesson-card"><p class="eyebrow">${subject} · ${topic}</p><div class="lesson-timer" id="lesson-timer" role="timer" aria-live="polite"></div><h2>${subtopic}</h2>${lessonImage}<div class="lesson-copy"><p>${contentOverride.lesson || activeLesson.lesson}</p></div>${vocabularyHtml}${diagramHtml}<section class="examples-section"><h3>✦ Five examples</h3>${examples}</section><button class="btn" id="finish-lesson">I am done learning</button></article>`;
     activeLesson._guidedVideo = video;
     activeLesson._guidedQuestions = extras.questions;
     // CONTENT-STUDIO QUESTIONS: exact five-question sets saved by an admin or
