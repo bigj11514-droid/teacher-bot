@@ -1941,9 +1941,85 @@ const BASIC6_3D_MODELS_QUIZ = [
 // available shared subject map until Oxford-specific lesson content is added.
 learningCatalog.oxford = {
   ...learningCatalog.ges,
-  name: "Oxford Curriculum (shared lesson map)",
+  name: "Oxford International Computing",
   topics: JSON.parse(JSON.stringify(learningCatalog.ges.topics)),
 };
+
+// Oxford Computing study notes requested for the Learning & Revision page.
+// Each class gets a focused catalogue so students only see their own units.
+const oxfordComputingLessons = {
+  basic3: {
+    "First Term · Unit 1.6: Creative Media – Add Shapes with Text (Pages 26–27)": {
+      "Add shapes with text": {
+        lesson: "Open your document. Choose Insert, then Shapes. Pick a shape such as a star or box. Drag on the page to draw it, click inside, and type your words. Use Shape Styles to change its colour and outline. Turn the shape with the circle handle at the top. WordArt Styles can make the words look special.",
+        vocabulary: { Shape: "A picture object, such as a star or box, that you can add to a page.", Format: "Change how something looks, such as its colour, size, border, or words." },
+        examples: [{ title: "Make a hobby badge", problem: "Add a star and write your hobby inside.", steps: ["Choose Insert → Shapes.", "Pick a star and drag to draw it.", "Click inside and type your hobby."], result: "Your words appear inside the star." }],
+        questions: [["How do you rotate a shape on a page?", ["Click the turning circle at the top", "Double-click the text", "Press Delete", "Change font colour"], 0]],
+      },
+    },
+  },
+  basic4: {
+    "First Term · Unit 1.5: Edit a Document Together (Pages 24–25)": {
+      "Work together on a document": {
+        lesson: "Collaborating means working with other people on a document. You can share a file in a Shared Drive on your school network or in the Cloud online. Track Changes is under Review. It shows edits in coloured mark-up and deleted words in the margin. Authors can accept or reject each edit. To leave feedback, highlight words, choose Review, then New Comment. A comment appears in the page margin and others can reply.",
+        vocabulary: { Collaborating: "Working together with other people.", Cloud: "Online storage where you can keep and open files using the internet.", "Shared Drive": "A shared folder on a school's computer network.", "Mark-up": "Coloured text that shows a change.", "Track Changes": "A tool that records edits made to a document." },
+        examples: [{ title: "Review a class story", problem: "A classmate changes one sentence.", steps: ["Open Review → Track Changes.", "Read the coloured edit.", "Accept it to keep it or reject it to remove it."], result: "The document shows which edits were kept." }],
+        questions: [["Where can you find Track Changes?", ["Review menu", "Insert menu", "File name", "Page footer"], 0]],
+      },
+    },
+    "First Term · Unit 1.6: Finalize a Document (Pages 26–27)": {
+      "Find, replace, and proofread": {
+        lesson: "Find searches a document for a word or phrase. Replace swaps that word for a new one. Find Next lets you check each match. Replace All changes every match at once. Proofreading means checking your work for spelling and grammar errors. A red underline can point out a spelling mistake. Auto-Correction may fix common typing errors. Open Review → Proofing to see suggested corrections.",
+        vocabulary: { Proofing: "Checking writing for spelling and grammar mistakes.", Find: "Search for a word in a document.", Replace: "Change a word to a different word.", "Spell Checker": "A tool that marks possible spelling mistakes and suggests fixes." },
+        examples: [{ title: "Fix a repeated word", problem: "You used 'teh' several times by mistake.", steps: ["Choose Find and Replace.", "Find 'teh'.", "Replace it with 'the'."], result: "The misspelling is corrected throughout the document." }],
+        questions: [["Which tool can change every matching word at once?", ["Replace All", "Find Next", "New Comment", "Track Changes"], 0]],
+      },
+    },
+  },
+  basic6: {
+    "First Term · Unit 1.1: Parts of a Web Page (Pages 16–17)": {
+      "Web page parts and wireframes": {
+        lesson: "A header is the top of a web page. It can hold a logo, title, and menu. The body is the main area for words and pictures. A footer is at the bottom. Headings introduce sections. A hyperlink is something you can click to open another page. A wireframe is a simple plan that shows where things will go before you build the page. It can use placeholder text. Web pages include static information pages, interactive landing pages, menu pages, registration pages, contact pages, and online shop or gallery pages.",
+        vocabulary: { Header: "The top part of a web page.", Logo: "A picture or symbol for a school, group, or business.", "Navigation Menu": "Links or buttons that help people move to other pages.", Wireframe: "A simple plan showing where page parts will go.", Hyperlink: "Words or a picture you can click to open another page.", Footer: "The bottom part of a web page." },
+        diagram: "<div class=\"learning-diagram wireframe-diagram\" role=\"img\" aria-label=\"Simple web page wireframe\"><strong>HEADER · logo · title · menu</strong><div class=\"wireframe-body\"><span>HEADING</span><span>TEXT</span><span>IMAGE</span></div><strong>FOOTER · links</strong></div>",
+        examples: [{ title: "Plan a school page", problem: "Choose where the school name and picture should go.", steps: ["Put the logo and menu in the header.", "Put the heading, words, and image in the body.", "Put extra links in the footer."], result: "The wireframe shows a clear page plan." }],
+        questions: [["What does a wireframe show?", ["A plan for where parts of a page go", "A finished password", "A computer's battery level", "A list of spelling mistakes"], 0]],
+      },
+    },
+    "First Term · Unit 1.2: Create a Web Page (Pages 18–19)": {
+      "Create and format a safe web page": {
+        lesson: "A web page editor, such as Wix, helps you build a page. A page has a header at the top, a body in the middle, and a footer at the bottom. Add a text box, type your words, then choose a clear heading, font size, and colour. Keep private information safe: never share your full name, phone number, or home address online.",
+        vocabulary: { "Web page editor": "A tool that helps you make a web page.", Header: "The top part of a page.", Body: "The middle part with the main words and pictures.", Footer: "The bottom part of a page.", "Private information": "Personal details that should be kept safe." },
+        examples: [{ title: "Make a safe class page", problem: "Add a heading without sharing personal details.", steps: ["Add a text box.", "Type a class topic, not your home address.", "Make the heading easy to read."], result: "The page shares useful information safely." }],
+        questions: [["Which detail should you keep private online?", ["Your home address", "A page heading", "A class topic", "A public school subject"], 0]],
+      },
+    },
+    "First Term · Unit 1.3: Create Images from 3D Models (Pages 20–21)": {
+      "Explore and export a 3D model": {
+        lesson: "A 2D image is flat and is seen from one view. A 3D model has height, width, and depth, so you can turn it to see different sides. CAD means Computer-Aided Design: software used to plan models on a computer. CAM can use a design to help make a real object, including by 3D printing it layer by layer. Virtual Reality can let you explore a 3D place. In a 3D Viewer, turn and zoom the model, set the light, then export a picture as PNG or JPG.",
+        vocabulary: { "2D image": "A flat picture with height and width.", "3D model": "A digital object with height, width, and depth.", CAD: "Computer software used to design objects.", CAM: "Using a computer design to help make an object.", "Virtual Reality": "A computer-made place you can look around in." },
+        diagram: "<div class=\"learning-diagram model-diagram\"><div><strong>2D</strong><span>Flat · one view</span></div><span aria-hidden=\"true\">→</span><div><strong>3D</strong><span>Depth · turn to see sides</span></div></div>",
+        examples: [{ title: "Export a model picture", problem: "Save a view of a 3D model as an image.", steps: ["Open the model in 3D Viewer.", "Rotate and zoom to choose a view.", "Set the lighting and export a snapshot."], result: "You have a PNG or JPG picture of the model." }],
+        questions: [["What can you do with a 3D model that you cannot do with a flat 2D image?", ["Turn it to see different sides", "Give it a file name", "Save it", "Look at it on a screen"], 0]],
+      },
+    },
+  },
+};
+
+Object.entries(oxfordComputingLessons).forEach(([classKey, topics]) => {
+  learningCatalog[`oxford-${classKey}`] = {
+    name: "Oxford International Computing",
+    years: [classKey.replace("basic", "Basic ")],
+    topics: { Computing: topics },
+  };
+});
+
+function getLearningSyllabus(syllabusKey, className) {
+  if (syllabusKey === "oxford" && learningCatalog[`oxford-${className}`]) {
+    return learningCatalog[`oxford-${className}`];
+  }
+  return learningCatalog[syllabusKey] || learningCatalog.ges;
+}
 
 function createBasicIctSyllabus(className) {
   const terms = BASIC_ICT_WEEKS[className];
