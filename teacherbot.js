@@ -2070,12 +2070,12 @@ function createBasicIctSyllabus(className) {
             ? "Use the eraser to correct mistakes in a drawing. Layers work like transparent sheets, letting you draw and erase one part without changing the others. Add facial features on a new top layer, then save your work."
             : is3DModelsQuiz
               ? "A 2D picture shows an object from one direction, while a 3D model contains information about all its parts and can be turned to view it from different directions. Designers use CAD and CAM tools to create products, explore models, and export 2D images for projects and web pages."
-            : `${name} introduces an important idea in ${topic}. Learn the key terms, look at how the idea works, and practise using it in a familiar situation. Remember to work carefully, make safe choices, and check your work.`,
+            : explainBasicIctWeek(topic, name, className),
           questions: isMakeChangesQuiz
             ? DIGITAL_DRAWING_MAKE_CHANGES_QUIZ
             : is3DModelsQuiz
               ? BASIC6_3D_MODELS_QUIZ
-              : [[`What is the main idea of “${name}” in ${topic}?`, [name, "Ignore the topic", "Stop before practising", "Share private information"], 0]],
+              : [[`In “${name}”, what should you use to practise the idea from ${topic}?`, [basicIctPracticeContext(topic, name), "Ignore the steps and guess", "Share private information", "Skip checking your work"], 0]],
           ...(isMakeChangesQuiz || is3DModelsQuiz
             ? { _hasManagedQuestions: true }
             : {}),
@@ -2085,6 +2085,63 @@ function createBasicIctSyllabus(className) {
     }
   });
   return { name: `${className} ICT curriculum`, years: [className], topics };
+}
+
+// Write the lesson note from the actual weekly unit and subtopic. This keeps
+// the generated Basic ICT weeks useful without changing how they are displayed.
+function explainBasicIctWeek(topic, weekName, className) {
+  const title = `${topic} — ${weekName}`;
+  const subject = topic.toLowerCase();
+  const week = weekName.toLowerCase();
+  const explanations = [
+    [/creative media|drawing|poster|document|photo|web page|illustrat|chart|factsheet/, () => {
+      if (/template/.test(week)) return `A template is a ready-made page layout. For ${title}, choose a template that suits your purpose, then add your own title and content in the spaces provided. Check that your work is easy to read.`;
+      if (/text|sentence|heading|title|label|word/.test(week)) return `Text gives the reader information. In ${title}, add or edit words so they explain the picture or subject clearly. Use a title or heading to show what the work is about, then check spelling and readability.`;
+      if (/image|picture|photo|media/.test(week)) return `Images help people understand and remember information. In ${title}, choose a picture that matches your message, place it carefully, and make changes such as resizing or cropping without hiding important details.`;
+      if (/shape|line|colour|format|style/.test(week)) return `Formatting changes how a piece of work looks. In ${title}, use suitable colours, shapes, and styles to make the main information stand out while keeping the page clear.`;
+      if (/edit|change|correct|mistake|proof|final|check/.test(week)) return `Editing means improving work after a first attempt. In ${title}, review the content, correct mistakes, and check that each part is clear before saving or sharing it.`;
+      if (/3d|model/.test(week)) return `A 3D model represents an object with height, width, and depth. In ${title}, explore the model from different views and notice how its parts fit together before using or saving an image of it.`;
+      return `In ${title}, plan the message first, then use the right digital tools to create and improve the work. Keep text and images clear, save your changes, and check the finished result.`;
+    }],
+    [/digital literacy|safe|website|search|email|messag|internet|online|feedback|kind|personal information/, () => {
+      if (/search|result|website|link|bookmark/.test(week)) return `A search engine helps find pages on the web. In ${title}, choose useful search words, open reliable results, and check who made the page before using its information.`;
+      if (/email|reply|send|message/.test(week)) return `Email and messaging let people communicate online. In ${title}, choose the correct recipient, write a clear and polite message, and check it before sending. Keep passwords and private details to yourself.`;
+      if (/safe|private|password|cookie|footprint|advert|fake/.test(week)) return `Being safe online means protecting personal information and making careful choices. In ${title}, pause before sharing, check whether information is trustworthy, and ask a trusted adult if something worries you.`;
+      return `Digital literacy means using online tools thoughtfully and kindly. In ${title}, consider who will see your words, use respectful language, protect private information, and check that online content is useful.`;
+    }],
+    [/computational thinking|algorithm|input|output|operator|plan|logic|data|survey|spreadsheet|parcel|snack bar/, () => {
+      if (/input|output/.test(week)) return `An input is information or an action a computer receives; an output is the result it gives. In ${title}, identify what goes in, what the computer does with it, and what result comes out.`;
+      if (/algorithm|order|plan|step|requirement|break|parts|reuse/.test(week)) return `An algorithm is a set of ordered steps for solving a problem. In ${title}, describe the goal, put the steps in a sensible order, and check that they cover the whole task.`;
+      if (/operator|number|total|calculate|formula|if/.test(week)) return `A computer can follow rules to calculate or compare values. In ${title}, identify the values, choose the operation or condition that fits, and check the result with a simple example.`;
+      if (/spreadsheet|table|sort|filter|validation|cell|range|label|value/.test(week)) return `A spreadsheet organises information in rows and columns. In ${title}, use labels to explain the data, keep each value in the correct cell, and use the named tool or formula to find the result you need.`;
+      if (/survey|data|chart|analyse|analysis/.test(week)) return `Data is information collected to answer a question. In ${title}, gather relevant responses, organise them clearly, look for patterns, and explain what the evidence shows.`;
+      return `Computational thinking means breaking a problem into clear parts and choosing steps that solve it. In ${title}, identify the input or starting information, follow the stated rules, and check the output against the goal.`;
+    }],
+    [/programming|drawing bug|scratch|frog|parrot|game|robot|code|script|block|motion|loop|variable|error/, () => {
+      if (/error|debug|fix/.test(week)) return `Debugging means finding and correcting a problem in a program. In ${title}, run the program, notice what differs from the intended result, inspect the relevant instructions, and test one change at a time.`;
+      if (/variable/.test(week)) return `A variable is a named place where a program stores a value that may change. In ${title}, track when the value is set or updated and observe how that changes what the program does.`;
+      if (/loop|forever|repeat/.test(week)) return `A loop repeats one or more instructions. In ${title}, identify the instructions being repeated and the condition or event that lets the repetition stop.`;
+      if (/input|keyboard|mouse|control/.test(week)) return `A program can use input, such as a key press or mouse action, to decide what happens next. In ${title}, connect the input to the correct instruction and test how the program responds.`;
+      if (/robot|motion|turn|degree|move/.test(week)) return `Programs control movement through instructions such as move and turn. In ${title}, follow the instructions in order, use the stated direction or angle, and compare the result with the intended path.`;
+      return `A program is a set of instructions a computer follows. In ${title}, identify the event that starts the program, follow each instruction in order, and test whether the result matches the goal.`;
+    }],
+    [/understanding technology|computer|network|device|robot|technology|survey|community/, () => {
+      if (/network|internet|connection|service/.test(week)) return `A computer network connects devices so they can share information or services. In ${title}, identify the devices involved, how they connect, and one useful or safe way people use the connection.`;
+      if (/input device|output device/.test(week)) return `An input device sends information to a computer; an output device presents information from it. In ${title}, identify what a device does and choose an example that matches its role.`;
+      if (/robot/.test(week)) return `A robot is a machine that can carry out actions, often by following instructions or using sensors. In ${title}, describe the task it performs and consider one benefit and one limitation.`;
+      return `Technology is made of tools and systems people use to solve problems. In ${title}, identify the device or system, explain what people use it for, and consider a helpful choice or limitation.`;
+    }],
+  ];
+  const match = explanations.find(([pattern]) => pattern.test(subject));
+  const levelNote = /Basic [1-3]/.test(className)
+    ? " Try the steps one at a time and ask for help if you get stuck."
+    : " Explain why your chosen steps or tools fit the task.";
+  return `${match ? match[1]() : `In ${title}, learn the main idea, see how it applies to ${topic}, and practise it with a clear example. Check your answer against the goal.`}${levelNote}`;
+}
+
+function basicIctPracticeContext(topic, weekName) {
+  const context = topic.split(":").slice(1).join(":").trim() || topic;
+  return `Use the steps or tool taught in “${weekName}” to complete a small ${context.toLowerCase()} task, then check your result.`;
 }
 
 for (let grade = 1; grade <= 6; grade++) {
@@ -2287,11 +2344,11 @@ function createExtraLesson(subject, topic, step, number) {
   // extra practice lessons added across the Basic curriculum.
   const title = `${topic}: ${step}`;
   return {
-    lesson: `${step} helps you build confidence in ${topic}. Read the earlier lesson, identify the main idea, and use it to solve a small problem. Learning one step at a time makes the whole ${topic} topic easier to understand.`,
+    lesson: buildDepartmentLessonText(subject, topic, step),
     examples: [
       {
         title: "How to practise",
-        problem: `Use one idea from ${topic} in a daily-life situation.`,
+        problem: departmentPracticePrompt(subject, topic, step),
         steps: [
           "Read the question carefully.",
           "Choose the idea or method that fits.",
@@ -2347,16 +2404,47 @@ function createDepartmentLesson(subject, topic, subtopic) {
   // DEPARTMENT GENERATOR: JHS and SHS lessons begin with no shared questions.
   // getFiveQuizQuestions creates the lesson's class-level question bank.
   return {
-    lesson: `${subtopic} is part of the ${subject} topic, ${topic}. Read the lesson, study the examples, and practise before moving forward.`,
+    lesson: buildDepartmentLessonText(subject, topic, subtopic),
     questions: [],
     generated: true,
     examples: Array.from({ length: 5 }, (_, index) => ({
       title: `${subtopic} example ${index + 1}`,
-      problem: `Apply ${subtopic} to a ${subject} situation.`,
+      problem: departmentPracticePrompt(subject, topic, subtopic),
       steps: ["Read the task.", "Use the lesson idea.", "Check the result."],
       result: `A correct ${subtopic} response.`,
     })),
   };
+}
+
+// Generated department lessons draw their explanation and task from the
+// subject area and named topic instead of repeating a generic study prompt.
+function buildDepartmentLessonText(subject, topic, subtopic) {
+  const area = subject.toLowerCase();
+  const step = subtopic.replace(/^\d+\.\s*/, "");
+  const title = `${step} in ${topic}`;
+  const explanations = [
+    [/math/.test(area), `In ${title}, identify the information given, choose a suitable mathematical method, and show each step. Check the answer by estimating or using the inverse operation.`],
+    [/science/.test(area), `In ${title}, observe the evidence, identify the science idea it shows, and explain the result using what you know. Keep the observation separate from your explanation.`],
+    [/english|language/.test(area), `In ${title}, focus on how words and sentences communicate meaning. Read the example carefully, identify the language feature being practised, then use it in your own clear sentence.`],
+    [/history/.test(area), `In ${title}, place the people or events in context. Use evidence from the source, distinguish fact from opinion, and explain what the evidence suggests about the past.`],
+    [/religious|moral/.test(area), `In ${title}, consider the belief, value, or choice being discussed. Explain the idea in your own words and connect it to a respectful action in everyday life.`],
+    [/creative|arts|media/.test(area), `In ${title}, plan what you want to communicate, choose suitable materials or techniques, and make a creative response. Review how well the finished work expresses your idea.`],
+    [/our world|social|geography/.test(area), `In ${title}, look at how people, places, and resources are connected. Use a relevant example, describe the pattern or issue, and explain its effect on a community.`],
+    [/comput|ict|technology/.test(area), `In ${title}, identify the digital tool or computing idea involved, follow its steps, and check whether the result meets the task. Use devices and information responsibly.`],
+  ].find(([matches]) => matches);
+  return explanations?.[1] || `In ${title}, identify the main idea, connect it to ${subject}, and practise it with a clear example. Explain your steps and check that your result fits the task.`;
+}
+
+function departmentPracticePrompt(subject, topic, subtopic) {
+  const area = subject.toLowerCase();
+  if (/math/.test(area)) return `Solve a short problem using “${subtopic}” from ${topic}. Show your method and check the answer.`;
+  if (/science/.test(area)) return `Use a familiar observation to explain “${subtopic}” from ${topic}. State what you observe and what it means.`;
+  if (/english|language/.test(area)) return `Write a short example that uses “${subtopic}” from ${topic} clearly and correctly.`;
+  if (/history/.test(area)) return `Use one piece of evidence to explain “${subtopic}” from ${topic} in its historical context.`;
+  if (/religious|moral/.test(area)) return `Describe a respectful everyday example of “${subtopic}” from ${topic}.`;
+  if (/creative|arts|media/.test(area)) return `Make a small creative response that demonstrates “${subtopic}” from ${topic}.`;
+  if (/our world|social|geography/.test(area)) return `Give a real-life example of “${subtopic}” from ${topic} and explain its effect on people or places.`;
+  return `Apply “${subtopic}” from ${topic} to a practical ${subject} task and explain how you checked your result.`;
 }
 
 function createJhsCatalog() {
