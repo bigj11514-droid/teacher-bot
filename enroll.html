@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Register your interest in Y_Cohde Software Engineering and Computer Science learning programmes." />
+    <title>Tech Programs | Y_Cohde</title>
+    <link rel="stylesheet" href="teacher.css" />
+    <style>
+      .program-page { min-height: 100vh; padding: 22px; }
+      .program-header { width: min(100%, 780px); margin: 0 auto 18px; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+      .program-header nav { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); }
+      .program-header a:hover, .program-header a:focus-visible { color: var(--accent); }
+      .program-card { width: min(100%, 780px); margin: 0 auto; padding: clamp(22px, 5vw, 42px); border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
+      .program-card h1 { margin: 8px 0 10px; }
+      .program-card > p { color: var(--muted); line-height: 1.65; }
+      .program-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+      .program-option { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.06); }
+      .program-option strong { color: var(--accent); }
+      .program-option span { color: var(--muted); line-height: 1.5; }
+      .program-form { display: grid; gap: 14px; margin-top: 22px; }
+      .program-form label { display: grid; gap: 7px; color: var(--muted); }
+      .program-form input, .program-form select, .program-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.06); color: var(--text); }
+      .program-form select option { color: #071f2d; }
+      .program-form textarea { min-height: 96px; resize: vertical; }
+      .program-note { margin-top: 14px; font-size: .95rem; }
+      @media (max-width: 560px) { .program-page { padding: 14px; } .program-header { align-items: flex-start; flex-direction: column; } .program-options { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body class="program-page">
+    <header class="program-header">
+      <a class="simple-brand" href="index.html">Y_Cohde</a>
+      <nav aria-label="Main navigation">
+        <a href="index.html">Dashboard</a>
+        <a href="department.html">School courses</a>
+      </nav>
+    </header>
+    <main class="program-card">
+      <p class="eyebrow">Explore technology careers</p>
+      <h1>Join a Software Engineering or Computer Science program</h1>
+      <p>Interested students can send an enrollment request here. Choose the program you want to learn, add your contact details, and continue in WhatsApp to send the request to Y_Cohde.</p>
+
+      <div class="program-options" aria-label="Available programs">
+        <article class="program-option">
+          <strong>Software Engineering</strong>
+          <span>Learn how to plan, build, test, and improve software.</span>
+        </article>
+        <article class="program-option">
+          <strong>Computer Science</strong>
+          <span>Explore programming, algorithms, data, and how computers work.</span>
+        </article>
+      </div>
+
+      <form id="program-enrollment-form" class="program-form">
+        <label for="enrollment-name">Student name
+          <input id="enrollment-name" name="name" autocomplete="name" required />
+        </label>
+        <label for="enrollment-email">Email address
+          <input id="enrollment-email" name="email" type="email" autocomplete="email" required />
+        </label>
+        <label for="enrollment-program">Program of interest
+          <select id="enrollment-program" name="program" required>
+            <option value="">Choose a program</option>
+            <option>Software Engineering</option>
+            <option>Computer Science</option>
+          </select>
+        </label>
+        <label for="enrollment-level">Current class or education level
+          <input id="enrollment-level" name="level" placeholder="For example: JHS 3, SHS 2, or university" required />
+        </label>
+        <label for="enrollment-message">What would you like to learn? (optional)
+          <textarea id="enrollment-message" name="message" maxlength="500" placeholder="Tell us a little about your interests."></textarea>
+        </label>
+        <button type="submit" class="btn">Continue to WhatsApp to send request</button>
+      </form>
+      <p class="program-note" id="enrollment-status" role="status" aria-live="polite">Your request will open as a WhatsApp message for you to review and send.</p>
+    </main>
+    <script>
+      document.getElementById("program-enrollment-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const details = [
+          "Hello Y_Cohde, I would like to enrol in a tech program.",
+          `Name: ${form.get("name").trim()}`,
+          `Email: ${form.get("email").trim()}`,
+          `Program: ${form.get("program")}`,
+          `Current level: ${form.get("level").trim()}`,
+          form.get("message").trim() ? `What I would like to learn: ${form.get("message").trim()}` : "",
+        ].filter(Boolean).join("\n");
+        const whatsappUrl = `https://wa.me/233207918169?text=${encodeURIComponent(details)}`;
+        window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+        document.getElementById("enrollment-status").textContent = "WhatsApp opened with your request. Review it there and press Send to contact Y_Cohde.";
+      });
+    </script>
+  </body>
+</html>

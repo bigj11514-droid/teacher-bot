@@ -2664,15 +2664,15 @@ function showWeeklyRevisionPopup(syllabusKey, className, onClose) {
   );
   if (!lessons.length) { onClose(); return; }
 
-  const questionSet = lessons.map(([key, item]) => {
+  const questionPool = lessons.flatMap(([key, item]) => {
     const syllabus = getLearningSyllabus(syllabusKey, item.className || className);
     const lesson = syllabus.topics?.[item.subject]?.[item.topic]?.[item.subtopic];
-    const [question, answers, correct] = getFiveQuizQuestions(
+    return getFiveQuizQuestions(
       lesson || { lesson: "Review the key idea from this topic." }, item.subtopic, undefined,
       { subject: item.subject, topic: item.topic, subtopic: item.subtopic, syllabus: syllabusKey, className: item.className || className },
-    )[0];
-    return { key, item, question, answers, correct };
+    ).map(([question, answers, correct]) => ({ key, item, question, answers, correct }));
   });
+  const questionSet = shuffleArray(questionPool).slice(0, 8);
   let index = 0;
   let score = 0;
   let modal = document.getElementById("weekly-revision-modal");
