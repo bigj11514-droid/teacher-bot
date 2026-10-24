@@ -14,6 +14,18 @@
       .program-card { width: min(100%, 780px); margin: 0 auto; padding: clamp(22px, 5vw, 42px); border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
       .program-card h1 { margin: 8px 0 10px; }
       .program-card > p { color: var(--muted); line-height: 1.65; }
+      .course-choice-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(2,10,20,.84); backdrop-filter: blur(8px); }
+      .course-choice-backdrop[hidden], .program-form[hidden] { display: none; }
+      .course-choice-dialog { width: min(100%, 760px); padding: clamp(22px, 5vw, 38px); border: 1px solid var(--border-strong); border-radius: 24px; background: var(--panel-stronger); box-shadow: var(--glow); }
+      .course-choice-dialog h1 { margin: 8px 0; }
+      .course-choice-dialog > p { color: var(--muted); line-height: 1.6; }
+      .course-choice-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+      .course-choice-button { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.07); color: var(--text); text-align: left; cursor: pointer; }
+      .course-choice-button:hover, .course-choice-button:focus-visible { border-color: var(--accent); box-shadow: var(--glow); }
+      .course-choice-button img { width: 100%; aspect-ratio: 16 / 8.5; object-fit: cover; border-radius: 12px; }
+      .course-choice-button strong { color: var(--accent); font-size: 1.15rem; }
+      .course-choice-button span { color: var(--muted); line-height: 1.5; }
+      .selected-program { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; color: var(--accent); }
       .program-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
       .program-option { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.06); overflow: hidden; }
       .program-option img { width: 100%; aspect-ratio: 16 / 8.5; object-fit: cover; border: 1px solid var(--border); border-radius: 12px; }
@@ -26,6 +38,7 @@
       .program-form textarea { min-height: 96px; resize: vertical; }
       .program-note { margin-top: 14px; font-size: .95rem; }
       @media (max-width: 560px) { .program-page { padding: 14px; } .program-header { align-items: flex-start; flex-direction: column; } .program-options { grid-template-columns: 1fr; } }
+      @media (max-width: 560px) { .course-choice-list { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body class="program-page">
@@ -36,6 +49,25 @@
         <a href="department.html">School courses</a>
       </nav>
     </header>
+    <div class="course-choice-backdrop" id="course-choice-popup">
+      <section class="course-choice-dialog" role="dialog" aria-modal="true" aria-labelledby="course-choice-title">
+        <p class="eyebrow">Choose your learning path</p>
+        <h1 id="course-choice-title">Which course would you like to take?</h1>
+        <p>Select a course first. We’ll ask for your details after you choose.</p>
+        <div class="course-choice-list">
+          <button class="course-choice-button" type="button" data-course-choice="Software Engineering">
+            <img src="software-engineering.svg" alt="" />
+            <strong>Software Engineering</strong>
+            <span>Plan, build, test, and improve software.</span>
+          </button>
+          <button class="course-choice-button" type="button" data-course-choice="Computer Science">
+            <img src="computer-science.svg" alt="" />
+            <strong>Computer Science</strong>
+            <span>Explore programming, algorithms, data, and computing.</span>
+          </button>
+        </div>
+      </section>
+    </div>
     <main class="program-card">
       <p class="eyebrow">Explore technology careers</p>
       <h1>Join a Software Engineering or Computer Science program</h1>
@@ -54,14 +86,9 @@
         </article>
       </div>
 
-      <form id="program-enrollment-form" class="program-form">
-        <label for="enrollment-program">Choose the program you want to take
-          <select id="enrollment-program" name="program" required>
-            <option value="">Choose a program</option>
-            <option>Software Engineering</option>
-            <option>Computer Science</option>
-          </select>
-        </label>
+      <form id="program-enrollment-form" class="program-form" hidden>
+        <div class="selected-program"><span>Selected course: <strong id="selected-program-name"></strong></span><button class="soft-btn" id="change-program" type="button">Change</button></div>
+        <input id="selected-program" name="program" type="hidden" required />
         <label for="enrollment-name">Student name
           <input id="enrollment-name" name="name" autocomplete="name" required />
         </label>
@@ -79,7 +106,24 @@
       <p class="program-note" id="enrollment-status" role="status" aria-live="polite">Your request will open as a WhatsApp message for you to review and send.</p>
     </main>
     <script>
-      document.getElementById("program-enrollment-form").addEventListener("submit", (event) => {
+      const coursePopup = document.getElementById("course-choice-popup");
+      const enrollmentForm = document.getElementById("program-enrollment-form");
+      const selectedProgram = document.getElementById("selected-program");
+      document.querySelectorAll("[data-course-choice]").forEach((choice) => {
+        choice.addEventListener("click", () => {
+          selectedProgram.value = choice.dataset.courseChoice;
+          document.getElementById("selected-program-name").textContent = selectedProgram.value;
+          coursePopup.hidden = true;
+          enrollmentForm.hidden = false;
+          document.getElementById("enrollment-name").focus();
+        });
+      });
+      document.getElementById("change-program").addEventListener("click", () => {
+        enrollmentForm.hidden = true;
+        coursePopup.hidden = false;
+        coursePopup.querySelector("[data-course-choice]").focus();
+      });
+      enrollmentForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         const details = [
