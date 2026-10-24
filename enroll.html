@@ -14,9 +14,9 @@
       .program-card { width: min(100%, 780px); margin: 0 auto; padding: clamp(22px, 5vw, 42px); border: 1px solid var(--border); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
       .program-card h1 { margin: 8px 0 10px; }
       .program-card > p { color: var(--muted); line-height: 1.65; }
-      .course-choice-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(2,10,20,.84); backdrop-filter: blur(8px); }
+      .course-choice-backdrop { position: fixed; inset: 0; z-index: 20; display: block; overflow-y: auto; overscroll-behavior: contain; padding: 20px; background: rgba(2,10,20,.84); backdrop-filter: blur(8px); }
       .course-choice-backdrop[hidden], .program-form[hidden] { display: none; }
-      .course-choice-dialog { width: min(100%, 760px); padding: clamp(22px, 5vw, 38px); border: 1px solid var(--border-strong); border-radius: 24px; background: var(--panel-stronger); box-shadow: var(--glow); }
+      .course-choice-dialog { width: min(100%, 760px); margin: clamp(18px, 5vh, 44px) auto; padding: clamp(22px, 5vw, 38px); border: 1px solid var(--border-strong); border-radius: 24px; background: var(--panel-stronger); box-shadow: var(--glow); }
       .course-choice-dialog h1 { margin: 8px 0; }
       .course-choice-dialog > p { color: var(--muted); line-height: 1.6; }
       .course-choice-list { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 22px; }
