@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bigj11514-droid.github.io/teacher-bot/sitemap.xml
