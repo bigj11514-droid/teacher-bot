@@ -36,8 +36,19 @@
       .program-form select option { color: #071f2d; }
       .program-form textarea { min-height: 96px; resize: vertical; }
       .program-note { margin-top: 14px; font-size: .95rem; }
-      @media (max-width: 560px) { .program-page { padding: 14px; } .program-header { align-items: flex-start; flex-direction: column; } .program-options { grid-template-columns: 1fr; } }
-      @media (max-width: 560px) { .course-choice-list { grid-template-columns: 1fr; } }
+      @media (max-width: 560px) {
+        .program-page { padding: 10px; }
+        .program-header { align-items: flex-start; flex-direction: column; margin-bottom: 12px; }
+        .program-card { padding: 16px; }
+        .course-choice-backdrop { padding: 8px; }
+        .course-choice-dialog { margin: 10px auto; padding: 16px; }
+        .course-choice-list { grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+        .course-choice-button, .program-option { padding: 8px; }
+        .program-options { grid-template-columns: 1fr; gap: 10px; margin: 14px 0; }
+        .program-form { gap: 10px; margin-top: 16px; }
+        .program-form input, .program-form select, .program-form textarea { padding: 10px 12px; }
+        .selected-program { padding: 10px; }
+      }
     </style>
   </head>
   <body class="program-page">
