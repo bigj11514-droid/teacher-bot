@@ -15,7 +15,8 @@
       .program-card h1 { margin: 8px 0 10px; }
       .program-card > p { color: var(--muted); line-height: 1.65; }
       .program-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
-      .program-option { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.06); }
+      .program-option { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.06); overflow: hidden; }
+      .program-option img { width: 100%; aspect-ratio: 16 / 8.5; object-fit: cover; border: 1px solid var(--border); border-radius: 12px; }
       .program-option strong { color: var(--accent); }
       .program-option span { color: var(--muted); line-height: 1.5; }
       .program-form { display: grid; gap: 14px; margin-top: 22px; }
@@ -42,10 +43,12 @@
 
       <div class="program-options" aria-label="Available programs">
         <article class="program-option">
+          <img src="software-engineering.svg" alt="Illustration of a laptop displaying a software project with code and design panels" />
           <strong>Software Engineering</strong>
           <span>Learn how to plan, build, test, and improve software.</span>
         </article>
         <article class="program-option">
+          <img src="computer-science.svg" alt="Illustration of connected computing nodes, data symbols, and a glowing algorithm path" />
           <strong>Computer Science</strong>
           <span>Explore programming, algorithms, data, and how computers work.</span>
         </article>
