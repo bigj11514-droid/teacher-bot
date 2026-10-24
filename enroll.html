@@ -23,14 +23,13 @@
       .course-choice-button { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.07); color: var(--text); text-align: left; cursor: pointer; }
       .course-choice-button:hover, .course-choice-button:focus-visible { border-color: var(--accent); box-shadow: var(--glow); }
       .course-choice-button img { width: 100%; aspect-ratio: 16 / 8.5; object-fit: cover; border-radius: 12px; }
-      .course-choice-button strong { color: var(--accent); font-size: 1.15rem; }
-      .course-choice-button span { color: var(--muted); line-height: 1.5; }
+      .course-choice-button strong, .program-option > strong { color: #fff; font-size: clamp(1.35rem, 2.4vw, 1.8rem); font-weight: 800; line-height: 1.15; text-shadow: 0 0 18px rgba(95,233,255,.32); }
+      .course-choice-button span, .program-option span { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); line-height: 1.5; }
+      .course-choice-button span::before, .program-option span::before { content: "•"; flex: 0 0 auto; color: var(--accent); font-size: 1.3em; line-height: 1.1; }
       .selected-program { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; color: var(--accent); }
       .program-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
       .program-option { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: rgba(127,231,255,.06); overflow: hidden; }
       .program-option img { width: 100%; aspect-ratio: 16 / 8.5; object-fit: cover; border: 1px solid var(--border); border-radius: 12px; }
-      .program-option strong { color: var(--accent); }
-      .program-option span { color: var(--muted); line-height: 1.5; }
       .program-form { display: grid; gap: 14px; margin-top: 22px; }
       .program-form label { display: grid; gap: 7px; color: var(--muted); }
       .program-form input, .program-form select, .program-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.06); color: var(--text); }
