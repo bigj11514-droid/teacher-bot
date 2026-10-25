@@ -11,6 +11,8 @@ python -m pip install -r requirements.txt
 python Backend/app.py
 ```
 
+On Windows, you can also double-click `Backend/start_backend.bat` and keep its console window open while using the site.
+
 Open `http://127.0.0.1:5000`. The Flask app serves the existing website and its API on the same origin, so its login cookie works with the pages. Do not open the HTML directly as a `file://` URL when using accounts.
 
 ## Accounts
