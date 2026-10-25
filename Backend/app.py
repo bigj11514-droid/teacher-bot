@@ -5,12 +5,14 @@ import os
 import secrets
 import sqlite3
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
-from flask import Flask, jsonify, request, session
+from flask import Flask, abort, jsonify, request, send_from_directory, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
+SITE_DIR = BASE_DIR.parent
 DATABASE = Path(os.environ.get("YCOHDE_DATABASE", BASE_DIR / "database.db"))
 ROLES = {"student", "teacher", "administrator"}
 DEPARTMENTS = {"basic", "jhs", "shs"}
@@ -33,8 +35,21 @@ def connect_db():
     return db
 
 
+@contextmanager
+def database():
+    db = connect_db()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
 def init_db():
-    with connect_db() as db:
+    with database() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             full_name TEXT NOT NULL,
@@ -71,7 +86,7 @@ def current_user():
     user_id = session.get("user_id")
     if not user_id:
         return None
-    with connect_db() as db:
+    with database() as db:
         return db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
 
 
@@ -90,6 +105,8 @@ def register():
     password = data.get("password", "")
     department = str(data.get("department", "basic")).strip().lower()
     photo = str(data.get("profile_picture", data.get("profilePicture", ""))).strip()
+    occupation = str(data.get("occupation", "")).strip()
+    school = str(data.get("school", "")).strip()
     if not name or len(name) > 120 or "@" not in email or len(email) > 254:
         return jsonify(success=False, message="Enter a valid name and email address."), 400
     if not isinstance(password, str) or len(password) < 8:
@@ -97,11 +114,11 @@ def register():
     if department not in DEPARTMENTS:
         return jsonify(success=False, message="Choose a valid department."), 400
     # Public self-registration is limited to student accounts. Staff are provisioned by an admin.
-    with connect_db() as db:
+    with database() as db:
         try:
             cursor = db.execute(
-                "INSERT INTO users (full_name,email,account_type,department,password,profile_picture) VALUES (?,?,?,?,?,?)",
-                (name, email, "student", department, generate_password_hash(password), photo),
+                "INSERT INTO users (full_name,email,account_type,department,password,profile_picture,occupation,school) VALUES (?,?,?,?,?,?,?,?)",
+                (name, email, "student", department, generate_password_hash(password), photo, occupation, school),
             )
             user = db.execute("SELECT * FROM users WHERE id = ?", (cursor.lastrowid,)).fetchone()
         except sqlite3.IntegrityError:
@@ -119,7 +136,7 @@ def login():
     requested_role = str(data.get("role", data.get("account_type", ""))).strip().lower()
     if not email or not isinstance(password, str):
         return jsonify(success=False, message="Email and password are required."), 400
-    with connect_db() as db:
+    with database() as db:
         user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     if not user or not check_password_hash(user["password"], password):
         return jsonify(success=False, message="Invalid email or password."), 401
@@ -143,6 +160,25 @@ def logout():
     return jsonify(success=True)
 
 
+@app.get("/")
+def home():
+    return send_from_directory(SITE_DIR, "index.html")
+
+
+@app.get("/<path:filename>")
+def site_files(filename):
+    # Keep staff panels behind the authenticated role when served by this backend.
+    if filename in {"admin.html", "teacher.html"}:
+        user = current_user()
+        allowed_role = "administrator" if filename == "admin.html" else "teacher"
+        if not user or user["account_type"] != allowed_role:
+            return send_from_directory(SITE_DIR, "login.html")
+    requested = (SITE_DIR / filename).resolve()
+    if SITE_DIR not in requested.parents or not requested.is_file():
+        abort(404)
+    return send_from_directory(SITE_DIR, filename)
+
+
 @app.post("/api/admin/users")
 def create_staff_account():
     admin = current_user()
@@ -157,7 +193,7 @@ def create_staff_account():
         return jsonify(success=False, message="Enter a name, valid email, and staff role."), 400
     if not isinstance(password, str) or len(password) < 8:
         return jsonify(success=False, message="Use a password with at least 8 characters."), 400
-    with connect_db() as db:
+    with database() as db:
         try:
             cursor = db.execute(
                 "INSERT INTO users (full_name,email,account_type,department,password,profile_picture,occupation,school) VALUES (?,?,?,?,?,?,?,?)",
@@ -178,7 +214,7 @@ def create_admin():
     password = getpass.getpass("Administrator password (8+ characters): ")
     if not name or "@" not in email or len(password) < 8:
         raise SystemExit("A name, valid email, and password of at least 8 characters are required.")
-    with connect_db() as db:
+    with database() as db:
         try:
             db.execute(
                 "INSERT INTO users (full_name,email,account_type,department,password) VALUES (?,?,?,?,?)",

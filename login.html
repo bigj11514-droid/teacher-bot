@@ -163,6 +163,7 @@
 
       function updateAccountMode() {
         const isStudent = accountRole.value === "student";
+        if (!isStudent) creatingAccount = false;
         createButton.hidden = !isStudent;
         document.getElementById("student-name").required = creatingAccount;
         document.getElementById("student-department").required = creatingAccount;
@@ -180,22 +181,29 @@
       });
       accountRole.addEventListener("change", updateAccountMode);
 
-      // If already logged in, return to that account's own workspace.
-      if (localStorage.getItem(sessionKey)) {
-        const savedSession = JSON.parse(localStorage.getItem(sessionKey));
-        window.location.replace(
-          savedSession.role === "administrator"
-            ? "admin.html"
-            : savedSession.role === "teacher"
-              ? "teacher.html"
-              : "index.html",
-        );
-      } else {
+      // Restore the account from the server cookie; localStorage alone is not authentication.
+      async function restoreServerSession() {
+        if (localStorage.getItem(sessionKey)) {
+          try {
+            const response = await fetch("/api/auth/me", { credentials: "same-origin" });
+            const result = await response.json();
+            if (response.ok && result.user) {
+              localStorage.setItem(sessionKey, JSON.stringify(result.user));
+              const role = result.user.role;
+              window.location.replace(role === "administrator" ? "admin.html" : role === "teacher" ? "teacher.html" : "index.html");
+              return;
+            }
+          } catch (error) {
+            console.warn("Could not restore the server session:", error);
+          }
+          localStorage.removeItem(sessionKey);
+        }
         const savedRoleChoice = sessionStorage.getItem(roleChoiceKey);
         if (["student", "teacher", "administrator"].includes(savedRoleChoice)) {
           openLoginForRole(savedRoleChoice);
         }
       }
+      restoreServerSession();
 
       document.querySelectorAll("[data-role]").forEach((button) => {
         button.addEventListener("click", () =>
@@ -237,7 +245,7 @@
               headers: { "Content-Type": "application/json" },
               credentials: "same-origin",
               body: JSON.stringify(creatingAccount
-                ? { full_name: name, email, password, department, profile_picture: profilePicture }
+                ? { full_name: name, email, password, department, profile_picture: profilePicture, occupation, school }
                 : { email, password, role }),
             });
             const result = await response.json();
