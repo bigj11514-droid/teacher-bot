@@ -15,7 +15,7 @@ Open `http://127.0.0.1:5000`. The Flask app serves the existing website and its 
 
 ## Accounts
 
-- Students can create their own accounts from the login page. The optional profile picture field accepts an image URL; that saved image appears in the profile pill.
+- Students can create their own accounts from the login page. They can use an image URL or upload a JPG, PNG, WebP, or GIF (up to 5 MB); the saved photo appears in the profile pill. Uploaded photos are stored under `Backend/uploads`.
 - Teachers and administrators sign in with accounts created by an administrator.
 - To create the first administrator, run `python Backend/app.py create-admin` from the project root. The command asks for the name, email, and password without displaying the password. After signing in as that administrator, staff accounts can be provisioned with the administrator-only `POST /api/admin/users` endpoint.
 - Accounts and password hashes persist in `Backend/database.db`. Keep a backup of this file.

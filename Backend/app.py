@@ -7,6 +7,7 @@ import sqlite3
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+from uuid import uuid4
 
 from flask import Flask, abort, jsonify, request, send_from_directory, session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -14,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = Path(__file__).resolve().parent
 SITE_DIR = BASE_DIR.parent
 DATABASE = Path(os.environ.get("YCOHDE_DATABASE", BASE_DIR / "database.db"))
+UPLOAD_DIR = BASE_DIR / "uploads"
 ROLES = {"student", "teacher", "administrator"}
 DEPARTMENTS = {"basic", "jhs", "shs"}
 
@@ -24,6 +26,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "0") == "1",
     PERMANENT_SESSION_LIFETIME=60 * 60 * 24 * 30,
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024,
 )
 
 
@@ -158,6 +161,33 @@ def whoami():
 def logout():
     session.clear()
     return jsonify(success=True)
+
+
+@app.post("/api/auth/profile-picture")
+def update_profile_picture():
+    user = current_user()
+    if not user:
+        return jsonify(success=False, message="Sign in before updating your profile picture."), 401
+    picture = request.files.get("profile_picture")
+    if not picture or not picture.filename:
+        return jsonify(success=False, message="Choose an image to upload."), 400
+    extensions = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
+    extension = extensions.get(picture.mimetype)
+    if not extension:
+        return jsonify(success=False, message="Choose a JPG, PNG, WebP, or GIF image."), 400
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{extension}"
+    picture.save(UPLOAD_DIR / filename)
+    image_url = f"/uploads/{filename}"
+    with database() as db:
+        db.execute("UPDATE users SET profile_picture = ? WHERE id = ?", (image_url, user["id"]))
+        updated = db.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    return jsonify(success=True, user=public_user(updated))
+
+
+@app.get("/uploads/<path:filename>")
+def uploaded_profile_picture(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
 
 
 @app.get("/")

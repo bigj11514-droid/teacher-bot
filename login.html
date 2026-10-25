@@ -68,6 +68,14 @@
             placeholder="https://example.com/photo.jpg"
         /></label>
         <label
+          >Or choose a profile photo<input
+            id="profile-picture-file"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+          />
+          <small>Your photo is saved to your account and shown in your profile pill (5 MB max).</small>
+        </label>
+        <label
           >Department<select id="student-department">
             <option value="basic">Basic Department</option>
             <option value="jhs">Junior High Department</option>
@@ -225,6 +233,7 @@
           const profilePicture = document
             .getElementById("profile-picture")
             .value.trim();
+          const pictureFile = document.getElementById("profile-picture-file").files[0];
 
           const error = document.getElementById("login-error");
 
@@ -233,6 +242,10 @@
             error.textContent = creatingAccount
               ? "Enter your name and email, and use a password with at least 8 characters."
               : "Enter your email and password.";
+            return;
+          }
+          if (pictureFile && (!pictureFile.type.startsWith("image/") || pictureFile.size > 5 * 1024 * 1024)) {
+            error.textContent = "Choose an image no larger than 5 MB.";
             return;
           }
           const department =
@@ -250,7 +263,19 @@
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || "Unable to sign in.");
-            const user = result.user;
+            let user = result.user;
+            if (pictureFile) {
+              const uploadData = new FormData();
+              uploadData.append("profile_picture", pictureFile);
+              const uploadResponse = await fetch("/api/auth/profile-picture", {
+                method: "POST",
+                credentials: "same-origin",
+                body: uploadData,
+              });
+              const uploadResult = await uploadResponse.json();
+              if (!uploadResponse.ok) throw new Error(uploadResult.message || "Your account signed in, but the profile photo could not be saved.");
+              user = uploadResult.user;
+            }
             localStorage.setItem(sessionKey, JSON.stringify(user));
             window.location.replace(user.role === "administrator" ? "admin.html" : user.role === "teacher" ? "teacher.html" : "index.html");
           } catch (requestError) {

@@ -171,7 +171,6 @@ function setupStudentSession() {
         profile.insertBefore(avatar, initialsElement || profile.firstChild);
       }
       avatar.alt = `${student.name || "User"} profile picture`;
-      avatar.src = student.profilePicture;
       avatar.addEventListener("error", () => {
         avatar.hidden = true;
         if (initialsElement) initialsElement.hidden = false;
@@ -180,6 +179,7 @@ function setupStudentSession() {
         avatar.hidden = false;
         if (initialsElement) initialsElement.hidden = true;
       }, { once: true });
+      avatar.src = student.profilePicture;
     } else {
       avatar?.remove();
       if (initialsElement) initialsElement.hidden = false;
