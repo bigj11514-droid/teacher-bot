@@ -92,6 +92,7 @@
           >
         </p>
         <button class="btn" type="submit">Log in to dashboard</button>
+        <button class="btn login-mode-toggle" id="create-account-toggle" type="button">Create a student account</button>
       </form>
     </main>
     <!-- FIRST-VISIT ROLE CHOICE: shown before the login fields are available. -->
@@ -143,6 +144,10 @@
       const loginCard = document.getElementById("login-card");
       const roleModal = document.getElementById("role-choice-modal");
       const accountRole = document.getElementById("account-role");
+      const form = document.getElementById("login-form");
+      const submitButton = form.querySelector('button[type="submit"]');
+      const createButton = document.getElementById("create-account-toggle");
+      let creatingAccount = false;
 
       // FIRST-VISIT ROLE CHOICE: choose a role before the login fields open.
       // This is stored only for the current browser tab/session, not as an account.
@@ -153,7 +158,27 @@
         loginCard.hidden = false;
         loginCard.setAttribute("aria-hidden", "false");
         document.getElementById("student-name").focus();
+        updateAccountMode();
       }
+
+      function updateAccountMode() {
+        const isStudent = accountRole.value === "student";
+        createButton.hidden = !isStudent;
+        document.getElementById("student-name").required = creatingAccount;
+        document.getElementById("student-department").required = creatingAccount;
+        document.getElementById("profile-picture").required = false;
+        submitButton.textContent = creatingAccount ? "Create account" : "Log in to dashboard";
+        createButton.textContent = creatingAccount ? "I already have an account" : "Create a student account";
+        document.querySelector(".login-card > p").textContent = creatingAccount
+          ? "Create your student account to save your learning and return any time."
+          : "Log in to open your learning, teacher, or administrator space.";
+      }
+
+      createButton.addEventListener("click", () => {
+        creatingAccount = !creatingAccount;
+        updateAccountMode();
+      });
+      accountRole.addEventListener("change", updateAccountMode);
 
       // If already logged in, return to that account's own workspace.
       if (localStorage.getItem(sessionKey)) {
@@ -179,9 +204,7 @@
       });
 
       // Login form
-      document
-        .getElementById("login-form")
-        .addEventListener("submit", (event) => {
+      form.addEventListener("submit", async (event) => {
           event.preventDefault();
 
           const name = document.getElementById("student-name").value.trim();
@@ -197,38 +220,36 @@
 
           const error = document.getElementById("login-error");
 
-          if (!name || !email || password.length < 4) {
-            error.textContent =
-              "Enter your name, a valid email, and a password of at least 4 characters.";
+          const role = accountRole.value;
+          if (!email || (creatingAccount && !name) || password.length < (creatingAccount ? 8 : 1)) {
+            error.textContent = creatingAccount
+              ? "Enter your name and email, and use a password with at least 8 characters."
+              : "Enter your email and password.";
             return;
           }
-
-          const role = document.getElementById("account-role").value;
           const department =
             document.getElementById("student-department").value;
-          // This local demo login stores the account role in this browser.
-          // Use a secure server-side account system before publishing the site.
-          localStorage.setItem(
-            sessionKey,
-            JSON.stringify({
-              name: name,
-              email: email,
-              role: role,
-              department: department,
-              occupation: occupation,
-              school: school,
-              profilePicture: profilePicture,
-            }),
-          );
-
-          // Go to dashboard
-          window.location.replace(
-            role === "administrator"
-              ? "admin.html"
-              : role === "teacher"
-                ? "teacher.html"
-                : "index.html",
-          );
+          error.textContent = "";
+          submitButton.disabled = true;
+          try {
+            const response = await fetch(creatingAccount ? "/api/auth/register" : "/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify(creatingAccount
+                ? { full_name: name, email, password, department, profile_picture: profilePicture }
+                : { email, password, role }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Unable to sign in.");
+            const user = result.user;
+            localStorage.setItem(sessionKey, JSON.stringify(user));
+            window.location.replace(user.role === "administrator" ? "admin.html" : user.role === "teacher" ? "teacher.html" : "index.html");
+          } catch (requestError) {
+            error.textContent = requestError.message || "Could not reach the account server. Start the Python backend and try again.";
+          } finally {
+            submitButton.disabled = false;
+          }
         });
     </script>
   </body>

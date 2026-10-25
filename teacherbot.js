@@ -163,6 +163,27 @@ function setupStudentSession() {
     const initialsElement = profile.querySelector("span");
     if (nameElement) nameElement.textContent = student.name;
     if (initialsElement) initialsElement.textContent = initials || "ST";
+    let avatar = profile.querySelector(".profile-avatar");
+    if (student.profilePicture) {
+      if (!avatar) {
+        avatar = document.createElement("img");
+        avatar.className = "profile-avatar";
+        profile.insertBefore(avatar, initialsElement || profile.firstChild);
+      }
+      avatar.alt = `${student.name || "User"} profile picture`;
+      avatar.src = student.profilePicture;
+      avatar.addEventListener("error", () => {
+        avatar.hidden = true;
+        if (initialsElement) initialsElement.hidden = false;
+      }, { once: true });
+      avatar.addEventListener("load", () => {
+        avatar.hidden = false;
+        if (initialsElement) initialsElement.hidden = true;
+      }, { once: true });
+    } else {
+      avatar?.remove();
+      if (initialsElement) initialsElement.hidden = false;
+    }
   });
 
   const addLogout = (navigation, className) => {
@@ -172,7 +193,12 @@ function setupStudentSession() {
     logoutButton.className = `${className} logout-btn`;
     logoutButton.setAttribute("aria-label", "Log out of Y_Cohde");
     logoutButton.textContent = "Log out";
-    logoutButton.addEventListener("click", () => {
+    logoutButton.addEventListener("click", async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+      } catch (error) {
+        console.warn("The server session could not be cleared:", error);
+      }
       localStorage.removeItem(STUDENT_SESSION_KEY);
       // FIRST-VISIT ROLE CHOICE: let the next person choose their own role.
       sessionStorage.removeItem("ycohdeLoginRoleChoice");

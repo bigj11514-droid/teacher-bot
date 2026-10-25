@@ -488,6 +488,19 @@ a {
   font-weight: 700;
 }
 
+.profile-pill .profile-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid rgba(118, 221, 255, 0.45);
+}
+
+.profile-pill [hidden] {
+  display: none;
+}
+
 .profile-pill small {
   display: block;
   color: var(--muted);
