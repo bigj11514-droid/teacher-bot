@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -10,6 +11,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from flask import Flask, abort, jsonify, request, send_from_directory, session
+from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -28,6 +31,28 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=60 * 60 * 24 * 30,
     MAX_CONTENT_LENGTH=5 * 1024 * 1024,
 )
+CORS(
+    app,
+    resources={r"/api/*": {"origins": re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")}},
+    supports_credentials=True,
+)
+
+
+@app.errorhandler(HTTPException)
+def handle_http_error(error):
+    if request.path.startswith("/api/"):
+        return jsonify(success=False, message=error.description), error.code
+    return error
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    app.logger.exception("Unhandled application error")
+    if request.path.startswith("/api/"):
+        return jsonify(success=False, message="The account service encountered an error. Please try again."), 500
+    if isinstance(error, HTTPException):
+        return error
+    return "Internal server error", 500
 
 
 def connect_db():

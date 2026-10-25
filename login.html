@@ -149,6 +149,31 @@
 
       const sessionKey = "ycohdeStudentSession";
       const roleChoiceKey = "ycohdeLoginRoleChoice";
+      const accountApiBase = ["localhost", "127.0.0.1"].includes(window.location.hostname) && window.location.port !== "5000"
+        ? `${window.location.protocol}//${window.location.hostname}:5000`
+        : "";
+      async function accountApi(path, options = {}) {
+        let response;
+        try {
+          response = await fetch(`${accountApiBase}${path}`, { ...options, credentials: "include" });
+        } catch {
+          throw new Error("Could not reach the account server. Start the Python backend with `python Backend/app.py` and try again.");
+        }
+        const body = await response.text();
+        let result;
+        try {
+          result = body ? JSON.parse(body) : {};
+        } catch {
+          throw new Error(`The account server returned an unreadable response (HTTP ${response.status}). Open the site through the Python backend at http://127.0.0.1:5000.`);
+        }
+        return { response, result };
+      }
+      function normalizeAccountUser(user) {
+        if (user?.profilePicture?.startsWith("/uploads/")) {
+          user.profilePicture = new URL(user.profilePicture, accountApiBase || window.location.origin).href;
+        }
+        return user;
+      }
       const loginCard = document.getElementById("login-card");
       const roleModal = document.getElementById("role-choice-modal");
       const accountRole = document.getElementById("account-role");
@@ -193,11 +218,11 @@
       async function restoreServerSession() {
         if (localStorage.getItem(sessionKey)) {
           try {
-            const response = await fetch("/api/auth/me", { credentials: "same-origin" });
-            const result = await response.json();
+            const { response, result } = await accountApi("/api/auth/me");
             if (response.ok && result.user) {
-              localStorage.setItem(sessionKey, JSON.stringify(result.user));
-              const role = result.user.role;
+              const user = normalizeAccountUser(result.user);
+              localStorage.setItem(sessionKey, JSON.stringify(user));
+              const role = user.role;
               window.location.replace(role === "administrator" ? "admin.html" : role === "teacher" ? "teacher.html" : "index.html");
               return;
             }
@@ -253,29 +278,26 @@
           error.textContent = "";
           submitButton.disabled = true;
           try {
-            const response = await fetch(creatingAccount ? "/api/auth/register" : "/api/auth/login", {
+            const { response, result } = await accountApi(creatingAccount ? "/api/auth/register" : "/api/auth/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              credentials: "same-origin",
               body: JSON.stringify(creatingAccount
                 ? { full_name: name, email, password, department, profile_picture: profilePicture, occupation, school }
                 : { email, password, role }),
             });
-            const result = await response.json();
             if (!response.ok) throw new Error(result.message || "Unable to sign in.");
             let user = result.user;
             if (pictureFile) {
               const uploadData = new FormData();
               uploadData.append("profile_picture", pictureFile);
-              const uploadResponse = await fetch("/api/auth/profile-picture", {
+              const { response: uploadResponse, result: uploadResult } = await accountApi("/api/auth/profile-picture", {
                 method: "POST",
-                credentials: "same-origin",
                 body: uploadData,
               });
-              const uploadResult = await uploadResponse.json();
               if (!uploadResponse.ok) throw new Error(uploadResult.message || "Your account signed in, but the profile photo could not be saved.");
               user = uploadResult.user;
             }
+            user = normalizeAccountUser(user);
             localStorage.setItem(sessionKey, JSON.stringify(user));
             window.location.replace(user.role === "administrator" ? "admin.html" : user.role === "teacher" ? "teacher.html" : "index.html");
           } catch (requestError) {
