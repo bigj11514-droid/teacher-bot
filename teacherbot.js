@@ -6556,6 +6556,52 @@ function buildShuffledQuestion(question) {
   };
 }
 
+function collectCurriculumQuizQuestions(syllabus, subjectName) {
+  const subjectTopics = syllabus?.topics?.[subjectName];
+  if (!subjectTopics) return [];
+
+  const collected = [];
+  const seen = new Set();
+  const addQuestion = (entry) => {
+    let question;
+    if (Array.isArray(entry) && Array.isArray(entry[1])) {
+      question = { question: entry[0], answers: entry[1], correct: entry[2] };
+    } else if (entry && Array.isArray(entry.options)) {
+      question = {
+        question: entry.question,
+        answers: entry.options,
+        correct: typeof entry.answer === "number"
+          ? entry.answer
+          : entry.options.indexOf(entry.answer),
+        explanation: entry.explanation,
+      };
+    } else if (entry && Array.isArray(entry.answers)) {
+      question = entry;
+    }
+    if (
+      !question || typeof question.question !== "string" ||
+      !Array.isArray(question.answers) || question.answers.length < 2 ||
+      !Number.isInteger(question.correct) || question.correct < 0 ||
+      question.correct >= question.answers.length
+    ) return;
+    const key = question.question.trim().toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    collected.push({ ...question, answers: [...question.answers] });
+  };
+
+  Object.entries(subjectTopics).forEach(([topicName, subtopics]) => {
+    Object.entries(subtopics || {}).forEach(([subtopicName, lesson]) => {
+      const entries = lesson?.week1Questions || lesson?._guidedQuestions || lesson?.questions || [];
+      entries.forEach(addQuestion);
+      // A few lessons store their questions in the guided bank and others in
+      // the regular bank. Include both when the lesson has both sources.
+      if (lesson?.week1Questions && lesson?.questions) lesson.questions.forEach(addQuestion);
+    });
+  });
+  return collected;
+}
+
 function buildQuizQuestionSet(baseQuestions, total = 10) {
   if (!Array.isArray(baseQuestions) || baseQuestions.length === 0) return [];
 
@@ -7036,7 +7082,7 @@ function setupQuiz() {
   }
 
   const levelKey = classLevels[classKey] || "early";
-  const baseQuestions = catalogLesson?.week1Questions
+  const currentLessonQuestions = catalogLesson?.week1Questions
     ? catalogLesson.week1Questions.map(({ question, options, answer, explanation }) => ({
         question,
         answers: options,
@@ -7045,13 +7091,19 @@ function setupQuiz() {
       }))
     : catalogLesson
       ? getTwentyQuizQuestions(catalogLesson, catalogSubtopic, { className: classKey, subject: catalogSubject }).map(([question, answers, correct]) => ({ question, answers, correct }))
-    : subjectData?.[levelKey] || subjectData?.early;
-  quizQuestions = buildQuizQuestionSet(baseQuestions, 10);
+      : subjectData?.[levelKey] || subjectData?.early;
+  const curriculumQuestions = collectCurriculumQuizQuestions(catalogSyllabus, catalogSubject);
+  const baseQuestions = curriculumQuestions.length
+    ? curriculumQuestions
+    : currentLessonQuestions;
+  quizQuestions = buildQuizQuestionSet(baseQuestions, 100);
   currentQuestionIndex = 0;
   score = 0;
   mistakes = 0;
   answeredQuestions = [];
-  subjectTitle.textContent = catalogLesson ? `${classLabels[classKey]} · ${catalogTopic} · ${catalogSubtopic}` : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"}`;
+  subjectTitle.textContent = catalogLesson
+    ? `${classLabels[classKey]} · ${catalogSubject} · 100-question review`
+    : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"} · 100 questions`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
   showDiagramForQuestion(quizQuestions[0]);
