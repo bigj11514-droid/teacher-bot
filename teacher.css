@@ -1510,6 +1510,15 @@ body.menu-open::before {
   width: min(100%, 460px); padding: 36px; border: 1px solid var(--border);
   border-radius: 24px; background: var(--panel); box-shadow: var(--shadow);
 }
+.login-bot-art {
+  overflow: hidden;
+  margin-bottom: 18px;
+  border: 1px solid rgba(95, 233, 255, 0.28);
+  border-radius: 18px;
+  background: #071724;
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.12);
+}
+.login-bot-art img { width: 100%; height: auto; border-radius: 0; }
 .login-card h1 { margin: 18px 0 8px; }
 .login-card p { color: var(--muted); line-height: 1.6; }
 .login-form { display: grid; gap: 16px; margin-top: 26px; }
@@ -1565,6 +1574,12 @@ body.menu-open::before {
   box-shadow: 0 0 0 1px rgba(95, 233, 255, 0.12), 0 10px 22px rgba(95, 233, 255, 0.1);
 }
 .role-choice-btn span { color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 640px) {
+  .login-card { padding: 22px; }
+  .role-choice-card { padding: 22px; }
+  .login-bot-art { margin-bottom: 14px; }
+}
 
 .syllabus-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; }
 .syllabus-table { width: 100%; border-collapse: collapse; min-width: 680px; }
