@@ -6606,10 +6606,24 @@ function buildQuizQuestionSet(baseQuestions, total = 10) {
   if (!Array.isArray(baseQuestions) || baseQuestions.length === 0) return [];
 
   const questions = [];
+  let previousQuestion = "";
   while (questions.length < total) {
-    questions.push(...shuffleArray(baseQuestions).map(buildShuffledQuestion));
+    const shuffledCycle = shuffleArray(baseQuestions);
+    // Keep each bank item unique until a full cycle has been used. If another
+    // cycle is needed, avoid repeating its first item at the previous boundary.
+    if (
+      shuffledCycle.length > 1 &&
+      shuffledCycle[0].question === previousQuestion
+    ) {
+      [shuffledCycle[0], shuffledCycle[1]] = [shuffledCycle[1], shuffledCycle[0]];
+    }
+    const cycleQuestions = shuffledCycle
+      .slice(0, total - questions.length)
+      .map(buildShuffledQuestion);
+    questions.push(...cycleQuestions);
+    previousQuestion = cycleQuestions[cycleQuestions.length - 1]?.question || previousQuestion;
   }
-  return questions.slice(0, total);
+  return questions;
 }
 
 function renderSubjectLinks(selectedClass, container) {
@@ -7102,8 +7116,8 @@ function setupQuiz() {
   mistakes = 0;
   answeredQuestions = [];
   subjectTitle.textContent = catalogLesson
-    ? `${classLabels[classKey]} · ${catalogSubject} · 100-question review`
-    : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"} · 100 questions`;
+    ? `${classLabels[classKey]} · ${catalogSubject} · Random 100-question review`
+    : `${subjectData?.displayName || "Quiz"} • ${classLabels[classKey] || "Class"} · Random 100 questions`;
   updateScoreDisplay();
   feedbackEl.textContent = "";
   showDiagramForQuestion(quizQuestions[0]);
