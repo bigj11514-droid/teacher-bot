@@ -1519,6 +1519,20 @@ body.menu-open::before {
   box-shadow: 0 0 28px rgba(56, 189, 248, 0.12);
 }
 .login-bot-art img { width: 100%; height: auto; border-radius: 0; }
+
+/* Give the student account choice a clear, welcoming emphasis. */
+#account-role {
+  border-color: #2f91c9;
+  background: linear-gradient(135deg, #effaff, #f5f3ff);
+  color: #17345a;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(47, 145, 201, 0.1);
+}
+
+#account-role option[value="student"] {
+  color: #17345a;
+  font-weight: 700;
+}
 .login-card h1 { margin: 18px 0 8px; }
 .login-card p { color: var(--muted); line-height: 1.6; }
 .login-form { display: grid; gap: 16px; margin-top: 26px; }
